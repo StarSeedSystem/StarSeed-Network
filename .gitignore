@@ -1,0 +1,14 @@
+# .gitignore
+
+# Entorno Virtual de Python
+venv/
+__pycache__/
+*.pyc
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de IDEs y editores (Cursor/VSCode)
+.vscode/
+.idea/
