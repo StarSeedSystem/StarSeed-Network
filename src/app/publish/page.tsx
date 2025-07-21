@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -35,7 +36,7 @@ export default function PublishPage() {
 
         toast({
             title: "¡Transmisión Exitosa!",
-            description: "Tu mensaje ha sido difundido en el Nexo.",
+            description: `Tu mensaje ha sido difundido a: ${selectedDestinations.join(', ')}.`,
         });
 
         setContent("");

@@ -1,6 +1,40 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Shield, BookOpen, Handshake } from "lucide-react";
+import { Users, Shield, BookOpen, Handshake, Globe, Landmark, Dot } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+const communities = [
+    {
+        name: "Innovación Sostenible",
+        description: "Comunidad dedicada a encontrar e implementar soluciones ecológicas en la red.",
+        members: 125,
+        avatar: "https://placehold.co/100x100.png",
+        avatarHint: "green leaf",
+        type: "Comunidad",
+        icon: Globe,
+    },
+    {
+        name: "Arte Ciberdélico",
+        description: "Colectivo de artistas y programadores explorando la creatividad emergente a través de la IA.",
+        members: 342,
+        avatar: "https://placehold.co/100x100.png",
+        avatarHint: "abstract art",
+        type: "Comunidad",
+        icon: Globe,
+    },
+     {
+        name: "E.F. Localidad Central",
+        description: "Entidad territorial para la gobernanza local y proyectos comunitarios.",
+        members: 1530,
+        avatar: "https://placehold.co/100x100.png",
+        avatarHint: "city skyline",
+        type: "Entidad Federativa",
+        icon: Landmark,
+    }
+];
+
 
 export default function ParticipationsPage() {
   return (
@@ -36,10 +70,33 @@ export default function ParticipationsPage() {
             <Card className="glass-card">
                 <CardHeader>
                     <CardTitle>Comunidades y Entidades Federativas</CardTitle>
-                    <CardDescription>Grupos sociales y territoriales a los que perteneces.</CardDescription>
+                    <CardDescription>Grupos sociales y territoriales a los que perteneces. Estos son tus principales espacios de colaboración y gobernanza.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground">Aquí se mostrará una lista de tus comunidades y entidades federativas. Próximamente...</p>
+                    <div className="space-y-4">
+                        {communities.map((item, index) => (
+                             <Card key={index} className="glass-card flex items-center p-4 gap-4">
+                                <Avatar className="h-16 w-16 border-2 border-primary/30">
+                                    <AvatarImage src={item.avatar} alt={item.name} data-ai-hint={item.avatarHint} />
+                                    <AvatarFallback>{item.name.substring(0,2)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-grow">
+                                    <div className="flex items-center gap-2">
+                                         <h3 className="font-headline text-lg font-semibold">{item.name}</h3>
+                                         <div className="flex items-center text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                                            <item.icon className="h-3 w-3 mr-1"/>
+                                            {item.type}
+                                         </div>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                                     <p className="text-sm font-semibold flex items-center mt-1">
+                                        <Users className="h-4 w-4 mr-2 text-primary" /> {item.members.toLocaleString()} Miembros
+                                    </p>
+                                </div>
+                                <Button variant="outline">Ir al Perfil</Button>
+                            </Card>
+                        ))}
+                    </div>
                 </CardContent>
             </Card>
         </TabsContent>
