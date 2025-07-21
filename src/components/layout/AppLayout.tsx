@@ -47,6 +47,7 @@ import {
   Clapperboard,
   Bot,
   ArrowLeft,
+  Bell,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -92,6 +93,7 @@ const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/profile", label: "Perfil", icon: User },
     { href: "/messages", label: "Mensajes", icon: MessageSquare },
+    { href: "/notifications", label: "Notificaciones", icon: Bell },
     { href: "/participations", label: "Hub de Conexiones", icon: Users },
     {
       label: "Red",
