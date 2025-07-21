@@ -1,7 +1,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Shield, BookOpen, Handshake, Globe, Landmark, Dot } from "lucide-react";
+import { Users, Shield, BookOpen, Handshake, Globe, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -34,6 +34,75 @@ const communities = [
         icon: Landmark,
     }
 ];
+
+const politicalParties = [
+    {
+        name: "Partido: Futuro Transhumanista",
+        description: "Agrupación que impulsa políticas para la evolución tecnológica y biológica consciente.",
+        members: 89,
+        avatar: "https://placehold.co/100x100.png",
+        avatarHint: "futuristic human",
+        type: "Partido Político",
+        icon: Shield,
+    }
+];
+
+const studyGroups = [
+    {
+        name: "Grupo de Estudio: Redes Neuronales Descentralizadas",
+        description: "Investigación y desarrollo de arquitecturas de IA que operan en entornos P2P.",
+        members: 45,
+        avatar: "https://placehold.co/100x100.png",
+        avatarHint: "glowing brain",
+        type: "Grupo de Estudio",
+        icon: BookOpen,
+    },
+    {
+        name: "Taller de Diseño de Avatares VRM",
+        description: "Aprendizaje colaborativo sobre las herramientas y técnicas para crear avatares 3D interoperables.",
+        members: 78,
+        avatar: "https://placehold.co/100x100.png",
+        avatarHint: "3d model",
+        type: "Grupo de Estudio",
+        icon: BookOpen,
+    }
+];
+
+const alliances = [
+    {
+        name: "Alianza por la Soberanía Digital",
+        description: "Colaboración entre 'Innovación Sostenible' y la 'E.F. Localidad Central' para desarrollar estándares de datos.",
+        members: 2, // Representa a los 2 grupos
+        avatar: "https://placehold.co/100x100.png",
+        avatarHint: "digital handshake",
+        type: "Alianza Estratégica",
+        icon: Handshake,
+    }
+];
+
+const ParticipationCard = ({ item }: { item: (typeof communities)[0] }) => (
+    <Card className="glass-card flex items-center p-4 gap-4">
+        <Avatar className="h-16 w-16 border-2 border-primary/30">
+            <AvatarImage src={item.avatar} alt={item.name} data-ai-hint={item.avatarHint} />
+            <AvatarFallback>{item.name.substring(0,2)}</AvatarFallback>
+        </Avatar>
+        <div className="flex-grow">
+            <div className="flex items-center gap-2">
+                 <h3 className="font-headline text-lg font-semibold">{item.name}</h3>
+                 <div className="flex items-center text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                    <item.icon className="h-3 w-3 mr-1"/>
+                    {item.type}
+                 </div>
+            </div>
+            <p className="text-sm text-muted-foreground">{item.description}</p>
+             <p className="text-sm font-semibold flex items-center mt-1">
+                <Users className="h-4 w-4 mr-2 text-primary" /> 
+                {item.members.toLocaleString()} {item.type === 'Alianza Estratégica' ? 'Grupos' : 'Miembros'}
+            </p>
+        </div>
+        <Button variant="outline">Ir al Perfil</Button>
+    </Card>
+);
 
 
 export default function ParticipationsPage() {
@@ -75,26 +144,7 @@ export default function ParticipationsPage() {
                 <CardContent>
                     <div className="space-y-4">
                         {communities.map((item, index) => (
-                             <Card key={index} className="glass-card flex items-center p-4 gap-4">
-                                <Avatar className="h-16 w-16 border-2 border-primary/30">
-                                    <AvatarImage src={item.avatar} alt={item.name} data-ai-hint={item.avatarHint} />
-                                    <AvatarFallback>{item.name.substring(0,2)}</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-grow">
-                                    <div className="flex items-center gap-2">
-                                         <h3 className="font-headline text-lg font-semibold">{item.name}</h3>
-                                         <div className="flex items-center text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
-                                            <item.icon className="h-3 w-3 mr-1"/>
-                                            {item.type}
-                                         </div>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">{item.description}</p>
-                                     <p className="text-sm font-semibold flex items-center mt-1">
-                                        <Users className="h-4 w-4 mr-2 text-primary" /> {item.members.toLocaleString()} Miembros
-                                    </p>
-                                </div>
-                                <Button variant="outline">Ir al Perfil</Button>
-                            </Card>
+                             <ParticipationCard key={index} item={item as any} />
                         ))}
                     </div>
                 </CardContent>
@@ -107,7 +157,11 @@ export default function ParticipationsPage() {
                     <CardDescription>Agrupaciones ideológicas para la acción política coordinada.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                     <p className="text-muted-foreground">Aquí se mostrará una lista de los partidos políticos en los que participas. Próximamente...</p>
+                     <div className="space-y-4">
+                        {politicalParties.map((item, index) => (
+                             <ParticipationCard key={index} item={item as any} />
+                        ))}
+                    </div>
                 </CardContent>
             </Card>
         </TabsContent>
@@ -118,7 +172,11 @@ export default function ParticipationsPage() {
                     <CardDescription>Colaboración y aprendizaje sobre temas específicos.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground">Aquí se mostrará una lista de tus grupos de estudio. Próximamente...</p>
+                     <div className="space-y-4">
+                        {studyGroups.map((item, index) => (
+                             <ParticipationCard key={index} item={item as any} />
+                        ))}
+                    </div>
                 </CardContent>
             </Card>
         </TabsContent>
@@ -129,7 +187,11 @@ export default function ParticipationsPage() {
                     <CardDescription>Colaboraciones formales entre los diferentes grupos en los que participas.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                     <p className="text-muted-foreground">Aquí se visualizarán tus alianzas estratégicas. Próximamente...</p>
+                     <div className="space-y-4">
+                        {alliances.map((item, index) => (
+                             <ParticipationCard key={index} item={item as any} />
+                        ))}
+                    </div>
                 </CardContent>
             </Card>
         </TabsContent>
