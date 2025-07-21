@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import {
   TooltipProvider,
 } from "@/components/ui/tooltip"
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
