@@ -18,11 +18,11 @@ const ecosystemSections = [
         imgHint: "digital files folders",
     },
     {
-        title: "Marketplace del Nexo",
+        title: "Tienda Virtual",
         description: "Descubre, instala y comparte plantillas, apps, avatares y más desde el repositorio comunitario.",
         icon: Store,
         href: "#",
-        hrefLabel: "Explorar Marketplace",
+        hrefLabel: "Explorar Tienda Virtual",
         img: "https://placehold.co/600x400.png",
         imgHint: "app store marketplace",
     },

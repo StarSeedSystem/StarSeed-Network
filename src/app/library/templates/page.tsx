@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LayoutTemplate, PlusCircle, User } from "lucide-react";
+import { LayoutTemplate, PlusCircle, User, Palette, LayoutDashboard as DashboardIcon } from "lucide-react";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -26,14 +26,22 @@ const templates = {
             author: "Art-AI.dao"
         },
     ],
-    community: [
+    ui: [
          {
-            title: "Comunidad 'Colmena'",
-            description: "Diseño para grupos grandes, centrado en propuestas y votaciones.",
+            title: "Interfaz 'Glass Morph'",
+            description: "Un tema visual que aplica efectos de vidrio a todos los componentes de la UI.",
             image: "https://placehold.co/600x400.png",
-            imageHint: "community hub interface",
+            imageHint: "glassmorphism ui",
             type: "2D",
-            author: "GovArchs"
+            author: "UIDesigners"
+        },
+        {
+            title: "Interfaz 'Holográfica'",
+            description: "Proyecciones holográficas para menús y notificaciones en tu vista AR.",
+            image: "https://placehold.co/600x400.png",
+            imageHint: "holographic interface",
+            type: "AR",
+            author: "UIDesigners"
         },
     ],
     dashboard: [
@@ -45,15 +53,13 @@ const templates = {
             type: "2D",
             author: "DataWeavers"
         },
-    ],
-    environment: [
-         {
-            title: "Entorno 'Jardín Zen'",
-            description: "Un espacio virtual minimalista y relajante para la meditación.",
+        {
+            title: "Dashboard 'Entorno VR'",
+            description: "Gestiona tu mundo virtual desde un panel de control inmersivo.",
             image: "https://placehold.co/600x400.png",
-            imageHint: "zen garden",
+            imageHint: "vr dashboard",
             type: "VR",
-            author: "GaiaPrime"
+            author: "DataWeavers"
         },
     ]
 };
@@ -108,16 +114,23 @@ export default function TemplatesPage() {
             </div>
 
             <Tabs defaultValue="profile" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-card/60 rounded-xl h-auto">
-                    <TabsTrigger value="profile" className="rounded-lg py-2 text-base">Perfiles</TabsTrigger>
-                    <TabsTrigger value="community" className="rounded-lg py-2 text-base">Comunidades</TabsTrigger>
-                    <TabsTrigger value="dashboard" className="rounded-lg py-2 text-base">Dashboards</TabsTrigger>
-                    <TabsTrigger value="environment" className="rounded-lg py-2 text-base">Entornos VR</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 bg-card/60 rounded-xl h-auto">
+                    <TabsTrigger value="profile" className="rounded-lg py-2 text-base">
+                        <User className="mr-2 h-4 w-4"/>
+                        Perfiles de Usuario
+                    </TabsTrigger>
+                    <TabsTrigger value="ui" className="rounded-lg py-2 text-base">
+                        <Palette className="mr-2 h-4 w-4"/>
+                        Interfaz de Usuario
+                    </TabsTrigger>
+                    <TabsTrigger value="dashboard" className="rounded-lg py-2 text-base">
+                        <DashboardIcon className="mr-2 h-4 w-4"/>
+                        Dashboards
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value="profile" className="mt-6">{renderTemplateGrid("profile")}</TabsContent>
-                <TabsContent value="community" className="mt-6">{renderTemplateGrid("community")}</TabsContent>
+                <TabsContent value="ui" className="mt-6">{renderTemplateGrid("ui")}</TabsContent>
                 <TabsContent value="dashboard" className="mt-6">{renderTemplateGrid("dashboard")}</TabsContent>
-                <TabsContent value="environment" className="mt-6">{renderTemplateGrid("environment")}</TabsContent>
             </Tabs>
         </div>
     );
