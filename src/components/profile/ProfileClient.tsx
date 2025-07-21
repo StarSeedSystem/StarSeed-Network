@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -52,9 +53,9 @@ export function ProfileClient() {
     setAvatarUrl(newAvatarUrl);
     setBadges(prev => ({ ...prev, aiSymbiote: true }));
     toast({
-      title: "Avatar Actualizado!",
-      description: "Tu nuevo avatar generado por IA ha sido establecido y has ganado la insignia 'AI Symbiote'."
-    })
+      title: "¡Insignia Desbloqueada!",
+      description: "Has obtenido la insignia 'AI Symbiote'. Tu nuevo avatar está listo y guardado en tu biblioteca.",
+    });
   }
   
   return (

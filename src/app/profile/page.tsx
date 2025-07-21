@@ -5,21 +5,27 @@ import { NatalChartWidget } from "@/components/profile/NatalChartWidget";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Award, Library } from "lucide-react";
 import { AchievementsWidget } from "@/components/dashboard/AchievementsWidget";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LibraryGrid } from "@/components/profile/LibraryGrid";
 
-function LibraryPlaceholder() {
-    return (
-        <Card className="glass-card">
-            <CardHeader>
-                <CardTitle>Mi Biblioteca</CardTitle>
-                <CardDescription>Tu ecosistema personal de apps, archivos y avatares.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <p className="text-muted-foreground">La gestión de tu biblioteca personal estará disponible aquí próximamente.</p>
-            </CardContent>
-        </Card>
-    )
-}
+// Placeholder data for generated content. In a real app, this would come from a database.
+const libraryItems = [
+    {
+        id: "vid_001",
+        type: "Video",
+        title: "Dragon over forest",
+        thumbnail: "https://placehold.co/600x400.png",
+        thumbnailHint: "dragon forest",
+        source: "/video-generator",
+    },
+    {
+        id: "img_001",
+        type: "Avatar",
+        title: "AI Symbiote",
+        thumbnail: "https://placehold.co/400x400.png",
+        thumbnailHint: "glowing astronaut",
+        source: "/avatar-generator",
+    }
+];
 
 
 export default function ProfilePage() {
@@ -43,7 +49,7 @@ export default function ProfilePage() {
                 <BadgesGrid earnedBadges={{}} />
               </TabsContent>
               <TabsContent value="library" className="mt-6">
-                <LibraryPlaceholder />
+                 <LibraryGrid items={libraryItems} />
               </TabsContent>
             </Tabs>
         </div>
