@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { User, Globe, Users, Landmark, Shield, BookOpen } from "lucide-react";
 
 const allDestinations = [
-    { id: "profile", label: "Mi Perfil Personal", icon: User },
+    { id: "profile", label: "Mi Perfil Personal", icon: User, areas: ['culture', 'education'] },
     { id: "community_innovation", label: "Comunidad: Innovación Sostenible", icon: Globe, areas: ['culture', 'education'] },
     { id: "community_art", label: "Comunidad: Arte Ciberdélico", icon: Users, areas: ['culture'] },
     { id: "group_philosophy", label: "Grupo Estudio: Filosofía", icon: BookOpen, areas: ['education'] },
@@ -33,10 +33,7 @@ export function AudienceSelector({ selectedArea, selectedDestinations, onSelecti
     };
 
     const availableDestinations = allDestinations.filter(dest => {
-        if (selectedArea === 'culture' || selectedArea === 'education') {
-            return dest.id === 'profile' || dest.areas.includes(selectedArea);
-        }
-        return dest.areas.includes(selectedArea);
+        return dest.areas && dest.areas.includes(selectedArea);
     });
 
     return (
