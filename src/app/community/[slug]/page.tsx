@@ -1,10 +1,10 @@
 
 
-import { notFound, useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Check, Users, Info, PenSquare, ArrowLeft, Loader2 } from "lucide-react";
+import { Bell, Check, Users, Info, PenSquare } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileFeed } from "@/components/profile/ProfileFeed";
@@ -35,7 +35,7 @@ const communityMembers = [
 ]
 
 async function getCommunityData(slug: string): Promise<Community | null> {
-    // In a real app, you would fetch this from your database.
+    // In a real app, this would fetch this from your database.
     // We are simulating that with our db object.
     const community = await db.communities.findUnique(slug);
     return community;
@@ -45,7 +45,7 @@ export default async function CommunityProfilePage({ params }: { params: { slug:
     const data = await getCommunityData(params.slug);
 
     if (!data) {
-        return notFound();
+        notFound();
     }
 
     return (
