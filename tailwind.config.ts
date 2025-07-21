@@ -65,11 +65,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        "electric-lime": "#AFFF33",
-        "solar-orange": "#FF9505",
-        "sky-blue": "#87CEEB",
-        coral: "#FF7F50",
-        "sea-green": "#2E8B57",
+        "electric-lime": "hsl(var(--chart-2))",
+        "solar-orange": "hsl(var(--chart-1))",
+        "sky-blue": "hsl(var(--chart-4))",
+        "coral": "#FF7F50",
+        "sea-green": "hsl(var(--chart-3))",
         "golden-yellow": "#FFD700",
       },
       borderRadius: {
@@ -107,3 +107,5 @@ export default {
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
+
+    
