@@ -44,7 +44,8 @@ import {
   Settings,
   LogOut,
   ChevronDown,
-  Info
+  Info,
+  Clapperboard,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -105,6 +106,7 @@ const navItems = [
       subItems: [
         { href: "/library/apps", label: "Apps Favoritas" },
         { href: "/library/files", label: "Archivos Recientes" },
+        { href: "/video-generator", label: "AI Video Generator", icon: Clapperboard },
       ],
     },
     {
@@ -155,7 +157,7 @@ function AppSidebar() {
                             isActive={pathname === subItem.href}
                             >
                             <Link href={subItem.href ?? '#'} prefetch={false}>
-                                {subItem.icon && <subItem.icon />}
+                                {subItem.icon && <subItem.icon className="h-4 w-4" />}
                                 <span>{subItem.label}</span>
                             </Link>
                             </SidebarMenuSubButton>
