@@ -135,7 +135,7 @@ export default function PublishPage() {
                                 <div className="relative group">
                                      <CardTitle className="text-sm font-semibold mb-2">Contenido Adjunto</CardTitle>
                                      <div className="rounded-lg overflow-hidden relative aspect-video max-h-64 border border-primary/20">
-                                        <Image src={attachedItem.thumbnail} alt={attachedItem.title} layout="fill" objectFit="cover" />
+                                        <Image src={attachedItem.thumbnail} alt={attachedItem.title} layout="fill" objectFit="cover" data-ai-hint={attachedItem.thumbnailHint} />
                                      </div>
                                      <Button 
                                         variant="destructive" 
