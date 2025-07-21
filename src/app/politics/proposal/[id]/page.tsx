@@ -1,12 +1,15 @@
 
+"use client";
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Gavel, MessageSquare, Tag, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Gavel, MessageSquare, Tag, ThumbsDown, ThumbsUp, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommentSection } from "@/components/politics/CommentSection";
+import { useRouter } from "next/navigation";
 
 // Mock data, in a real app this would be fetched based on the id
 const legislativeProposals = {
@@ -37,6 +40,7 @@ const statusColors: { [key: string]: string } = {
 };
 
 export default function ProposalDetailPage({ params }: { params: { id: string } }) {
+    const router = useRouter();
     const proposal = legislativeProposals[params.id as keyof typeof legislativeProposals];
 
     if (!proposal) {
@@ -45,6 +49,10 @@ export default function ProposalDetailPage({ params }: { params: { id: string } 
 
     return (
         <div className="space-y-8">
+             <Button variant="outline" size="sm" onClick={() => router.back()} className="mb-4">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver a Propuestas
+            </Button>
              <Card className="glass-card rounded-2xl">
                 <CardHeader>
                     <div className="flex justify-between items-start gap-4">

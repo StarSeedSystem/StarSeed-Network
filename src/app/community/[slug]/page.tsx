@@ -5,11 +5,12 @@ import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Check, Edit, PenSquare, Users, Info, PlusCircle } from "lucide-react";
+import { Bell, Check, Edit, PenSquare, Users, Info, PlusCircle, ArrowLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileFeed } from "@/components/profile/ProfileFeed";
 import type { FeedPostType } from "@/components/dashboard/FeedPost";
+import { useRouter } from "next/navigation";
 
 // Mock data, in a real app this would be fetched based on the slug
 const communityData = {
@@ -46,6 +47,7 @@ const communityMembers = [
 ]
 
 export default function CommunityProfilePage({ params }: { params: { slug: string } }) {
+    const router = useRouter();
     const data = communityData[params.slug as keyof typeof communityData] || {
         name: "Comunidad no encontrada",
         description: "Esta comunidad no existe o ha sido movida.",
@@ -59,6 +61,10 @@ export default function CommunityProfilePage({ params }: { params: { slug: strin
 
     return (
         <div className="space-y-8">
+            <Button variant="outline" size="sm" onClick={() => router.back()} className="mb-4">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver
+            </Button>
             <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
                 <Image src={data.banner} alt="Profile Banner" layout="fill" objectFit="cover" data-ai-hint={data.bannerHint} />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />

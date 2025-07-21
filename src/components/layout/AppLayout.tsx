@@ -46,6 +46,7 @@ import {
   Info,
   Clapperboard,
   Bot,
+  ArrowLeft,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -126,7 +127,13 @@ const navItems = [
 
 function AppSidebar() {
   const pathname = usePathname();
-  const { state } = useSidebar();
+  const { state, setOpenMobile, isMobile } = useSidebar();
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }
 
   const renderNavItems = () => (
     navItems.map((item) =>
@@ -158,7 +165,7 @@ function AppSidebar() {
                       asChild
                       isActive={pathname === subItem.href}
                       >
-                      <Link href={subItem.href ?? '#'} prefetch={false}>
+                      <Link href={subItem.href ?? '#'} prefetch={false} onClick={handleLinkClick}>
                           {subItem.icon && <subItem.icon className="h-4 w-4" />}
                           <span>{subItem.label}</span>
                       </Link>
@@ -172,7 +179,7 @@ function AppSidebar() {
       ) : (
         <SidebarMenuItem key={item.href}>
           <SidebarMenuButton asChild isActive={pathname === item.href}>
-            <Link href={item.href ?? '#'} prefetch={false}>
+            <Link href={item.href ?? '#'} prefetch={false} onClick={handleLinkClick}>
                 <Tooltip>
                     <TooltipTrigger asChild>
                         {item.icon && <item.icon className="glowing-icon h-5 w-5" />}
