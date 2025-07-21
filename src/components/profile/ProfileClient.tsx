@@ -5,7 +5,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Image as ImageIcon, Calendar as CalendarIcon, Clock, MapPin, Award, Library } from "lucide-react";
+import { Edit, Image as ImageIcon, Calendar as CalendarIcon, Clock, MapPin, Award, Library, PenSquare } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,11 +30,37 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BadgesGrid } from "./BadgesGrid";
 import { LibraryGrid, LibraryItem } from "./LibraryGrid";
-
+import { ProfileFeed } from "./ProfileFeed";
+import type { FeedPostType } from "../dashboard/FeedPost";
 
 interface ProfileClientProps {
   libraryItems: LibraryItem[];
 }
+
+const userPosts: FeedPostType[] = [
+    {
+        author: "Starlight",
+        handle: "starlight.eth",
+        avatar: "https://placehold.co/100x100.png",
+        avatarHint: "glowing astronaut",
+        content: "Just broadcasted my first message across the Nexus! The journey begins.",
+        comments: 2,
+        reposts: 0,
+        likes: 15,
+        destinations: ["Profile", "Innovación Sostenible"]
+    },
+    {
+        author: "Starlight",
+        handle: "starlight.eth",
+        avatar: "https://placehold.co/100x100.png",
+        avatarHint: "glowing astronaut",
+        content: "My new AI-generated avatar is ready. A small step in forging a new digital identity.",
+        comments: 8,
+        reposts: 1,
+        likes: 42,
+        destinations: ["Profile"]
+    }
+]
 
 export function ProfileClient({ libraryItems }: ProfileClientProps) {
   const [avatarUrl, setAvatarUrl] = useState("https://placehold.co/128x128.png");
@@ -200,19 +226,26 @@ export function ProfileClient({ libraryItems }: ProfileClientProps) {
         </div>
       </div>
       <div className="px-4 sm:px-8">
-        <Tabs defaultValue="badges" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-card/60 rounded-xl">
-            <TabsTrigger value="badges" className="rounded-lg">
-                <Award className="mr-2 h-4 w-4"/>
-                Insignias
-            </TabsTrigger>
-            <TabsTrigger value="library" className="rounded-lg">
-                <Library className="mr-2 h-4 w-4"/>
-                Biblioteca
-            </TabsTrigger>
+        <Tabs defaultValue="publications" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-card/60 rounded-xl">
+              <TabsTrigger value="publications" className="rounded-lg">
+                  <PenSquare className="mr-2 h-4 w-4"/>
+                  Publicaciones
+              </TabsTrigger>
+              <TabsTrigger value="badges" className="rounded-lg">
+                  <Award className="mr-2 h-4 w-4"/>
+                  Insignias
+              </TabsTrigger>
+              <TabsTrigger value="library" className="rounded-lg">
+                  <Library className="mr-2 h-4 w-4"/>
+                  Biblioteca
+              </TabsTrigger>
             </TabsList>
+            <TabsContent value="publications" className="mt-6">
+              <ProfileFeed initialFeed={userPosts} />
+            </TabsContent>
             <TabsContent value="badges" className="mt-6">
-            <BadgesGrid earnedBadges={badges} />
+              <BadgesGrid earnedBadges={badges} />
             </TabsContent>
             <TabsContent value="library" className="mt-6">
                 <LibraryGrid items={libraryItems} />
