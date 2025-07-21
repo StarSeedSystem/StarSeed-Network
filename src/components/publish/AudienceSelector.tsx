@@ -16,7 +16,7 @@ const destinations = [
 
 interface AudienceSelectorProps {
     selectedDestinations: string[];
-    onSelectionChange: (selectedIds: string[]) => void;
+    onSelectionChange: (selectedIds: string[], isFederationSelected: boolean) => void;
 }
 
 export function AudienceSelector({ selectedDestinations, onSelectionChange }: AudienceSelectorProps) {
@@ -26,7 +26,12 @@ export function AudienceSelector({ selectedDestinations, onSelectionChange }: Au
             ? [...selectedDestinations, id] 
             : selectedDestinations.filter(destId => destId !== id);
         
-        onSelectionChange(newSelection);
+        const isFederationSelected = newSelection.some(destId => {
+            const dest = destinations.find(d => d.id === destId);
+            return dest?.type === 'federation';
+        });
+
+        onSelectionChange(newSelection, isFederationSelected);
     };
 
     return (

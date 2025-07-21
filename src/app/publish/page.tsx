@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { SendHorizonal, PenSquare, Paperclip, X, Gavel } from "lucide-react";
+import { SendHorizonal, PenSquare, Paperclip, X, Gavel, AtSign, Tags } from "lucide-react";
 import { AudienceSelector } from "@/components/publish/AudienceSelector";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -15,6 +15,9 @@ import { LegislativeSettings } from "@/components/publish/LegislativeSettings";
 import { NewsSettings } from "@/components/publish/NewsSettings";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { FederatedEntitySettings } from "@/components/publish/FederatedEntitySettings";
 
 // Mock data for library items, in a real app this would be fetched
 const libraryItems: LibraryItem[] = [
@@ -43,6 +46,8 @@ export default function PublishPage() {
     const [isNews, setIsNews] = useState(false);
     const [attachedItem, setAttachedItem] = useState<LibraryItem | null>(null);
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+    const [isFederationSelected, setIsFederationSelected] = useState(false);
+    const [federationArea, setFederationArea] = useState<string | null>(null);
     const { toast } = useToast();
 
     const handlePublish = () => {
@@ -63,7 +68,7 @@ export default function PublishPage() {
             return;
         }
 
-        console.log("Publicando:", { content, destinations: selectedDestinations, attachedItem, isCreatingVote, isNews });
+        console.log("Publicando:", { content, destinations: selectedDestinations, attachedItem, isCreatingVote, isNews, federationArea });
 
         toast({
             title: "¡Transmisión Exitosa!",
@@ -81,11 +86,16 @@ export default function PublishPage() {
         setIsLibraryOpen(false);
     };
 
-    const handleDestinationChange = (selectedIds: string[]) => {
+    const handleDestinationChange = (selectedIds: string[], isFedSelected: boolean) => {
         setSelectedDestinations(selectedIds);
+        setIsFederationSelected(isFedSelected);
+        if (!isFedSelected) {
+            setFederationArea(null);
+        }
     };
 
     const isLegislative = isCreatingVote;
+    const isLegislativeProposal = isFederationSelected && federationArea === 'legislative';
 
     return (
         <div className="container mx-auto max-w-5xl py-8">
@@ -113,18 +123,34 @@ export default function PublishPage() {
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
                         <div className="md:col-span-2 space-y-4">
-                            <div>
+                             <div>
                                 <h3 className="text-lg font-headline font-semibold mb-2">Paso 2: Contenido de la Transmisión</h3>
-                                <div className="p-4 rounded-lg border bg-background/50">
-                                    {/* This will eventually become a block editor */}
-                                     <Textarea
-                                        placeholder="Escribe tu mensaje aquí usando bloques de contenido..."
-                                        className="min-h-[250px] text-base bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
-                                        value={content}
-                                        onChange={(e) => setContent(e.target.value)}
-                                    />
-                                </div>
+                                <Tabs defaultValue="content" className="w-full">
+                                    <TabsList className="grid w-full grid-cols-2 bg-card/80">
+                                        <TabsTrigger value="content"><PenSquare className="h-4 w-4 mr-2" />Editor</TabsTrigger>
+                                        <TabsTrigger value="tags"><AtSign className="h-4 w-4 mr-2" />Menciones y Hashtags</TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="content" className="mt-4 p-4 rounded-lg border bg-background/50">
+                                         <Textarea
+                                            placeholder="Escribe tu mensaje aquí usando bloques de contenido..."
+                                            className="min-h-[250px] text-base bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+                                            value={content}
+                                            onChange={(e) => setContent(e.target.value)}
+                                        />
+                                    </TabsContent>
+                                    <TabsContent value="tags" className="mt-4 space-y-4 p-4 rounded-lg border bg-background/50">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="mentions" className="flex items-center gap-2"><AtSign className="h-4 w-4 text-primary" />Mencionar Usuarios o Grupos</Label>
+                                            <Input id="mentions" placeholder="@starlight, @innovacion-sostenible..." />
+                                        </div>
+                                         <div className="space-y-2">
+                                            <Label htmlFor="hashtags" className="flex items-center gap-2"><Tags className="h-4 w-4 text-primary" />Añadir Hashtags</Label>
+                                            <Input id="hashtags" placeholder="#sostenibilidad, #IA, #democracia..." />
+                                        </div>
+                                    </TabsContent>
+                                </Tabs>
                             </div>
+
                             {attachedItem && (
                                 <div className="relative group">
                                      <CardTitle className="text-sm font-semibold mb-2">Contenido Adjunto</CardTitle>
@@ -163,6 +189,8 @@ export default function PublishPage() {
                                     </div>
                                 </DialogContent>
                             </Dialog>
+
+                            {isFederationSelected && <FederatedEntitySettings onAreaChange={setFederationArea} />}
                              
                             <div className="flex items-center space-x-2 rounded-lg border p-3 bg-secondary/40 border-secondary/60">
                                 <Checkbox id="add-vote" checked={isCreatingVote} onCheckedChange={(checked) => setIsCreatingVote(!!checked)} />
@@ -172,8 +200,8 @@ export default function PublishPage() {
                                 </Label>
                             </div>
 
-                             {isLegislative && <LegislativeSettings />}
-                             {!isLegislative && <NewsSettings isNews={isNews} onIsNewsChange={setIsNews} />}
+                             {isCreatingVote && <LegislativeSettings isLegislativeProposal={isLegislativeProposal} />}
+                             {!isCreatingVote && <NewsSettings isNews={isNews} onIsNewsChange={setIsNews} />}
                         </div>
                     </div>
                     

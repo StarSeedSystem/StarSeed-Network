@@ -13,7 +13,11 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Clock, AlertTriangle, Gavel } from "lucide-react";
 
-export function LegislativeSettings() {
+interface LegislativeSettingsProps {
+    isLegislativeProposal: boolean;
+}
+
+export function LegislativeSettings({ isLegislativeProposal }: LegislativeSettingsProps) {
     const [executionDate, setExecutionDate] = useState<Date>();
 
     return (
@@ -53,12 +57,16 @@ export function LegislativeSettings() {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="voting-period">Establecer Plazo de Votación</Label>
-                    <Select defaultValue="7d">
+                    <Label htmlFor="voting-period">
+                        Establecer Plazo de Votación 
+                        {isLegislativeProposal && <span className="text-destructive"> *</span>}
+                    </Label>
+                    <Select required={isLegislativeProposal}>
                         <SelectTrigger id="voting-period">
                             <SelectValue placeholder="Seleccionar plazo..." />
                         </SelectTrigger>
                         <SelectContent className="glass-card">
+                            <SelectItem value="none">Ninguno (Informativo)</SelectItem>
                             <SelectItem value="3d">3 Días</SelectItem>
                             <SelectItem value="7d">1 Semana</SelectItem>
                             <SelectItem value="14d">2 Semanas</SelectItem>
