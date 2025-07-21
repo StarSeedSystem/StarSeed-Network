@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileFeed } from "@/components/profile/ProfileFeed";
 import type { FeedPostType } from "@/components/dashboard/FeedPost";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 // Mock data, in a real app this would be fetched based on the slug
 const communityData = {
@@ -46,9 +46,11 @@ const communityMembers = [
     { name: "Starlight", avatar: "https://placehold.co/100x100.png", avatarHint: "glowing astronaut", role: "Miembro" }
 ]
 
-export default function CommunityProfilePage({ params }: { params: { slug: string } }) {
+export default function CommunityProfilePage() {
     const router = useRouter();
-    const data = communityData[params.slug as keyof typeof communityData] || {
+    const params = useParams();
+    const slug = params.slug as string;
+    const data = communityData[slug as keyof typeof communityData] || {
         name: "Comunidad no encontrada",
         description: "Esta comunidad no existe o ha sido movida.",
         longDescription: "",
