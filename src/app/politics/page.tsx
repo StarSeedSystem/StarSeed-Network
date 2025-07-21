@@ -1,7 +1,11 @@
+
+"use client";
+
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProposalCard } from "@/components/politics/ProposalCard";
 import { Gavel, PlaySquare, Scale } from "lucide-react";
-import { AdvancedFilter } from "@/components/politics/AdvancedFilter";
+import { AdvancedFilter, FilterState } from "@/components/politics/AdvancedFilter";
 
 const legislativeProposals = [
   {
@@ -49,6 +53,18 @@ const judicialCases = [
 ];
 
 export default function PoliticsPage() {
+  const [filters, setFilters] = useState<FilterState>({
+    entity: "all",
+    status: "all",
+    tags: "",
+    saved: false,
+  });
+
+  // En una aplicación real, usarías estos filtros para obtener datos de una API
+  const filteredLegislative = legislativeProposals.filter(p => !filters.saved);
+  const filteredExecutive = executiveProjects.filter(p => !filters.saved);
+  const filteredJudicial = judicialCases.filter(p => !filters.saved);
+
   return (
     <div className="space-y-8">
       <div>
@@ -58,7 +74,7 @@ export default function PoliticsPage() {
         </p>
       </div>
 
-       <AdvancedFilter />
+       <AdvancedFilter filters={filters} onFilterChange={setFilters} />
 
       <Tabs defaultValue="legislative" className="w-full">
         <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 bg-card/60 rounded-xl h-auto">
@@ -77,22 +93,22 @@ export default function PoliticsPage() {
         </TabsList>
         <TabsContent value="legislative" className="mt-6">
             <div className="space-y-6">
-                {legislativeProposals.map(proposal => (
-                    <ProposalCard key={proposal.id} {...proposal} />
+                {filteredLegislative.map(proposal => (
+                    <ProposalCard key={proposal.id} {...proposal} isSaved={filters.saved} />
                 ))}
             </div>
         </TabsContent>
         <TabsContent value="executive" className="mt-6">
             <div className="space-y-6">
-                {executiveProjects.map(proposal => (
-                    <ProposalCard key={proposal.id} {...proposal} />
+                {filteredExecutive.map(proposal => (
+                    <ProposalCard key={proposal.id} {...proposal} isSaved={filters.saved} />
                 ))}
             </div>
         </TabsContent>
          <TabsContent value="judicial" className="mt-6">
             <div className="space-y-6">
                 {judicialCases.map(proposal => (
-                    <ProposalCard key={proposal.id} {...proposal} />
+                    <ProposalCard key={proposal.id} {...proposal} isSaved={filters.saved} />
                 ))}
             </div>
         </TabsContent>

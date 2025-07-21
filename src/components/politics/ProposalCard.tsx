@@ -1,9 +1,11 @@
+
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ThumbsUp, ThumbsDown, MessageSquare, Users, Star, Eye } from "lucide-react";
+import { ThumbsUp, ThumbsDown, MessageSquare, Users, Star, Eye, Bookmark } from "lucide-react";
 
 type ProposalCardProps = {
     id: string;
@@ -13,6 +15,7 @@ type ProposalCardProps = {
     status: string;
     stats: { [key: string]: number };
     summary: string;
+    isSaved?: boolean;
 };
 
 const statusColors: { [key: string]: string } = {
@@ -30,11 +33,14 @@ const getStatsIcon = (key: string) => {
         case 'comments': return <MessageSquare className="h-4 w-4 text-primary" />;
         case 'volunteers': return <Users className="h-4 w-4 text-sky-blue" />;
         case 'participants': return <Users className="h-4 w-4 text-sky-blue" />;
+        case 'progress': return null;
         default: return null;
     }
 }
 
-export function ProposalCard({ title, proposer, entity, status, stats, summary }: ProposalCardProps) {
+export function ProposalCard({ title, proposer, entity, status, stats, summary, isSaved: initialIsSaved = false }: ProposalCardProps) {
+  const [isSaved, setIsSaved] = useState(initialIsSaved);
+  
   return (
     <Card className="glass-card rounded-2xl overflow-hidden transition-all hover:border-primary/50">
         <CardHeader>
@@ -65,13 +71,14 @@ export function ProposalCard({ title, proposer, entity, status, stats, summary }
                     <div key={key} className="flex items-center gap-1.5 text-sm text-muted-foreground">
                        {getStatsIcon(key)}
                        <span>{value}{key === 'progress' ? '%' : ''}</span>
+                       {key === 'progress' && <span className="font-semibold">Progreso</span>}
                     </div>
                 ))}
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
-                 <Button variant="outline" className="w-full sm:w-auto">
-                    <Star className="mr-2 h-4 w-4" />
-                    Guardar
+                 <Button variant="outline" className="w-full sm:w-auto" onClick={() => setIsSaved(!isSaved)}>
+                    {isSaved ? <Bookmark className="mr-2 h-4 w-4 fill-current" /> : <Bookmark className="mr-2 h-4 w-4" />}
+                    {isSaved ? "Guardado" : "Guardar"}
                 </Button>
                 <Button className="w-full sm:w-auto">
                     Ver Detalles

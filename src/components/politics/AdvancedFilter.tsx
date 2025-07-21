@@ -10,8 +10,25 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 
-export function AdvancedFilter() {
+export interface FilterState {
+    entity: string;
+    status: string;
+    tags: string;
+    saved: boolean;
+}
+
+interface AdvancedFilterProps {
+    filters: FilterState;
+    onFilterChange: (filters: FilterState) => void;
+}
+
+
+export function AdvancedFilter({ filters, onFilterChange }: AdvancedFilterProps) {
     const [isOpen, setIsOpen] = useState(false);
+
+    const handleFieldChange = (field: keyof FilterState, value: string | boolean) => {
+        onFilterChange({ ...filters, [field]: value });
+    };
 
     return (
         <div>
@@ -27,7 +44,10 @@ export function AdvancedFilter() {
                            
                             <div className="space-y-2">
                                 <Label className="flex items-center gap-2 text-sm"><Landmark className="h-4 w-4" />Filtrar por Entidad Federativa</Label>
-                                <Select defaultValue="all">
+                                <Select 
+                                    value={filters.entity} 
+                                    onValueChange={(value) => handleFieldChange("entity", value)}
+                                >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Seleccionar entidad..." />
                                     </SelectTrigger>
@@ -41,7 +61,10 @@ export function AdvancedFilter() {
                            
                             <div className="space-y-2">
                                 <Label className="flex items-center gap-2 text-sm"><ListFilter className="h-4 w-4" />Filtrar por Estado (Legislativo)</Label>
-                                <Select defaultValue="all">
+                                 <Select 
+                                    value={filters.status}
+                                    onValueChange={(value) => handleFieldChange("status", value)}
+                                >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Seleccionar estado..." />
                                     </SelectTrigger>
@@ -56,12 +79,20 @@ export function AdvancedFilter() {
                            
                             <div className="space-y-2">
                                 <Label className="flex items-center gap-2 text-sm"><Tag className="h-4 w-4" />Filtrar por Etiquetas</Label>
-                                <Input placeholder="#soberania, #seguridad..." />
+                                <Input 
+                                    placeholder="#soberania, #seguridad..."
+                                    value={filters.tags}
+                                    onChange={(e) => handleFieldChange("tags", e.target.value)}
+                                />
                             </div>
 
                             <div className="space-y-2 flex flex-col justify-end">
                                  <div className="flex items-center space-x-2 pt-4">
-                                    <Switch id="saved-filter" />
+                                    <Switch 
+                                        id="saved-filter"
+                                        checked={filters.saved}
+                                        onCheckedChange={(checked) => handleFieldChange("saved", checked)}
+                                    />
                                     <Label htmlFor="saved-filter" className="flex items-center gap-2 cursor-pointer"><Bookmark className="h-4 w-4" />Mostrar solo contenido guardado</Label>
                                 </div>
                             </div>
