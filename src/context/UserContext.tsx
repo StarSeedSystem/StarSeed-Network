@@ -1,44 +1,40 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { User as FirebaseUser, onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/data/firebase"; // Import auth from our new firebase config
 
-interface User {
-    name: string;
-    handle: string;
-    title: string;
-    avatarUrl: string;
-    bannerUrl: string;
-    bio: string;
-    badges: { [key: string]: boolean };
-}
-
-interface UserContextType {
-    user: User;
-    setUser: React.Dispatch<React.SetStateAction<User>>;
-}
-
-const defaultUser: User = {
-    name: "Starlight",
-    handle: "@starlight.eth",
-    title: "Nexus Pioneer",
-    avatarUrl: "https://placehold.co/128x128.png",
-    bannerUrl: "https://placehold.co/1200x400.png",
-    bio: "Digital nomad exploring the intersections of consciousness and technology. Co-creating the future in the StarSeed Nexus.",
-    badges: {
-        nexusPioneer: true,
-        aiSymbiote: false,
-    },
+// The user object from our database will be different from the Firebase auth user object.
+// For now, we will store the Firebase user, but we'll expand this later.
+// We allow null for when the user is logged out.
+type UserContextType = {
+    user: FirebaseUser | null;
+    loading: boolean;
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<User>(defaultUser);
+    const [user, setUser] = useState<FirebaseUser | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // onAuthStateChanged returns an unsubscribe function
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            setLoading(false);
+        });
+
+        // Cleanup subscription on unmount
+        return () => unsubscribe();
+    }, []);
+
+    const value = { user, loading };
 
     return (
-        <UserContext.Provider value={{ user, setUser }}>
-            {children}
+        <UserContext.Provider value={value}>
+            {!loading && children}
         </UserContext.Provider>
     );
 };

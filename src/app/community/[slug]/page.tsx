@@ -118,7 +118,7 @@ export default async function CommunityProfilePage({ params }: { params: { slug:
                         <Card className="glass-card">
                             <CardHeader>
                                 <CardTitle>Acerca de {data.name}</CardTitle>
-                            </Header>
+                            </CardHeader>
                             <CardContent className="prose prose-invert max-w-none text-foreground/80">
                                 <p>{data.longDescription}</p>
                                 <h3 className="font-headline text-xl text-primary mt-6">Reglas y Principios</h3>

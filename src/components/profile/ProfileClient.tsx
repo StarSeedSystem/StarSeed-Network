@@ -3,395 +3,249 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { doc, setDoc, onSnapshot, updateDoc, DocumentData } from "firebase/firestore";
+import { db } from "@/data/firebase";
+import { useUser } from "@/context/UserContext";
+
+// --- UI Imports ---
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Image as ImageIcon, Calendar as CalendarIcon, Clock, MapPin, Award, Library, PenSquare, Loader2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { AIAvatarGenerator } from "./AIAvatarGenerator";
-import { PrivacySettings } from "./PrivacySettings";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { AIBannerGenerator } from "./AIBannerGenerator";
+import { Loader2, UserPlus, Edit, ImageIcon, Award, Library, PenSquare } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// --- Component Imports ---
+import { ProfileFeed } from "./ProfileFeed";
 import { BadgesGrid } from "./BadgesGrid";
 import { LibraryGrid, LibraryItem, LibraryFolder } from "./LibraryGrid";
-import { ProfileFeed } from "./ProfileFeed";
-import type { FeedPostType } from "../dashboard/FeedPost";
-import { NatalChartWidget } from "./NatalChartWidget";
-import { AchievementsWidget } from "../dashboard/AchievementsWidget";
-import { User } from "@/types/content-types";
-import { Skeleton } from "@/components/ui/skeleton";
+import { AIBannerGenerator } from "./AIBannerGenerator";
+import { AIAvatarGenerator } from "./AIAvatarGenerator";
 
-interface ProfileClientProps {
-  userId: string;
-  initialLibraryItems: LibraryItem[];
-  initialFolders?: LibraryFolder[];
-  viewMode?: "full" | "libraryOnly";
-}
+// --- Placeholder Data ---
+const initialLibraryItems: LibraryItem[] = [ { id: "vid_001", type: "Video", title: "Dragon over forest", thumbnail: "https://placehold.co/600x400.png", thumbnailHint: 'dragon forest', source: "/video-generator", folderId: "folder_videos" }];
+const initialFolders: LibraryFolder[] = [ { id: "folder_avatars", name: "Mis Avatares" }, { id: "folder_videos", name: "Videos Generados" }];
 
-const userPosts: FeedPostType[] = [
-    {
-        author: "Starlight",
-        handle: "starlight.eth",
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "glowing astronaut",
-        content: "Just broadcasted my first message across the Nexus! The journey begins.",
-        comments: 2,
-        reposts: 0,
-        likes: 15,
-        destinations: ["Profile", "Innovación Sostenible"]
-    },
-    {
-        author: "Starlight",
-        handle: "starlight.eth",
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "glowing astronaut",
-        content: "My new AI-generated avatar is ready. A small step in forging a new digital identity.",
-        comments: 8,
-        reposts: 1,
-        likes: 42,
-        destinations: ["Profile"]
-    }
-]
-
-export function ProfileClient({ userId, initialLibraryItems, initialFolders = [], viewMode = "full" }: ProfileClientProps) {
-  const [user, setUser] = useState<User | null>(null);
+export function ProfileClient() {
+  const { user: authUser, loading: authLoading } = useUser();
+  const [profile, setProfile] = useState<DocumentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [birthDate, setBirthDate] = useState<Date>();
-  const [libraryItems, setLibraryItems] = useState<LibraryItem[]>(initialLibraryItems);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isBannerOpen, setIsBannerOpen] = useState(false);
+  const [isAvatarOpen, setIsAvatarOpen] = useState(false);
+
+  const router = useRouter();
   const { toast } = useToast();
 
+  // --- Profile Creation State ---
+  const [handle, setHandle] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
+  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
+
+  // --- Real-time Profile Subscription ---
   useEffect(() => {
-    const fetchUser = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/user/${userId}`);
-        if (!response.ok) {
-          throw new Error('User not found');
-        }
-        const userData: User = await response.json();
-        setUser(userData);
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
-        toast({
-          title: "Error",
-          description: "Could not load user profile.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+    if (authLoading) return;
+    if (!authUser) {
+      router.push('/login');
+      return;
+    }
+
+    const docRef = doc(db, "users", authUser.uid);
+    const unsubscribe = onSnapshot(docRef, (doc) => {
+      if (doc.exists()) {
+        setProfile({ id: doc.id, ...doc.data() });
+      } else {
+        setProfile(null);
       }
-    };
+      setIsLoading(false);
+    });
 
-    fetchUser();
-  }, [userId, toast]);
+    return () => unsubscribe();
+  }, [authUser, authLoading, router]);
 
-  const handleSaveChanges = async (e: React.FormEvent<HTMLFormElement>) => {
+  // --- Profile Creation Handler ---
+  const handleCreateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user) return;
-
-    const formData = new FormData(e.currentTarget);
-    const updatedData: Partial<User> = {
-      bio: formData.get("bio") as string,
-    };
-
+    if (!authUser) return;
+    setIsCreatingProfile(true);
     try {
-        const response = await fetch(`/api/user/${user.id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedData),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to update profile');
-        }
-
-        const updatedUser: User = await response.json();
-        setUser(updatedUser); // Update state with the returned user data
-        setIsDialogOpen(false);
-        toast({
-            title: "Profile Updated",
-            description: "Your changes have been saved successfully.",
-        });
+      const newProfile = {
+        name: displayName,
+        handle: handle.startsWith('@') ? handle : `@${handle}`,
+        bio: bio,
+        avatarUrl: `https://avatar.vercel.sh/${handle}.png`,
+        bannerUrl: "https://placehold.co/1200x400.png",
+        badges: { nexusPioneer: true },
+        createdAt: new Date(),
+      };
+      await setDoc(doc(db, "users", authUser.uid), newProfile);
+      toast({ title: "Profile Created!", description: "Welcome to the Nexus, Pioneer." });
     } catch (error) {
-        console.error("Failed to save changes:", error);
-        toast({
-            title: "Error",
-            description: "Could not save your changes.",
-            variant: "destructive",
-        });
+      console.error("Error creating profile:", error);
+      toast({ title: "Error", description: "Could not create your profile.", variant: "destructive" });
+    } finally {
+      setIsCreatingProfile(false);
     }
   };
 
-  const handleAvatarGenerated = async (newAvatarUrl: string, description: string) => {
-    if (!user) return;
+  // --- Profile Update Handlers ---
+  const handleSaveChanges = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!authUser || !profile) return;
+    setIsUpdating(true);
 
-    const updatedData: Partial<User> = { 
-        avatarUrl: newAvatarUrl,
-        badges: { ...user.badges, aiSymbiote: true }
+    const formData = new FormData(e.currentTarget);
+    const updatedData = {
+      bio: formData.get("bio") as string,
+      name: formData.get("name") as string,
+      handle: formData.get("handle") as string,
     };
 
-     try {
-        const response = await fetch(`/api/user/${user.id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedData),
-        });
-        if (!response.ok) throw new Error('Failed to update avatar');
-        
-        const updatedUser: User = await response.json();
-        setUser(updatedUser);
-
-        const newLibraryItem: LibraryItem = {
-          id: `img_${Date.now()}`,
-          type: "Avatar",
-          title: description || "New AI Avatar",
-          thumbnail: newAvatarUrl,
-          thumbnailHint: "ai generated",
-          source: "/avatar-generator",
-          folderId: "folder_avatars"
-        };
-        setLibraryItems(prev => [newLibraryItem, ...prev]);
-
-        if (!user.badges.aiSymbiote) {
-           toast({
-            title: "¡Insignia Desbloqueada!",
-            description: "Has obtenido la insignia 'AI Symbiote'. Tu nuevo avatar está listo y guardado en tu biblioteca.",
-            duration: 5000,
-           });
-        } else {
-            toast({
-                title: "Avatar actualizado",
-                description: "Tu nuevo avatar ha sido guardado en tu biblioteca.",
-            });
-        }
-    } catch (error) {
-        console.error("Failed to update avatar:", error);
-        toast({ title: "Error", description: "Could not update avatar.", variant: "destructive" });
-    }
-  }
-
-  const handleBannerGenerated = async (newBannerUrl: string) => {
-    if (!user) return;
     try {
-        const response = await fetch(`/api/user/${user.id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ bannerUrl: newBannerUrl }),
-        });
-        if (!response.ok) throw new Error('Failed to update banner');
-
-        const updatedUser: User = await response.json();
-        setUser(updatedUser);
-        
-        toast({
-            title: "Banner Updated",
-            description: "Your new banner has been saved.",
-        });
+      const docRef = doc(db, "users", authUser.uid);
+      await updateDoc(docRef, updatedData);
+      
+      setIsEditOpen(false);
+      toast({ title: "Profile Updated", description: "Your changes have been saved successfully." });
     } catch (error) {
-        console.error("Failed to update banner:", error);
-        toast({ title: "Error", description: "Could not update banner.", variant: "destructive" });
+      console.error("Failed to save changes:", error);
+      toast({ title: "Error", description: "Could not save your changes.", variant: "destructive" });
+    } finally {
+      setIsUpdating(false);
     }
+  };
+
+  const handleUpdateField = async (field: string, value: any) => {
+    if (!authUser) return;
+    try {
+      await updateDoc(doc(db, "users", authUser.uid), { [field]: value });
+    } catch (error) {
+      console.error(`Error updating ${field}:`, error);
+      toast({ title: "Error", description: `Could not update ${field}.`, variant: "destructive" });
+    }
+  };
+  
+  const handleBannerGenerated = async (newBannerUrl: string) => {
+    await handleUpdateField('bannerUrl', newBannerUrl);
+    setIsBannerOpen(false);
+  };
+
+  const handleAvatarGenerated = async (newAvatarUrl: string, description: string) => {
+    await handleUpdateField('avatarUrl', newAvatarUrl);
+    await handleUpdateField('badges.aiSymbiote', true);
+    setIsAvatarOpen(false);
+    toast({
+        title: "¡Insignia Desbloqueada!",
+        description: "Has obtenido la insignia 'AI Symbiote'. ¡Tu nuevo avatar está listo!",
+        duration: 5000,
+    });
+  };
+
+  if (authLoading || isLoading) {
+    return <div className="text-center p-10">
+      <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+      <p className="mt-2 text-muted-foreground">Loading Profile...</p>
+    </div>;
   }
 
-   if (isLoading) {
+  if (authUser && !profile) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-48 w-full rounded-2xl" />
-        <div className="relative px-4 sm:px-8 pb-8 -mt-24">
-          <div className="flex flex-col sm:flex-row items-start gap-6">
-            <Skeleton className="w-32 h-32 rounded-full border-4 border-background ring-4 ring-primary" />
-            <div className="pt-16 flex-grow space-y-2">
-              <Skeleton className="h-8 w-48" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-20 w-full" />
-            </div>
-          </div>
-        </div>
-      </div>
+      <div className="flex items-center justify-center py-12"><Card className="mx-auto max-w-lg w-full glass-card"><CardHeader className="text-center"><CardTitle className="text-2xl font-headline flex items-center justify-center gap-2"><UserPlus/> Create Your Nexus Profile</CardTitle><CardDescription>Forge your identity in the network. This will be your public presence.</CardDescription></CardHeader><CardContent><form onSubmit={handleCreateProfile} className="grid gap-4"><div className="grid gap-2"><Label htmlFor="displayName">Display Name</Label><Input id="displayName" placeholder="Starlight" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required /></div><div className="grid gap-2"><Label htmlFor="handle">Unique Handle</Label><Input id="handle" placeholder="@starlight.eth" value={handle} onChange={(e) => setHandle(e.target.value)} required /></div><div className="grid gap-2"><Label htmlFor="bio">Short Bio</Label><Textarea id="bio" placeholder="Digital nomad..." value={bio} onChange={(e) => setBio(e.target.value)} required /></div><Button type="submit" className="w-full mt-2" size="lg" disabled={isCreatingProfile}>{isCreatingProfile ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Profile"}</Button></form></CardContent></Card></div>
     );
   }
-
-  if (!user) {
-    return <div className="text-center py-20">User not found.</div>;
-  }
   
+  if (!profile) return null;
+
   return (
     <>
-    {viewMode === "full" && (
-        <>
-            <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
-                <Image src={user.bannerUrl} alt="Profile Banner" layout="fill" objectFit="cover" data-ai-hint="nebula galaxy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-                <Dialog>
+      <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
+        <Image src={profile.bannerUrl} alt="Profile Banner" layout="fill" objectFit="cover" data-ai-hint="futuristic space" />
+        <Dialog open={isBannerOpen} onOpenChange={setIsBannerOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ImageIcon className="mr-2 h-4 w-4" /> Generar Banner
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="glass-card max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>Generador de Banners con IA</DialogTitle>
+                    <DialogDescription>Crea un nuevo banner para tu perfil usando IA.</DialogDescription>
+                </DialogHeader>
+                <AIBannerGenerator currentBanner={profile.bannerUrl} onBannerGenerated={handleBannerGenerated} />
+            </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="relative px-4 sm:px-8 pb-8 -mt-24">
+          <div className="flex flex-col sm:flex-row items-start gap-6">
+              <Dialog open={isAvatarOpen} onOpenChange={setIsAvatarOpen}>
                 <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ImageIcon className="mr-2 h-4 w-4" /> Edit Banner
-                    </Button>
+                    <Avatar className="w-32 h-32 border-4 border-background ring-4 ring-primary cursor-pointer transition-all hover:ring-accent hover:scale-105">
+                        <AvatarImage src={profile.avatarUrl} alt="User Avatar" />
+                        <AvatarFallback>{profile.name?.substring(0, 2) || '??'}</AvatarFallback>
+                    </Avatar>
                 </DialogTrigger>
-                <DialogContent className="glass-card rounded-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Generate New Banner</DialogTitle>
-                        <DialogDescription>
-                            Describe the banner you want to create with AI.
-                        </DialogDescription>
+                <DialogContent className="glass-card max-w-xl">
+                     <DialogHeader>
+                        <DialogTitle>Generador de Avatares con IA</DialogTitle>
+                        <DialogDescription>Crea un nuevo avatar o modifica el actual.</DialogDescription>
                     </DialogHeader>
-                    <AIBannerGenerator currentBanner={user.bannerUrl} onBannerGenerated={handleBannerGenerated} />
+                    <AIAvatarGenerator currentAvatar={profile.avatarUrl} onAvatarGenerated={handleAvatarGenerated} />
                 </DialogContent>
-                </Dialog>
-            </div>
-            <div className="relative px-4 sm:px-8 pb-8 -mt-24">
-                <div className="flex flex-col sm:flex-row items-start gap-6">
-                <Avatar className="w-32 h-32 border-4 border-background ring-4 ring-primary">
-                    <AvatarImage src={user.avatarUrl} alt="User Avatar" data-ai-hint="glowing astronaut" />
-                    <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
-                </Avatar>
-                <div className="pt-16 flex-grow">
-                    <div className="flex justify-between items-center flex-wrap gap-2">
-                        <div>
-                            <h1 className="text-3xl font-bold font-headline">{user.name}</h1>
-                            <p className="text-muted-foreground">{user.handle}</p>
-                        </div>
-                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline">
-                            <Edit className="mr-2 h-4 w-4" /> Edit Profile
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="glass-card rounded-2xl max-w-2xl">
-                            <DialogHeader>
-                            <DialogTitle>Edit Profile</DialogTitle>
-                            <DialogDescription>
-                                Update your public information, generate a new avatar, and set your privacy controls.
-                            </DialogDescription>
-                            </DialogHeader>
-                            <form onSubmit={handleSaveChanges} className="space-y-6 max-h-[70vh] overflow-y-auto p-1 pr-4">
-                            <AIAvatarGenerator currentAvatar={user.avatarUrl} onAvatarGenerated={handleAvatarGenerated} />
-                            
-                            <div className="space-y-2">
-                                <Label htmlFor="bio">Bio</Label>
-                                <Textarea id="bio" name="bio" defaultValue={user.bio} className="min-h-[100px]" />
-                            </div>
-
-                            <div>
-                                <h3 className="text-lg font-headline font-semibold mb-2">Carta Natal Astrológica</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg border bg-background/50">
-                                <div className="space-y-2">
-                                    <Label htmlFor="birthDate">Fecha de Nacimiento</Label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                            "w-full justify-start text-left font-normal",
-                                            !birthDate && "text-muted-foreground"
-                                            )}
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {birthDate ? format(birthDate, "PPP") : <span>Elige una fecha</span>}
-                                        </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0 glass-card">
-                                        <Calendar
-                                            mode="single"
-                                            selected={birthDate}
-                                            onSelect={setBirthDate}
-                                            initialFocus
-                                        />
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                                <div className="space-y-2">
-                                        <Label htmlFor="birthTime">Hora de Nacimiento</Label>
-                                        <div className="relative">
-                                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                            <Input id="birthTime" name="birthTime" type="time" className="pl-9" />
-                                        </div>
-                                </div>
-                                <div className="space-y-2 md:col-span-2">
-                                        <Label htmlFor="birthPlace">Lugar de Nacimiento</Label>
-                                        <div className="relative">
-                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                            <Input id="birthPlace" name="birthPlace" placeholder="Ciudad, País" className="pl-9"/>
-                                        </div>
-                                </div>
-                                </div>
-                            </div>
-
-                            <PrivacySettings />
-                            
-                            <DialogFooter className="sticky bottom-0 bg-background/80 backdrop-blur-sm pt-4 -mx-1 -mb-1 px-1">
-                                <DialogClose asChild>
-                                    <Button type="button" variant="ghost">Cancel</Button>
-                                </DialogClose>
-                                <Button type="submit">Save Changes</Button>
-                            </DialogFooter>
-                            </form>
-                        </DialogContent>
-                        </Dialog>
-                    </div>
-                    <p className="mt-4 text-foreground/90">{user.bio}</p>
-                </div>
-                </div>
-            </div>
-            <div className="px-4 sm:px-8">
-                <Tabs defaultValue="publications" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 bg-card/60 rounded-xl">
-                    <TabsTrigger value="publications" className="rounded-lg">
-                        <PenSquare className="mr-2 h-4 w-4"/>
-                        Publicaciones
-                    </TabsTrigger>
-                    <TabsTrigger value="badges" className="rounded-lg">
-                        <Award className="mr-2 h-4 w-4"/>
-                        Insignias
-                    </TabsTrigger>
-                    <TabsTrigger value="library" className="rounded-lg">
-                        <Library className="mr-2 h-4 w-4"/>
-                        Biblioteca
-                    </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="publications" className="mt-6">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                             <div className="lg:col-span-2 space-y-4">
-                                <ProfileFeed initialFeed={userPosts} />
-                             </div>
-                             <div className="space-y-8 lg:col-start-3">
-                                <NatalChartWidget />
-                                <AchievementsWidget />
-                            </div>
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="badges" className="mt-6">
-                    <BadgesGrid earnedBadges={user.badges} />
-                    </TabsContent>
-                    <TabsContent value="library" className="mt-6">
-                        <LibraryGrid items={libraryItems} folders={initialFolders} />
-                    </TabsContent>
-                </Tabs>
-            </div>
-        </>
-    )}
-    {viewMode === "libraryOnly" && (
-         <div className="px-4 sm:px-8">
-             <LibraryGrid items={libraryItems} folders={initialFolders} />
-         </div>
-    )}
+              </Dialog>
+              <div className="pt-16 flex-grow">
+                  <div className="flex justify-between items-center flex-wrap gap-2">
+                      <div>
+                          <h1 className="text-3xl font-bold font-headline">{profile.name}</h1>
+                          <p className="text-muted-foreground">{profile.handle}</p>
+                      </div>
+                      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                          <DialogTrigger asChild><Button variant="outline"><Edit className="mr-2 h-4 w-4" /> Edit Profile</Button></DialogTrigger>
+                          <DialogContent className="glass-card rounded-2xl max-w-2xl">
+                              <DialogHeader><DialogTitle>Edit Profile</DialogTitle><DialogDescription>Update your public information.</DialogDescription></DialogHeader>
+                              <form onSubmit={handleSaveChanges} className="space-y-4 max-h-[70vh] overflow-y-auto p-1 pr-4">
+                                  <div className="space-y-2"><Label htmlFor="name">Display Name</Label><Input id="name" name="name" defaultValue={profile.name} required /></div>
+                                  <div className="space-y-2"><Label htmlFor="handle">Handle</Label><Input id="handle" name="handle" defaultValue={profile.handle} required /></div>
+                                  <div className="space-y-2"><Label htmlFor="bio">Bio</Label><Textarea id="bio" name="bio" defaultValue={profile.bio} className="min-h-[100px]" required /></div>
+                                  <DialogFooter className="sticky bottom-0 bg-background/80 backdrop-blur-sm pt-4 -mx-1 -mb-1 px-1">
+                                      <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
+                                      <Button type="submit" disabled={isUpdating}>{isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : "Save Changes"}</Button>
+                                  </DialogFooter>
+                              </form>
+                          </DialogContent>
+                      </Dialog>
+                  </div>
+                  <p className="mt-4 text-foreground/90">{profile.bio}</p>
+              </div>
+          </div>
+      </div>
+      
+      <div className="px-4 sm:px-8">
+        <Tabs defaultValue="publications" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-card/60 rounded-xl">
+              <TabsTrigger value="publications" className="rounded-lg"><PenSquare className="mr-2 h-4 w-4"/>Publicaciones</TabsTrigger>
+              <TabsTrigger value="badges" className="rounded-lg"><Award className="mr-2 h-4 w-4"/>Insignias</TabsTrigger>
+              <TabsTrigger value="library" className="rounded-lg"><Library className="mr-2 h-4 w-4"/>Biblioteca</TabsTrigger>
+            </TabsList>
+            <TabsContent value="publications" className="mt-6">
+                <ProfileFeed profile={profile} />
+            </TabsContent>
+            <TabsContent value="badges" className="mt-6">
+                <BadgesGrid earnedBadges={profile.badges || {}} />
+            </TabsContent>
+            <TabsContent value="library" className="mt-6">
+                <LibraryGrid items={initialLibraryItems} folders={initialFolders} />
+            </TabsContent>
+        </Tabs>
+      </div>
     </>
   );
 }

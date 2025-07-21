@@ -244,38 +244,39 @@ function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-             <Button variant="ghost" className="justify-start w-full text-left p-2 h-auto">
-                <div className="flex items-center gap-3 w-full">
-                    <Avatar className="h-10 w-10 border-2 border-primary/50">
-                    <AvatarImage src={user.avatarUrl} alt="User Avatar" data-ai-hint="glowing astronaut" />
-                    <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
-                    </Avatar>
-                    <div className={cn("flex flex-col truncate transition-opacity duration-200", state === 'collapsed' && 'opacity-0 w-0 hidden')}>
-                        <span className="font-semibold text-sm">{user.name}</span>
-                        <span className="text-xs text-muted-foreground">{user.title}</span>
-                    </div>
-                </div>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" align="start" className="w-56 glass-card rounded-xl mb-2">
-            <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/settings" className="flex items-center w-full" prefetch={false} onClick={handleLinkClick}>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Ajustes</span>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/login" className="flex items-center w-full" prefetch={false} onClick={handleLinkClick}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Cerrar Sesión</span>
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="justify-start w-full text-left p-2 h-auto">
+                  <div className="flex items-center gap-3 w-full">
+                      <Avatar className="h-10 w-10 border-2 border-primary/50">
+                      <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User Avatar'} data-ai-hint="glowing astronaut" />
+                      <AvatarFallback>{user.displayName?.substring(0, 2) || 'U'}</AvatarFallback>
+                      </Avatar>
+                      <div className={cn("flex flex-col truncate transition-opacity duration-200", state === 'collapsed' && 'opacity-0 w-0 hidden')}>
+                          <span className="font-semibold text-sm">{user.displayName || user.email}</span>
+                      </div>
+                  </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="right" align="start" className="w-56 glass-card rounded-xl mb-2">
+              <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/settings" className="flex items-center w-full" prefetch={false} onClick={handleLinkClick}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Ajustes</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/login" className="flex items-center w-full" prefetch={false} onClick={handleLinkClick}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Cerrar Sesión</span>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </SidebarFooter>
     </Sidebar>
   );
