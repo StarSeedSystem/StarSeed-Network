@@ -1,11 +1,16 @@
 
+"use client";
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ThumbsUp, ThumbsDown, MessageSquare, Users, Star, Eye, Bookmark } from "lucide-react";
+import { ThumbsUp, ThumbsDown, MessageSquare, Users, Eye, Bookmark, Minus, Plus } from "lucide-react";
+import { Separator } from "../ui/separator";
+
+type VoteType = "support" | "reject" | null;
 
 type ProposalCardProps = {
     id: string;
@@ -25,24 +30,47 @@ const statusColors: { [key: string]: string } = {
     "En Mediación": "bg-golden-yellow/20 text-golden-yellow border-golden-yellow/30",
 };
 
-const getStatsIcon = (key: string) => {
+export function ProposalCard({ title, proposer, entity, status, stats: initialStats, summary, isSaved: initialIsSaved = false }: ProposalCardProps) {
+  const [isSaved, setIsSaved] = useState(initialIsSaved);
+  const [stats, setStats] = useState(initialStats);
+  const [userVote, setUserVote] = useState<VoteType>(null);
+
+  const handleVote = (newVote: VoteType) => {
+    setStats(currentStats => {
+        const newStats = { ...currentStats };
+
+        // Revert previous vote if it exists
+        if (userVote) {
+            newStats[userVote]--;
+        }
+
+        // Apply new vote
+        if (newVote && newVote !== userVote) {
+            newStats[newVote]++;
+            setUserVote(newVote);
+        } else {
+            // If clicking the same button again, un-vote
+            setUserVote(null);
+        }
+        
+        return newStats;
+    });
+  };
+
+  const getStatsIcon = (key: string, value: number) => {
     switch (key) {
-        case 'support': return <ThumbsUp className="h-4 w-4 text-sea-green" />;
-        case 'reject': return <ThumbsDown className="h-4 w-4 text-coral" />;
-        case 'abstain': return <Eye className="h-4 w-4 text-muted-foreground" />;
-        case 'comments': return <MessageSquare className="h-4 w-4 text-primary" />;
-        case 'volunteers': return <Users className="h-4 w-4 text-sky-blue" />;
-        case 'participants': return <Users className="h-4 w-4 text-sky-blue" />;
-        case 'progress': return null;
+        case 'comments': return <div className="flex items-center gap-1.5"><MessageSquare className="h-4 w-4 text-primary" /> <span>{value} Comentarios</span></div>;
+        case 'volunteers': return <div className="flex items-center gap-1.5"><Users className="h-4 w-4 text-sky-blue" /> <span>{value} Voluntarios</span></div>;
+        case 'participants': return <div className="flex items-center gap-1.5"><Users className="h-4 w-4 text-sky-blue" /> <span>{value} Participantes</span></div>;
+        case 'progress': return <div className="w-full"><div className="text-sm font-semibold mb-1">{value}% Progreso</div><div className="w-full bg-secondary rounded-full h-2.5"><div className="bg-electric-lime h-2.5 rounded-full" style={{width: `${value}%`}}></div></div></div>;
         default: return null;
     }
-}
+  }
 
-export function ProposalCard({ title, proposer, entity, status, stats, summary, isSaved: initialIsSaved = false }: ProposalCardProps) {
-  const [isSaved, setIsSaved] = useState(initialIsSaved);
-  
+  const isVotingProposal = status === "En Votación";
+
   return (
-    <Card className="glass-card rounded-2xl overflow-hidden transition-all hover:border-primary/50">
+    <Card className="glass-card rounded-2xl overflow-hidden transition-all hover:border-primary/50 flex flex-col">
         <CardHeader>
             <div className="flex justify-between items-start gap-4">
                 <div>
@@ -62,25 +90,61 @@ export function ProposalCard({ title, proposer, entity, status, stats, summary, 
                 </div>
             </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-grow">
             <p className="text-foreground/80">{summary}</p>
         </CardContent>
-        <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center flex-wrap gap-x-4 gap-y-2">
-                 {Object.entries(stats).map(([key, value]) => (
-                    <div key={key} className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                       {getStatsIcon(key)}
-                       <span>{value}{key === 'progress' ? '%' : ''}</span>
-                       {key === 'progress' && <span className="font-semibold">Progreso</span>}
-                    </div>
-                ))}
+        <CardFooter className="flex flex-col gap-4">
+            <div className="flex items-center flex-wrap gap-x-4 gap-y-2 w-full">
+                 {Object.entries(stats).map(([key, value]) => {
+                     // Hide voting stats from the main area if it's a voting proposal
+                     if (isVotingProposal && (key === 'support' || key === 'reject' || key === 'abstain')) {
+                         return null;
+                     }
+                     return <div key={key} className="text-sm text-muted-foreground">{getStatsIcon(key, value)}</div>
+                 })}
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-                 <Button variant="outline" className="w-full sm:w-auto" onClick={() => setIsSaved(!isSaved)}>
+
+            {isVotingProposal && (
+                <>
+                    <Separator className="bg-white/10" />
+                    <div className="w-full space-y-3">
+                        <div className="flex justify-around items-center text-center">
+                            <div>
+                                <p className="font-bold text-lg text-sea-green">{stats.support}</p>
+                                <p className="text-xs text-muted-foreground">APOYAN</p>
+                            </div>
+                             <div>
+                                <p className="font-bold text-lg text-coral">{stats.reject}</p>
+                                <p className="text-xs text-muted-foreground">RECHAZAN</p>
+                            </div>
+                            <div>
+                                <p className="font-bold text-lg">{stats.abstain}</p>
+                                <p className="text-xs text-muted-foreground">SE ABSTIENEN</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                             <Button variant={userVote === 'support' ? 'secondary' : 'outline'} onClick={() => handleVote('support')} className={cn(userVote === 'support' && "border-sea-green text-sea-green")}>
+                                <ThumbsUp className="mr-2 h-4 w-4" /> Apoyar
+                            </Button>
+                             <Button variant={userVote === 'reject' ? 'secondary' : 'outline'} onClick={() => handleVote('reject')} className={cn(userVote === 'reject' && "border-coral text-coral")}>
+                                <ThumbsDown className="mr-2 h-4 w-4" /> Rechazar
+                            </Button>
+                             <Button variant="outline">
+                                <MessageSquare className="mr-2 h-4 w-4" /> Debatir
+                            </Button>
+                        </div>
+                    </div>
+                </>
+            )}
+            
+            <Separator className="bg-white/10" />
+
+            <div className="flex items-center gap-2 w-full">
+                 <Button variant="outline" className="flex-1" onClick={() => setIsSaved(!isSaved)}>
                     {isSaved ? <Bookmark className="mr-2 h-4 w-4 fill-current" /> : <Bookmark className="mr-2 h-4 w-4" />}
                     {isSaved ? "Guardado" : "Guardar"}
                 </Button>
-                <Button className="w-full sm:w-auto">
+                <Button className="flex-1">
                     Ver Detalles
                 </Button>
             </div>
