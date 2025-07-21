@@ -106,10 +106,13 @@ export default function CulturePage() {
             </TabsList>
             <TabsContent value="feed" className="mt-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-headline">Feed Cultural</h2>
+                    <div>
+                        <h2 className="text-2xl font-headline">Feed Cultural</h2>
+                        <p className="text-muted-foreground">El lienzo principal para la expresión social y creativa de la red.</p>
+                    </div>
                     <Button variant="outline">
                         <Filter className="mr-2 h-4 w-4" />
-                        Filtrar Contenido
+                        Filtrar por Categoría, Formato...
                     </Button>
                 </div>
 

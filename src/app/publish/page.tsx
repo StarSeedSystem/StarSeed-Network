@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { SendHorizonal, PenSquare, Paperclip, X, Gavel, AtSign, Tags } from "lucide-react";
+import { SendHorizonal, PenSquare, Paperclip, X, Gavel, AtSign, Tags, Tag } from "lucide-react";
 import { AudienceSelector } from "@/components/publish/AudienceSelector";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -38,6 +38,15 @@ const libraryItems: LibraryItem[] = [
         source: "/avatar-generator",
     }
 ];
+
+const categories = [
+    { id: "art", label: "Arte" },
+    { id: "science", label: "Ciencia" },
+    { id: "technology", label: "Tecnología" },
+    { id: "environment", label: "Medio Ambiente" },
+    { id: "philosophy", label: "Filosofía" },
+    { id: "social", label: "Social" },
+]
 
 export default function PublishPage() {
     const [content, setContent] = useState("");
@@ -86,15 +95,15 @@ export default function PublishPage() {
         setIsLibraryOpen(false);
     };
 
-    const handleDestinationChange = (selectedIds: string[], isFedSelected: boolean) => {
+    const handleDestinationChange = (selectedIds: string[]) => {
         setSelectedDestinations(selectedIds);
-        setIsFederationSelected(isFedSelected);
-        if (!isFedSelected) {
-            setFederationArea(null);
+        const fedDest = ["federation_local"];
+        setIsFederationSelected(selectedIds.some(id => fedDest.includes(id)));
+        if (!selectedIds.some(id => fedDest.includes(id))) {
+             setFederationArea(null);
         }
     };
 
-    const isLegislative = isCreatingVote;
     const isLegislativeProposal = isFederationSelected && federationArea === 'legislative';
 
     return (
@@ -189,6 +198,20 @@ export default function PublishPage() {
                                     </div>
                                 </DialogContent>
                             </Dialog>
+
+                            <Card className="bg-secondary/20 border-secondary/40">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="font-headline text-base flex items-center gap-2"><Tag className="h-5 w-5 text-primary"/>Añadir Categorías</CardTitle>
+                                </CardHeader>
+                                <CardContent className="grid grid-cols-2 gap-2">
+                                    {categories.map(cat => (
+                                        <div key={cat.id} className="flex items-center space-x-2">
+                                            <Checkbox id={`cat-${cat.id}`} />
+                                            <Label htmlFor={`cat-${cat.id}`} className="text-sm font-normal">{cat.label}</Label>
+                                        </div>
+                                    ))}
+                                </CardContent>
+                            </Card>
 
                             {isFederationSelected && <FederatedEntitySettings onAreaChange={setFederationArea} />}
                              
