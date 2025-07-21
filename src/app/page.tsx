@@ -34,24 +34,23 @@ const initialFeed: FeedPostType[] = [
 
 export default function DashboardPage() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div className="lg:col-span-2 md:col-span-2 row-span-2">
-        <FeedWidget initialFeed={initialFeed} />
-      </div>
-      <div className="lg:col-span-2 md:col-span-2">
-         <PoliticalSummaryWidget />
-      </div>
-      <div className="lg:col-span-2 md:col-span-2">
-        <ProjectsWidget />
-      </div>
-       <div>
-         <AchievementsWidget />
-      </div>
-       <div>
+    <div className="flex flex-col lg:flex-row gap-8">
+      {/* Columna Izquierda */}
+      <div className="w-full lg:w-1/4 space-y-8">
+        <PoliticalSummaryWidget />
+        <AchievementsWidget />
         <TutorialsWidget />
       </div>
-      <div className="lg:col-span-2 md:col-span-2">
-         <LearningPathWidget />
+
+      {/* Columna Central (Principal) */}
+      <div className="w-full lg:w-1/2 space-y-8">
+        <FeedWidget initialFeed={initialFeed} />
+      </div>
+
+      {/* Columna Derecha */}
+      <div className="w-full lg:w-1/4 space-y-8">
+        <ProjectsWidget />
+        <LearningPathWidget />
       </div>
     </div>
   );
