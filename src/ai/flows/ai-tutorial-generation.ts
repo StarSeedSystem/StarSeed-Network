@@ -13,7 +13,7 @@ import {z} from 'genkit';
 
 const GenerateTutorialInputSchema = z.object({
   featureName: z.string().describe('The name of the complex feature.'),
-  userLevel: z.string().describe('The user\u0027s current level of expertise (e.g., beginner, intermediate, advanced).'),
+  userLevel: z.string().describe('The user\'s current level of expertise (e.g., beginner, intermediate, advanced).'),
 });
 export type GenerateTutorialInput = z.infer<typeof GenerateTutorialInputSchema>;
 
