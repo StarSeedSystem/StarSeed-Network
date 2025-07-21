@@ -215,12 +215,40 @@ function AppSidebar() {
 
 function AppHeader() {
   const isMobile = useIsMobile();
+  if (!isMobile) return null;
+
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/50 px-4 backdrop-blur-xl md:justify-end">
-      {isMobile && <AppLogo />}
-      <SidebarTrigger />
+      <AppLogo />
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <MenuIcon className="h-6 w-6" />
+          <span className="sr-only">Toggle Menu</span>
+        </Button>
+      </SheetTrigger>
     </header>
   );
+}
+
+function MenuIcon(props: React.SVGProps<SVGSVGElement>) {
+    return (
+      <svg
+        {...props}
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <line x1="4" x2="20" y1="12" y2="12" />
+        <line x1="4" x2="20" y1="6" y2="6" />
+        <line x1="4" x2="20" y1="18" y2="18" />
+      </svg>
+    )
 }
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -238,12 +266,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <div className="relative flex h-screen">
         <AppSidebar />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <AppHeader />
-          <div className="pt-6">
-            {children}
-          </div>
-        </main>
+        <div className="flex flex-col flex-1 data-[state=expanded]:ml-[18rem] transition-[margin-left] duration-300 ease-in-out group-data-[state=expanded]/sidebar-wrapper:ml-[--sidebar-width] group-data-[state=collapsed]/sidebar-wrapper:ml-[--sidebar-width-icon]">
+            <AppHeader />
+            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+                {children}
+            </main>
+        </div>
       </div>
     </SidebarProvider>
   );
