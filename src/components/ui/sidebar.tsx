@@ -9,16 +9,14 @@ import { ChevronsLeft, ChevronsRight } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
+
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -267,7 +265,7 @@ const SidebarHeader = React.forwardRef<
     >
       <div className={cn(
         "transition-opacity duration-200",
-        state === "collapsed" && "opacity-0 invisible"
+        state === "collapsed" && "opacity-0 invisible w-0"
       )}>
         {children}
       </div>
@@ -296,15 +294,12 @@ const SidebarContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
 >(({ className, ...props }, ref) => {
-  const { state } = useSidebar();
   return (
     <div
       ref={ref}
       data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden transition-opacity duration-200",
-        state === 'collapsed' && 'opacity-0 animate-out fade-out-0',
-        state === 'expanded' && 'opacity-100 animate-in fade-in-50',
+        "flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden",
         className
       )}
       {...props}
@@ -316,14 +311,18 @@ SidebarContent.displayName = "SidebarContent"
 const SidebarMenu = React.forwardRef<
   HTMLUListElement,
   React.ComponentProps<"ul">
->(({ className, ...props }, ref) => (
-  <ul
-    ref={ref}
-    data-sidebar="menu"
-    className={cn("flex w-full min-w-0 flex-col gap-1 px-1", className)}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const { state } = useSidebar();
+  if (state === "collapsed") return null;
+  return (
+      <ul
+        ref={ref}
+        data-sidebar="menu"
+        className={cn("flex w-full min-w-0 flex-col gap-1 px-1", className)}
+        {...props}
+      />
+  )
+})
 SidebarMenu.displayName = "SidebarMenu"
 
 const SidebarMenuItem = React.forwardRef<
@@ -362,28 +361,6 @@ const SidebarMenuButton = React.forwardRef<
     const Comp = asChild ? Slot : "button"
     const { state, isMobile } = useSidebar()
 
-    const buttonContent = (
-      <>
-        {React.Children.map(children, (child) => {
-            if (React.isValidElement(child) && 'type' in child && (child.type as any).displayName?.includes('Icon')) {
-                return React.cloneElement(child as React.ReactElement, { className: "h-5 w-5 shrink-0" });
-            }
-            return child;
-        })}
-        <span className={cn(
-            "flex-1 text-left truncate transition-opacity duration-200",
-            state === 'collapsed' && !isMobile && 'opacity-0 group-hover/menu-item:opacity-100'
-        )}>
-            {React.Children.map(children, (child) => {
-                if (!(React.isValidElement(child) && 'type' in child && (child.type as any).displayName?.includes('Icon'))) {
-                    return child;
-                }
-                return null;
-            })}
-        </span>
-      </>
-    );
-    
     const button = (
       <Comp
         ref={ref}

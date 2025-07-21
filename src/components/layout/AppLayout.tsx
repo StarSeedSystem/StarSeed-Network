@@ -16,6 +16,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -47,6 +48,7 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 
 const authRoutes = ["/login", "/signup"];
 
@@ -121,6 +123,57 @@ const navItems = [
 
 function AppSidebar() {
   const pathname = usePathname();
+  const { state } = useSidebar();
+
+  const renderNavItems = () => (
+    navItems.map((item) =>
+      item.subItems ? (
+        <Collapsible key={item.label} className="w-full">
+          <CollapsibleTrigger asChild>
+              <div className="group/menu-item relative">
+                  <SidebarMenuButton
+                      variant="default"
+                      className="w-full justify-between"
+                      tooltip={item.label}
+                  >
+                      <div className="flex items-center gap-3">
+                          <item.icon className="glowing-icon h-5 w-5" />
+                          <span className={state === 'collapsed' ? 'hidden' : 'inline'}>{item.label}</span>
+                      </div>
+                      <ChevronDown className={`h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180 ${state === 'collapsed' ? 'hidden' : 'inline'}`} />
+                  </SidebarMenuButton>
+              </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+              <SidebarMenuSub className="mt-1">
+                  {item.subItems.map((subItem) => (
+                  <SidebarMenuItem key={subItem.href}>
+                      <SidebarMenuSubButton
+                      asChild
+                      isActive={pathname === subItem.href}
+                      >
+                      <Link href={subItem.href ?? '#'} prefetch={false}>
+                          {subItem.icon && <subItem.icon className="h-4 w-4" />}
+                          <span>{subItem.label}</span>
+                      </Link>
+                      </SidebarMenuSubButton>
+                  </SidebarMenuItem>
+                  ))}
+              </SidebarMenuSub>
+          </CollapsibleContent>
+        </Collapsible>
+      ) : (
+        <SidebarMenuItem key={item.href}>
+          <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
+            <Link href={item.href ?? '#'} prefetch={false}>
+              {item.icon && <item.icon className="glowing-icon h-5 w-5" />}
+              <span className={state === 'collapsed' ? 'hidden' : 'inline'}>{item.label}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      )
+    )
+  );
 
   return (
     <Sidebar>
@@ -128,54 +181,15 @@ function AppSidebar() {
         <AppLogo />
       </SidebarHeader>
       <SidebarContent>
-        <SidebarMenu>
-          {navItems.map((item) =>
-            item.subItems ? (
-              <Collapsible key={item.label} className="w-full">
-                <CollapsibleTrigger asChild>
-                    <div className="group/menu-item relative">
-                        <SidebarMenuButton
-                            variant="default"
-                            className="w-full justify-between"
-                        >
-                            <div className="flex items-center gap-2">
-                                <item.icon className="glowing-icon" />
-                                <span>{item.label}</span>
-                            </div>
-                            <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                        </SidebarMenuButton>
-                    </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                    <SidebarMenuSub className="mt-1">
-                        {item.subItems.map((subItem) => (
-                        <SidebarMenuItem key={subItem.href}>
-                            <SidebarMenuSubButton
-                            asChild
-                            isActive={pathname === subItem.href}
-                            >
-                            <Link href={subItem.href ?? '#'} prefetch={false}>
-                                {subItem.icon && <subItem.icon className="h-4 w-4" />}
-                                <span>{subItem.label}</span>
-                            </Link>
-                            </SidebarMenuSubButton>
-                        </SidebarMenuItem>
-                        ))}
-                    </SidebarMenuSub>
-                </CollapsibleContent>
-              </Collapsible>
-            ) : (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton asChild isActive={pathname === item.href}>
-                  <Link href={item.href ?? '#'} prefetch={false}>
-                    {item.icon && <item.icon className="glowing-icon" />}
-                    <span>{item.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )
-          )}
-        </SidebarMenu>
+        {state === 'expanded' ? (
+          <SidebarMenu>
+            {renderNavItems()}
+          </SidebarMenu>
+        ) : (
+          <div className="flex flex-col items-center gap-1 px-1">
+            {renderNavItems()}
+          </div>
+        )}
       </SidebarContent>
       <SidebarFooter className="p-2">
         <DropdownMenu>
@@ -186,7 +200,7 @@ function AppSidebar() {
                   <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="glowing astronaut" />
                   <AvatarFallback>SN</AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col truncate">
+                <div className={`flex flex-col truncate transition-opacity duration-200 ${state === 'collapsed' ? 'opacity-0 w-0' : 'opacity-100'}`}>
                   <span className="font-semibold text-sm">Starlight</span>
                   <span className="text-xs text-muted-foreground">Nexus Pioneer</span>
                 </div>
@@ -251,6 +265,18 @@ function MenuIcon(props: React.SVGProps<SVGSVGElement>) {
     )
 }
 
+function MainContent({ children }: { children: React.ReactNode }) {
+    const { state } = useSidebar();
+    return (
+        <div className="flex flex-col flex-1 transition-[margin-left] duration-300 ease-in-out group-data-[state=expanded]/sidebar-wrapper:ml-[--sidebar-width] group-data-[state=collapsed]/sidebar-wrapper:ml-[--sidebar-width-icon]">
+            <AppHeader />
+            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+                {children}
+            </main>
+        </div>
+    );
+}
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
@@ -266,12 +292,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <div className="relative flex h-screen">
         <AppSidebar />
-        <div className="flex flex-col flex-1 data-[state=expanded]:ml-[18rem] transition-[margin-left] duration-300 ease-in-out group-data-[state=expanded]/sidebar-wrapper:ml-[--sidebar-width] group-data-[state=collapsed]/sidebar-wrapper:ml-[--sidebar-width-icon]">
-            <AppHeader />
-            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-                {children}
-            </main>
-        </div>
+        <MainContent>{children}</MainContent>
       </div>
     </SidebarProvider>
   );
