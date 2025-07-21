@@ -1,34 +1,15 @@
+
 // src/app/community/[slug]/page.tsx
-import { notFound } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/data/firebase";
-import { EntityProfile } from "@/components/profile/EntityProfile";
-import type { Community } from "@/types/content-types";
+import { CommunityClient } from "@/components/community/CommunityClient";
 
-// This is a Server Component that fetches data and passes it to a Client Component.
-async function getEntityData(slug: string): Promise<Community | null> {
-    try {
-        const docRef = doc(db, "communities", slug);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-            return { type: 'community', id: docSnap.id, ...docSnap.data() } as Community;
-        } else {
-            return null;
-        }
-    } catch (error) {
-        console.error(`Error fetching community ${slug}:`, error);
-        // In case of a database error, we can also treat it as not found.
-        return null;
-    }
+interface CommunityPageProps {
+  params: {
+    slug: string;
+  };
 }
 
-export default async function CommunityProfilePage({ params }: { params: { slug: string } }) {
-    const entityData = await getEntityData(params.slug);
-
-    if (!entityData) {
-        notFound();
-    }
-    
-    return <EntityProfile data={entityData} />;
+// This page receives the slug from the URL and passes it to the client component.
+// The client component handles all the logic for fetching and displaying data.
+export default function CommunityProfilePage({ params }: CommunityPageProps) {
+    return <CommunityClient slug={params.slug} />;
 }

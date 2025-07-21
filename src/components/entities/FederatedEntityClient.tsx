@@ -47,6 +47,9 @@ export function FederatedEntityClient({ slug }: FederatedEntityClientProps) {
         setEntity(null);
       }
       setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching federated entity:", error);
+        setIsLoading(false);
     });
 
     return () => unsubscribe();
@@ -63,13 +66,13 @@ export function FederatedEntityClient({ slug }: FederatedEntityClientProps) {
   return (
     <div>
         <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
-            <Image src={entity.bannerUrl} alt={`${entity.name} Banner`} layout="fill" objectFit="cover" />
+            <Image src={entity.banner} alt={`${entity.name} Banner`} layout="fill" objectFit="cover" data-ai-hint={entity.bannerHint} />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </div>
         <div className="relative px-4 sm:px-8 pb-8 -mt-24">
             <div className="flex flex-col sm:flex-row items-start gap-6">
                 <Avatar className="w-32 h-32 border-4 border-background ring-4 ring-primary">
-                    <AvatarImage src={entity.avatarUrl} alt={`${entity.name} Avatar`} />
+                    <AvatarImage src={entity.avatar} alt={`${entity.name} Avatar`} data-ai-hint={entity.avatarHint} />
                     <AvatarFallback>{entity.name.substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div className="pt-16 flex-grow">

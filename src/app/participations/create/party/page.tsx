@@ -54,7 +54,7 @@ export default function CreatePartyPage() {
         };
         
         try {
-            const partyRef = doc(db, "politicalParties", partySlug);
+            const partyRef = doc(db, "political_parties", partySlug);
             await setDoc(partyRef, partyData);
 
             toast({

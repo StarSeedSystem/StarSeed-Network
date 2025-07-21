@@ -1,32 +1,14 @@
 
-import { notFound } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/data/firebase";
-import { EntityProfile } from "@/components/profile/EntityProfile";
-import type { PoliticalParty } from "@/types/content-types";
+import { PartyClient } from "@/components/politics/PartyClient";
 
-async function getEntityData(slug: string): Promise<PoliticalParty | null> {
-    try {
-        const docRef = doc(db, "politicalParties", slug);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-            return { type: 'political_party', id: docSnap.id, ...docSnap.data() } as PoliticalParty;
-        } else {
-            return null;
-        }
-    } catch (error) {
-        console.error(`Error fetching political party ${slug}:`, error);
-        return null;
-    }
+interface PartyPageProps {
+  params: {
+    slug: string;
+  };
 }
 
-export default async function PoliticalPartyProfilePage({ params }: { params: { slug: string } }) {
-    const data = await getEntityData(params.slug);
-
-    if (!data) {
-        notFound();
-    }
-
-    return <EntityProfile data={data} />;
+// This page receives the slug from the URL and passes it to the client component.
+// The client component handles all the logic for fetching and displaying data.
+export default function PoliticalPartyProfilePage({ params }: PartyPageProps) {
+    return <PartyClient slug={params.slug} />;
 }

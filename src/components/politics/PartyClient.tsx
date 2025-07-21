@@ -43,8 +43,8 @@ export function PartyClient({ slug }: PartyClientProps) {
   useEffect(() => {
     if (!slug) return;
 
-    // Fetch data from the 'parties' collection using the slug as the ID
-    const docRef = doc(db, "parties", slug);
+    // Fetch data from the 'political_parties' collection using the slug as the ID
+    const docRef = doc(db, "political_parties", slug);
     const unsubscribe = onSnapshot(docRef, (doc) => {
       if (doc.exists()) {
         setParty({ id: doc.id, ...doc.data() });
@@ -52,6 +52,9 @@ export function PartyClient({ slug }: PartyClientProps) {
         setParty(null);
       }
       setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching political party:", error);
+        setIsLoading(false);
     });
 
     return () => unsubscribe();
@@ -69,13 +72,13 @@ export function PartyClient({ slug }: PartyClientProps) {
   return (
     <div>
         <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
-            <Image src={party.banner} alt={`${party.name} Banner`} layout="fill" objectFit="cover" />
+            <Image src={party.banner} alt={`${party.name} Banner`} layout="fill" objectFit="cover" data-ai-hint={party.bannerHint} />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </div>
         <div className="relative px-4 sm:px-8 pb-8 -mt-24">
             <div className="flex flex-col sm:flex-row items-start gap-6">
                 <Avatar className="w-32 h-32 border-4 border-background ring-4 ring-primary">
-                    <AvatarImage src={party.avatar} alt={`${party.name} Avatar`} />
+                    <AvatarImage src={party.avatar} alt={`${party.name} Avatar`} data-ai-hint={party.avatarHint} />
                     <AvatarFallback>{party.name.substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div className="pt-16 flex-grow">

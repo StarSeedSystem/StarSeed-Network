@@ -48,6 +48,9 @@ export function StudyGroupClient({ slug }: StudyGroupClientProps) {
         setGroup(null);
       }
       setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching study group:", error);
+        setIsLoading(false);
     });
 
     return () => unsubscribe();
@@ -64,13 +67,13 @@ export function StudyGroupClient({ slug }: StudyGroupClientProps) {
   return (
     <div>
         <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
-            <Image src={group.bannerUrl} alt={`${group.name} Banner`} layout="fill" objectFit="cover" />
+            <Image src={group.banner} alt={`${group.name} Banner`} layout="fill" objectFit="cover" data-ai-hint={group.bannerHint} />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </div>
         <div className="relative px-4 sm:px-8 pb-8 -mt-24">
             <div className="flex flex-col sm:flex-row items-start gap-6">
                 <Avatar className="w-32 h-32 border-4 border-background ring-4 ring-primary">
-                    <AvatarImage src={group.avatarUrl} alt={`${group.name} Avatar`} />
+                    <AvatarImage src={group.avatar} alt={`${group.name} Avatar`} data-ai-hint={group.avatarHint} />
                     <AvatarFallback>{group.name.substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div className="pt-16 flex-grow">
@@ -81,9 +84,7 @@ export function StudyGroupClient({ slug }: StudyGroupClientProps) {
                         </div>
                         <Button>Join Group</Button>
                     </div>
-                    {/* Add group description/long description here if available */}
                      <div className="mt-4 text-foreground/90">
-                        {/* Placeholder for full description if you add it to the form */}
                          <p>{group.description || "No detailed description provided."}</p>
                      </div>
                 </div>

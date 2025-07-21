@@ -54,14 +54,14 @@ export default function CreateStudyGroupPage() {
         };
         
         try {
-            const groupRef = doc(db, "studyGroups", groupSlug);
+            const groupRef = doc(db, "study_groups", groupSlug);
             await setDoc(groupRef, groupData);
 
             toast({
                 title: "Study Group Created!",
                 description: `The group "${groupName}" is now active.`,
             });
-            router.push(`/group/${groupSlug}`);
+            router.push(`/study-group/${groupSlug}`);
 
         } catch (error) {
              console.error("Error creating study group:", error);

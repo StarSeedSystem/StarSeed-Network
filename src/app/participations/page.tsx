@@ -2,8 +2,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/data/firebase";
+import { useUser } from "@/context/UserContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star, Activity, Gavel, PlaySquare, Loader2 } from "lucide-react";
@@ -88,8 +89,8 @@ const ConnectionCard = ({ item }: ConnectionCardProps) => {
     let href = "";
     switch (item.type) {
         case 'community': href = `/community/${item.slug}`; break;
-        case 'federation': href = `/federation/${item.slug}`; break;
-        case 'study_group': href = `/group/${item.slug}`; break;
+        case 'federation': href = `/federated-entity/${item.slug}`; break;
+        case 'study_group': href = `/study-group/${item.slug}`; break;
         case 'political_party': href = `/party/${item.slug}`; break;
         default: href = '#';
     }
@@ -115,6 +116,7 @@ const ConnectionCard = ({ item }: ConnectionCardProps) => {
 };
 
 export default function ConnectionsHubPage() {
+    const { user } = useUser();
     const [myCommunities, setMyCommunities] = useState<AnyEntity[]>([]);
     const [myFederations, setMyFederations] = useState<AnyEntity[]>([]);
     const [myStudyGroups, setMyStudyGroups] = useState<AnyEntity[]>([]);
@@ -122,18 +124,26 @@ export default function ConnectionsHubPage() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        if (!user) {
+            setIsLoading(false);
+            return;
+        }
+
         const fetchAllData = async () => {
             setIsLoading(true);
             try {
                 const collections: { key: string; setter: Function; type: AnyEntity['type'] }[] = [
                     { key: 'communities', setter: setMyCommunities, type: 'community' },
-                    { key: 'federations', setter: setMyFederations, type: 'federation' },
-                    { key: 'studyGroups', setter: setMyStudyGroups, type: 'study_group' },
-                    { key: 'politicalParties', setter: setMyPoliticalParties, type: 'political_party' },
+                    { key: 'federated_entities', setter: setMyFederations, type: 'federation' },
+                    { key: 'study_groups', setter: setMyStudyGroups, type: 'study_group' },
+                    { key: 'political_parties', setter: setMyPoliticalParties, type: 'political_party' },
                 ];
 
                 const promises = collections.map(async ({ key, setter, type }) => {
-                    const querySnapshot = await getDocs(collection(db, key));
+                    // This is a simplified query. In a real app, you'd check a 'members' subcollection.
+                    // For now, we fetch entities created by the current user as a proxy for membership.
+                    const q = query(collection(db, key), where("creatorId", "==", user.uid));
+                    const querySnapshot = await getDocs(q);
                     const data = querySnapshot.docs.map(doc => ({ type, id: doc.id, ...doc.data() } as AnyEntity));
                     setter(data);
                 });
@@ -148,7 +158,7 @@ export default function ConnectionsHubPage() {
         };
 
         fetchAllData();
-    }, []);
+    }, [user]);
 
     const renderList = (items: AnyEntity[]) => {
         if (isLoading) {
@@ -183,7 +193,7 @@ export default function ConnectionsHubPage() {
             </CardHeader>
             <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/community"><Globe className="h-5 w-5 text-primary"/><span>Comunidad</span></Link></Button>
-                <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/federation"><Landmark className="h-5 w-5 text-primary"/><span>E.F.</span></Link></Button>
+                <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/federated-entity"><Landmark className="h-5 w-5 text-primary"/><span>E.F.</span></Link></Button>
                 <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center" disabled><Link href="#"><Calendar className="h-5 w-5 text-primary"/><span>Evento</span></Link></Button>
                 <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/study-group"><BookOpen className="h-5 w-5 text-primary"/><span>Grupo Estudio</span></Link></Button>
                 <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/party"><Shield className="h-5 w-5 text-primary"/><span>Partido Político</span></Link></Button>

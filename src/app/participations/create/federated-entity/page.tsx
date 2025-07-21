@@ -43,10 +43,12 @@ export default function CreateFederatedEntityPage() {
             name: entityName,
             slug: entitySlug,
             description: entityDescription,
-            memberCount: 1,
+            members: 1,
             creatorId: authUser.uid,
-            avatarUrl: `https://avatar.vercel.sh/${entitySlug}.png`,
-            bannerUrl: `https://placehold.co/1200x400/1a1a1a/ffffff?text=${entityName}`,
+            avatar: `https://avatar.vercel.sh/${entitySlug}.png`,
+            avatarHint: "entity logo",
+            banner: `https://placehold.co/1200x400/1a1a1a/ffffff?text=${entityName}`,
+            bannerHint: "official banner",
             createdAt: serverTimestamp(),
             type: "Governmental", // Example default type
         };

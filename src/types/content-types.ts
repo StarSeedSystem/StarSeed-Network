@@ -1,4 +1,5 @@
 
+
 export interface Author {
     name: string;
     avatar: string;
@@ -51,7 +52,7 @@ export interface Community extends BaseEntity {
 
 export interface FederatedEntity extends BaseEntity {
     type: 'federation';
-    scope: 'Local' | 'Global' | 'Continental';
+    scope?: 'Local' | 'Global' | 'Continental';
 }
 
 export interface StudyGroup extends BaseEntity {
