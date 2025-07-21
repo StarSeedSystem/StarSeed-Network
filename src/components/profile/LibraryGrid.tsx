@@ -39,7 +39,7 @@ const typeIcons = {
     Image: <ImageIcon className="h-4 w-4" />,
 }
 
-export function LibraryGrid({ items, folders: initialFolders, selectionMode = false, onItemSelected }: LibraryGridProps) {
+export function LibraryGrid({ items, folders: initialFolders = [], selectionMode = false, onItemSelected }: LibraryGridProps) {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [folders, setFolders] = useState<LibraryFolder[]>(initialFolders);
     const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
