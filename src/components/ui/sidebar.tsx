@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import {
   TooltipProvider,
 } from "@/components/ui/tooltip"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
@@ -178,6 +178,7 @@ const Sidebar = React.forwardRef<
             className={cn("w-[--sidebar-width] p-0 border-r border-white/10 z-[100]", className)}
             style={{'--sidebar-width': SIDEBAR_WIDTH_MOBILE} as React.CSSProperties}
           >
+            <SheetTitle className="sr-only">Menú Principal</SheetTitle>
             <aside className={cn(commonClasses, "h-full")}>{children}</aside>
           </SheetContent>
         </Sheet>
