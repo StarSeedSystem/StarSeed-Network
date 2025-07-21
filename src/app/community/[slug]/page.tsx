@@ -1,4 +1,3 @@
-
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -8,9 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileFeed } from "@/components/profile/ProfileFeed";
 import type { FeedPostType } from "@/components/dashboard/FeedPost";
-import type { Community } from "@/types/content-types";
 import { BackButton } from "@/components/utils/BackButton";
-
+import { db } from "@/data/db";
 
 const communityPosts: FeedPostType[] = [
     {
@@ -32,29 +30,8 @@ const communityMembers = [
     { name: "Starlight", avatar: "https://placehold.co/100x100.png", avatarHint: "glowing astronaut", role: "Miembro" }
 ];
 
-async function getCommunityData(slug: string): Promise<Community | null> {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
-    try {
-        const response = await fetch(`${baseUrl}/api/communities/${slug}`, { cache: 'no-store' });
-        
-        if (response.status === 404) {
-            return null;
-        }
-        
-        if (!response.ok) {
-            console.error('Failed to fetch community data, status:', response.status);
-            return null;
-        }
-        
-        return response.json();
-    } catch (error) {
-        console.error('Error fetching community data:', error);
-        return null;
-    }
-}
-
 export default async function CommunityProfilePage({ params }: { params: { slug: string } }) {
-    const data = await getCommunityData(params.slug);
+    const data = await db.communities.findUnique(params.slug);
 
     if (!data) {
         notFound();
