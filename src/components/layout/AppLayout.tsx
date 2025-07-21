@@ -43,7 +43,8 @@ import {
   BookOpen,
   Settings,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  Info
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -108,7 +109,7 @@ const navItems = [
     },
     {
       label: "Información",
-      icon: BookOpen,
+      icon: Info,
       subItems: [
         { href: "/info/constitution", label: "Constitución" },
         { href: "/info/vision", label: "Fundamentos y Visión" },
@@ -215,7 +216,7 @@ function AppSidebar() {
 function AppHeader() {
   const isMobile = useIsMobile();
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-xl md:justify-end">
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/50 px-4 backdrop-blur-xl md:justify-end">
       {isMobile && <AppLogo />}
       <SidebarTrigger />
     </header>
@@ -227,7 +228,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (authRoutes.includes(pathname)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-primary/10 p-4">
+      <div className="flex min-h-screen items-center justify-center p-4">
         {children}
       </div>
     );
