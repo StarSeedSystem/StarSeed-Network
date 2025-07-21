@@ -161,7 +161,7 @@ export default function ConnectionsHubPage() {
                 <CardDescription>Inicia nuevas formas de colaboración y organización en la red.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <Button variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Globe className="h-5 w-5 text-primary"/><span>Comunidad</span></Button>
+                <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/community"><Globe className="h-5 w-5 text-primary"/><span>Comunidad</span></Link></Button>
                 <Button variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Landmark className="h-5 w-5 text-primary"/><span>E.F.</span></Button>
                 <Button variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Calendar className="h-5 w-5 text-primary"/><span>Evento</span></Button>
                 <Button variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><BookOpen className="h-5 w-5 text-primary"/><span>Grupo Estudio</span></Button>
