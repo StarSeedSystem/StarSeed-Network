@@ -223,11 +223,13 @@ function AppSidebar() {
           <DropdownMenuContent side="right" align="start" className="w-56 glass-card rounded-xl mb-2">
             <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/settings" className="flex items-center w-full" prefetch={false}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Ajustes</span>
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem asChild>
               <Link href="/login" className="flex items-center w-full" prefetch={false}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Cerrar Sesión</span>

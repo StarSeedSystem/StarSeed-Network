@@ -1,8 +1,11 @@
+
 "use client";
 
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Globe, Users, Lock } from "lucide-react";
+import { CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "../ui/button";
 
 const privacyOptions = [
     { id: "privacy-profile-pic", label: "Foto de Perfil" },
@@ -33,18 +36,22 @@ export function PrivacySettings() {
     );
 
     return (
-        <div>
-            <h3 className="text-lg font-headline font-semibold mb-2">Controles de Privacidad Granular</h3>
-            <div className="space-y-4 p-4 rounded-lg border bg-background/50">
-                 <p className="text-sm text-muted-foreground">
-                    Para cada elemento de tu perfil, elige quién puede verlo. Los ajustes se aplican de la opción más restrictiva a la más abierta.
-                </p>
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {renderOptions("Solo Yo", <Lock className="h-4 w-4" />)}
-                    {renderOptions("Solo Amigos", <Users className="h-4 w-4" />)}
-                    {renderOptions("Público", <Globe className="h-4 w-4" />)}
+        <>
+            <CardContent>
+                <div className="space-y-4 p-4 rounded-lg border bg-background/50">
+                    <p className="text-sm text-muted-foreground">
+                        Para cada elemento de tu perfil, elige quién puede verlo. Los ajustes se aplican de la opción más restrictiva a la más abierta.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {renderOptions("Solo Yo", <Lock className="h-4 w-4" />)}
+                        {renderOptions("Solo Amigos", <Users className="h-4 w-4" />)}
+                        {renderOptions("Público", <Globe className="h-4 w-4" />)}
+                    </div>
                 </div>
-            </div>
-        </div>
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4">
+                <Button>Guardar Ajustes de Privacidad</Button>
+            </CardFooter>
+        </>
     );
 }
