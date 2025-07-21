@@ -58,6 +58,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/context/UserContext";
 
 const authRoutes = ["/login", "/signup"];
 
@@ -161,6 +162,7 @@ const navItems = [
 function AppSidebar() {
   const pathname = usePathname();
   const { state, setOpenMobile, isMobile } = useSidebar();
+  const { user } = useUser();
 
   const handleLinkClick = () => {
     if (isMobile) {
@@ -247,12 +249,12 @@ function AppSidebar() {
              <Button variant="ghost" className="justify-start w-full text-left p-2 h-auto">
                 <div className="flex items-center gap-3 w-full">
                     <Avatar className="h-10 w-10 border-2 border-primary/50">
-                    <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="glowing astronaut" />
-                    <AvatarFallback>SN</AvatarFallback>
+                    <AvatarImage src={user.avatarUrl} alt="User Avatar" data-ai-hint="glowing astronaut" />
+                    <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
                     </Avatar>
                     <div className={cn("flex flex-col truncate transition-opacity duration-200", state === 'collapsed' && 'opacity-0 w-0 hidden')}>
-                        <span className="font-semibold text-sm">Starlight</span>
-                        <span className="text-xs text-muted-foreground">Nexus Pioneer</span>
+                        <span className="font-semibold text-sm">{user.name}</span>
+                        <span className="text-xs text-muted-foreground">{user.title}</span>
                     </div>
                 </div>
             </Button>

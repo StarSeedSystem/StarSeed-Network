@@ -35,6 +35,7 @@ import { ProfileFeed } from "./ProfileFeed";
 import type { FeedPostType } from "../dashboard/FeedPost";
 import { NatalChartWidget } from "./NatalChartWidget";
 import { AchievementsWidget } from "../dashboard/AchievementsWidget";
+import { useUser } from "@/context/UserContext";
 
 interface ProfileClientProps {
   initialLibraryItems: LibraryItem[];
@@ -68,17 +69,9 @@ const userPosts: FeedPostType[] = [
 ]
 
 export function ProfileClient({ initialLibraryItems, initialFolders = [], viewMode = "full" }: ProfileClientProps) {
-  const [avatarUrl, setAvatarUrl] = useState("https://placehold.co/128x128.png");
-  const [bannerUrl, setBannerUrl] = useState("https://placehold.co/1200x400.png");
-  const [bio, setBio] = useState(
-    "Digital nomad exploring the intersections of consciousness and technology. Co-creating the future in the StarSeed Nexus."
-  );
+  const { user, setUser } = useUser();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [birthDate, setBirthDate] = useState<Date>();
-  const [badges, setBadges] = useState<{ [key: string]: boolean }>({
-    nexusPioneer: true, // Example of a pre-earned badge
-    aiSymbiote: false,
-  });
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>(initialLibraryItems);
   const { toast } = useToast();
 
@@ -86,8 +79,9 @@ export function ProfileClient({ initialLibraryItems, initialFolders = [], viewMo
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const newBio = formData.get("bio") as string;
-    setBio(newBio);
-    // Logic to save other fields would go here
+    
+    setUser(prevUser => ({...prevUser, bio: newBio}));
+
     setIsDialogOpen(false);
      toast({
       title: "Profile Updated",
@@ -96,7 +90,7 @@ export function ProfileClient({ initialLibraryItems, initialFolders = [], viewMo
   };
 
   const handleAvatarGenerated = (newAvatarUrl: string, description: string) => {
-    setAvatarUrl(newAvatarUrl);
+    setUser(prevUser => ({...prevUser, avatarUrl: newAvatarUrl}));
     
     // Add new avatar to library
     const newLibraryItem: LibraryItem = {
@@ -110,9 +104,8 @@ export function ProfileClient({ initialLibraryItems, initialFolders = [], viewMo
     };
     setLibraryItems(prev => [newLibraryItem, ...prev]);
 
-    // Only grant badge and show special toast if it's the first time
-    if (!badges.aiSymbiote) {
-       setBadges(prev => ({ ...prev, aiSymbiote: true }));
+    if (!user.badges.aiSymbiote) {
+       setUser(prev => ({ ...prev, badges: { ...prev.badges, aiSymbiote: true } }));
        toast({
         title: "¡Insignia Desbloqueada!",
         description: "Has obtenido la insignia 'AI Symbiote'. Tu nuevo avatar está listo y guardado en tu biblioteca.",
@@ -125,13 +118,17 @@ export function ProfileClient({ initialLibraryItems, initialFolders = [], viewMo
         });
     }
   }
+
+  const handleBannerGenerated = (newBannerUrl: string) => {
+    setUser(prevUser => ({...prevUser, bannerUrl: newBannerUrl}));
+  }
   
   return (
     <>
     {viewMode === "full" && (
         <>
             <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
-                <Image src={bannerUrl} alt="Profile Banner" layout="fill" objectFit="cover" data-ai-hint="nebula galaxy" />
+                <Image src={user.bannerUrl} alt="Profile Banner" layout="fill" objectFit="cover" data-ai-hint="nebula galaxy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                 <Dialog>
                 <DialogTrigger asChild>
@@ -146,21 +143,21 @@ export function ProfileClient({ initialLibraryItems, initialFolders = [], viewMo
                             Describe the banner you want to create with AI.
                         </DialogDescription>
                     </DialogHeader>
-                    <AIBannerGenerator currentBanner={bannerUrl} onBannerGenerated={setBannerUrl} />
+                    <AIBannerGenerator currentBanner={user.bannerUrl} onBannerGenerated={handleBannerGenerated} />
                 </DialogContent>
                 </Dialog>
             </div>
             <div className="relative px-4 sm:px-8 pb-8 -mt-24">
                 <div className="flex flex-col sm:flex-row items-start gap-6">
                 <Avatar className="w-32 h-32 border-4 border-background ring-4 ring-primary">
-                    <AvatarImage src={avatarUrl} alt="User Avatar" data-ai-hint="glowing astronaut" />
-                    <AvatarFallback>SN</AvatarFallback>
+                    <AvatarImage src={user.avatarUrl} alt="User Avatar" data-ai-hint="glowing astronaut" />
+                    <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div className="pt-16 flex-grow">
                     <div className="flex justify-between items-center flex-wrap gap-2">
                         <div>
-                            <h1 className="text-3xl font-bold font-headline">Starlight</h1>
-                            <p className="text-muted-foreground">@starlight.eth</p>
+                            <h1 className="text-3xl font-bold font-headline">{user.name}</h1>
+                            <p className="text-muted-foreground">{user.handle}</p>
                         </div>
                         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
@@ -176,11 +173,11 @@ export function ProfileClient({ initialLibraryItems, initialFolders = [], viewMo
                             </DialogDescription>
                             </DialogHeader>
                             <form onSubmit={handleSaveChanges} className="space-y-6 max-h-[70vh] overflow-y-auto p-1 pr-4">
-                            <AIAvatarGenerator currentAvatar={avatarUrl} onAvatarGenerated={handleAvatarGenerated} />
+                            <AIAvatarGenerator currentAvatar={user.avatarUrl} onAvatarGenerated={handleAvatarGenerated} />
                             
                             <div className="space-y-2">
                                 <Label htmlFor="bio">Bio</Label>
-                                <Textarea id="bio" name="bio" defaultValue={bio} className="min-h-[100px]" />
+                                <Textarea id="bio" name="bio" defaultValue={user.bio} className="min-h-[100px]" />
                             </div>
 
                             <div>
@@ -240,7 +237,7 @@ export function ProfileClient({ initialLibraryItems, initialFolders = [], viewMo
                         </DialogContent>
                         </Dialog>
                     </div>
-                    <p className="mt-4 text-foreground/90">{bio}</p>
+                    <p className="mt-4 text-foreground/90">{user.bio}</p>
                 </div>
                 </div>
             </div>
@@ -272,7 +269,7 @@ export function ProfileClient({ initialLibraryItems, initialFolders = [], viewMo
                         </div>
                     </TabsContent>
                     <TabsContent value="badges" className="mt-6">
-                    <BadgesGrid earnedBadges={badges} />
+                    <BadgesGrid earnedBadges={user.badges} />
                     </TabsContent>
                     <TabsContent value="library" className="mt-6">
                         <LibraryGrid items={libraryItems} folders={initialFolders} />

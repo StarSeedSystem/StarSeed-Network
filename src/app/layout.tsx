@@ -3,6 +3,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { UserProvider } from "@/context/UserContext";
 
 export const metadata: Metadata = {
   title: "StarSeed Nexus",
@@ -28,7 +29,9 @@ export default function RootLayout({
         />
       </head>
       <body className={cn("min-h-screen bg-background font-body antialiased overflow-hidden")}>
-        <AppLayout>{children}</AppLayout>
+        <UserProvider>
+          <AppLayout>{children}</AppLayout>
+        </UserProvider>
         <Toaster />
       </body>
     </html>
