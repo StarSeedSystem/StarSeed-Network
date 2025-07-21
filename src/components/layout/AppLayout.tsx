@@ -91,7 +91,7 @@ const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/profile", label: "Perfil", icon: User },
     { href: "/messages", label: "Mensajes", icon: MessageSquare },
-    { href: "/participations", label: "Participaciones", icon: Users },
+    { href: "/participations", label: "Hub de Conexiones", icon: Users },
     {
       label: "Red",
       icon: Network,
