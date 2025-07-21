@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { slugify } from "@/lib/utils";
+import type { Community } from "@/types/content-types";
 
 export default function CreateCommunityPage() {
     const router = useRouter();
@@ -27,7 +28,7 @@ export default function CreateCommunityPage() {
         e.preventDefault();
         setIsLoading(true);
 
-        const communityData = {
+        const communityData: Omit<Community, 'type'> = {
             name: communityName,
             slug: slugify(communityName),
             description: communityDescription,

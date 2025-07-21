@@ -13,37 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Image from "next/image";
 import { Progress } from "@/components/ui/progress";
-import type { Community } from "@/types/content-types";
-
-const myFederations = [
-     {
-        name: "E.F. Localidad Central",
-        slug: "ef-localidad-central",
-        members: 1530,
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "city skyline",
-    }
-];
-
-const myStudyGroups = [
-    {
-        name: "Filosofía Transhumanista",
-        slug: "filosofia-transhumanista",
-        members: 42,
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "glowing brain",
-    }
-];
-
-const myPoliticalParties = [
-    {
-        name: "Alianza por la Privacidad Digital",
-        slug: "alianza-privacidad",
-        members: 88,
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "digital shield",
-    }
-];
+import type { Community, FederatedEntity, StudyGroup, PoliticalParty } from "@/types/content-types";
 
 const recommendations = [
     {
@@ -110,50 +80,91 @@ const activeParticipations = {
     }]
 };
 
+type ConnectionCardProps = {
+    item: Community | FederatedEntity | StudyGroup | PoliticalParty;
+}
 
-const ConnectionCard = ({ item }: { item: Community }) => (
-    <Card className="glass-card flex items-center p-4 gap-4">
-        <Avatar className="h-16 w-16 border-2 border-primary/30">
-            <AvatarImage src={item.avatar} alt={item.name} data-ai-hint={item.avatarHint} />
-            <AvatarFallback>{item.name.substring(0,2)}</AvatarFallback>
-        </Avatar>
-        <div className="flex-grow">
-            <h3 className="font-headline text-lg font-semibold">{item.name}</h3>
-             <p className="text-sm font-semibold flex items-center mt-1">
-                <Users className="h-4 w-4 mr-2 text-primary" /> 
-                {item.members.toLocaleString()} Miembros
-            </p>
-        </div>
-        <Button asChild variant="outline">
-            <Link href={`/community/${item.slug}`}>Ir al Perfil</Link>
-        </Button>
-    </Card>
-);
+const ConnectionCard = ({ item }: ConnectionCardProps) => {
+    let href = "";
+    switch (item.type) {
+        case 'community': href = `/community/${item.slug}`; break;
+        case 'federation': href = `/federation/${item.slug}`; break;
+        case 'study_group': href = `/group/${item.slug}`; break;
+        case 'political_party': href = `/party/${item.slug}`; break;
+        default: href = '#';
+    }
+
+    return (
+        <Card className="glass-card flex items-center p-4 gap-4">
+            <Avatar className="h-16 w-16 border-2 border-primary/30">
+                <AvatarImage src={item.avatar} alt={item.name} data-ai-hint={item.avatarHint} />
+                <AvatarFallback>{item.name.substring(0,2)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-grow">
+                <h3 className="font-headline text-lg font-semibold">{item.name}</h3>
+                <p className="text-sm font-semibold flex items-center mt-1">
+                    <Users className="h-4 w-4 mr-2 text-primary" /> 
+                    {item.members.toLocaleString()} Miembros
+                </p>
+            </div>
+            <Button asChild variant="outline">
+                <Link href={href}>Ir al Perfil</Link>
+            </Button>
+        </Card>
+    );
+};
 
 export default function ConnectionsHubPage() {
     const [myCommunities, setMyCommunities] = useState<Community[]>([]);
+    const [myFederations, setMyFederations] = useState<FederatedEntity[]>([]);
+    const [myStudyGroups, setMyStudyGroups] = useState<StudyGroup[]>([]);
+    const [myPoliticalParties, setMyPoliticalParties] = useState<PoliticalParty[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const fetchCommunities = async () => {
+        const fetchAllData = async () => {
             setIsLoading(true);
             try {
-                const response = await fetch('/api/communities');
-                if (!response.ok) {
-                    throw new Error('Failed to fetch communities');
+                const [communitiesRes, federationsRes, groupsRes, partiesRes] = await Promise.all([
+                    fetch('/api/communities'),
+                    fetch('/api/federations'),
+                    fetch('/api/study-groups'),
+                    fetch('/api/political-parties'),
+                ]);
+
+                if (!communitiesRes.ok || !federationsRes.ok || !groupsRes.ok || !partiesRes.ok) {
+                    throw new Error('Failed to fetch connection data');
                 }
-                const data: Community[] = await response.json();
-                setMyCommunities(data);
+
+                setMyCommunities(await communitiesRes.json());
+                setMyFederations(await federationsRes.json());
+                setMyStudyGroups(await groupsRes.json());
+                setMyPoliticalParties(await partiesRes.json());
+
             } catch (error) {
                 console.error(error);
-                // Optionally show a toast message here
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchCommunities();
+        fetchAllData();
     }, []);
+
+    const renderList = (items: (Community | FederatedEntity | StudyGroup | PoliticalParty)[]) => {
+        if (isLoading) {
+            return <div className="flex justify-center items-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+        }
+        if (items.length === 0) {
+            return <Card className="glass-card text-center p-8"><CardDescription>No perteneces a ninguna entidad de este tipo.</CardDescription></Card>;
+        }
+        return (
+            <div className="space-y-4">
+                {items.map((item) => <ConnectionCard key={item.slug} item={item} />)}
+            </div>
+        );
+    };
+
 
   return (
     <div className="space-y-8">
@@ -297,43 +308,11 @@ export default function ConnectionsHubPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="communities" className="mt-6">
-            {isLoading ? (
-                 <div className="flex justify-center items-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
-            ) : (
-                <div className="space-y-4">
-                    {myCommunities.map((item, index) => (
-                        <ConnectionCard key={index} item={item} />
-                    ))}
-                </div>
-            )}
-        </TabsContent>
-         <TabsContent value="federations" className="mt-6">
-            <div className="space-y-4">
-                {myFederations.map((item, index) => (
-                        <ConnectionCard key={index} item={item as any} />
-                ))}
-            </div>
-        </TabsContent>
-        <TabsContent value="events" className="mt-6">
-            <Card className="glass-card text-center p-8">
-                <CardDescription>Aún no te has unido o registrado para ningún evento.</CardDescription>
-            </Card>
-        </TabsContent>
-         <TabsContent value="study_groups" className="mt-6">
-            <div className="space-y-4">
-                {myStudyGroups.map((item, index) => (
-                        <ConnectionCard key={index} item={item as any} />
-                ))}
-            </div>
-        </TabsContent>
-         <TabsContent value="political_parties" className="mt-6">
-            <div className="space-y-4">
-                {myPoliticalParties.map((item, index) => (
-                        <ConnectionCard key={index} item={item as any} />
-                ))}
-            </div>
-        </TabsContent>
+        <TabsContent value="communities" className="mt-6">{renderList(myCommunities)}</TabsContent>
+        <TabsContent value="federations" className="mt-6">{renderList(myFederations)}</TabsContent>
+        <TabsContent value="events" className="mt-6">{renderList([])}</TabsContent>
+        <TabsContent value="study_groups" className="mt-6">{renderList(myStudyGroups)}</TabsContent>
+        <TabsContent value="political_parties" className="mt-6">{renderList(myPoliticalParties)}</TabsContent>
       </Tabs>
     </div>
   );

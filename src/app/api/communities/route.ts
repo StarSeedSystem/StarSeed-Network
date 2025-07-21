@@ -10,9 +10,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const body: Community = await request.json();
+        const body: Omit<Community, 'type'> = await request.json();
         
-        // Basic validation
         if (!body.name || !body.slug || !body.description) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }

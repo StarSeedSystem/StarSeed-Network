@@ -32,17 +32,51 @@ export interface NatalChartData {
     // We can add more planets and aspects here later
 }
 
-export interface Community {
-    name: string;
+interface BaseEntity {
     slug: string;
+    name: string;
     description: string;
     longDescription?: string;
-    members: number;
     avatar: string;
     avatarHint: string;
     banner: string;
     bannerHint: string;
+    members: number;
 }
+
+export interface Community extends BaseEntity {
+    type: 'community';
+    rules?: string[];
+}
+
+export interface FederatedEntity extends BaseEntity {
+    type: 'federation';
+    scope: 'Local' | 'Global' | 'Continental';
+}
+
+export interface StudyGroup extends BaseEntity {
+    type: 'study_group';
+    topic: string;
+}
+
+export interface PoliticalParty extends BaseEntity {
+    type: 'political_party';
+    ideology: string;
+}
+
+export interface Event {
+    type: 'event';
+    slug: string;
+    name: string;
+    description: string;
+    image: string;
+    imageHint: string;
+    date: string;
+    location: string;
+    organizer: Author;
+}
+
+export type AnyEntity = Community | FederatedEntity | StudyGroup | PoliticalParty;
 
 export interface User {
   id: string;
