@@ -8,30 +8,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Repeat, Heart, Share } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const allFeed = [
-  {
-    author: "CosmoNaut",
-    handle: "cosmo.eth",
-    avatar: "https://placehold.co/100x100.png",
-    avatarHint: "futuristic astronaut",
-    content: "Just integrated my consciousness with a stellar nebula. The universe is unbelievably vast and beautiful from this perspective. #transhumanism #starcitizen",
-    comments: 12,
-    reposts: 5,
-    likes: 42,
-  },
-  {
-    author: "GaiaPrime",
-    handle: "gaia.sol",
-    avatar: "https://placehold.co/100x100.png",
-    avatarHint: "glowing goddess",
-    content: "The latest AR nature overlay for Central Park is live! Experience the primordial forest as it was millions of years ago. A truly humbling experience.",
-    comments: 8,
-    reposts: 2,
-    likes: 33,
-  },
-];
+export interface FeedPostType {
+  author: string;
+  handle: string;
+  avatar: string;
+  avatarHint: string;
+  content: string;
+  comments: number;
+  reposts: number;
+  likes: number;
+}
 
-const followingFeed = [
+const followingFeed: FeedPostType[] = [
     {
         author: "Helios",
         handle: "helios.tez",
@@ -44,7 +32,7 @@ const followingFeed = [
     }
 ];
 
-const communitiesFeed = [
+const communitiesFeed: FeedPostType[] = [
     {
         author: "Art-AI Collective",
         handle: "art-ai.dao",
@@ -57,14 +45,7 @@ const communitiesFeed = [
     }
 ];
 
-const feedData = {
-    all: allFeed,
-    following: followingFeed,
-    communities: communitiesFeed,
-};
-
-
-function FeedPost({ post }: { post: (typeof allFeed)[0] }) {
+function FeedPost({ post }: { post: FeedPostType }) {
   return (
     <Card className="glass-card rounded-2xl overflow-hidden">
       <CardHeader>
@@ -100,8 +81,15 @@ function FeedPost({ post }: { post: (typeof allFeed)[0] }) {
   );
 }
 
-export function FeedWidget() {
+export function FeedWidget({ initialFeed }: { initialFeed: FeedPostType[] }) {
   const [activeFilter, setActiveFilter] = useState<'all' | 'following' | 'communities'>('all');
+  
+  const feedData = {
+    all: initialFeed,
+    following: followingFeed,
+    communities: communitiesFeed,
+  };
+
   const currentFeed = feedData[activeFilter];
 
   return (
@@ -132,7 +120,7 @@ export function FeedWidget() {
         <div className="space-y-4">
             {currentFeed.length > 0 ? (
                 currentFeed.map((item, index) => (
-                    <FeedPost key={`${activeFilter}-${index}`} post={item} />
+                    <FeedPost key={`${activeFilter}-${item.author}-${index}`} post={item} />
                 ))
             ) : (
                 <Card className="glass-card rounded-2xl p-8 text-center">

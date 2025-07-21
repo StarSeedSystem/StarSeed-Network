@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -13,7 +14,11 @@ import Link from "next/link";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { PenSquare } from "lucide-react";
 
-export function CreatePostWidget() {
+interface CreatePostWidgetProps {
+  onPostCreated: (content: string) => void;
+}
+
+export function CreatePostWidget({ onPostCreated }: CreatePostWidgetProps) {
   const [content, setContent] = useState("");
   const { toast } = useToast();
 
@@ -27,8 +32,7 @@ export function CreatePostWidget() {
       return;
     }
     
-    // In a real app, this would get the checked destinations
-    console.log("Broadcasting:", content);
+    onPostCreated(content);
 
     toast({
         title: "¡Transmisión Rápida Exitosa!",
