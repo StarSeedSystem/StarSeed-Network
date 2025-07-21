@@ -1,9 +1,11 @@
 
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LayoutTemplate, Palette, Copy } from "lucide-react";
+import { LayoutTemplate, PlusCircle, User } from "lucide-react";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 const templates = {
     profile: [
@@ -12,12 +14,16 @@ const templates = {
             description: "Un diseño futurista centrado en tus logros y actividad en la red.",
             image: "https://placehold.co/600x400.png",
             imageHint: "futuristic user profile",
+            type: "2D",
+            author: "NexusBuilders"
         },
         {
             title: "Perfil 'Artista'",
             description: "Una plantilla visual que destaca tu biblioteca de creaciones de IA.",
             image: "https://placehold.co/600x400.png",
             imageHint: "artistic portfolio",
+            type: "AR",
+            author: "Art-AI.dao"
         },
     ],
     community: [
@@ -26,6 +32,8 @@ const templates = {
             description: "Diseño para grupos grandes, centrado en propuestas y votaciones.",
             image: "https://placehold.co/600x400.png",
             imageHint: "community hub interface",
+            type: "2D",
+            author: "GovArchs"
         },
     ],
     dashboard: [
@@ -34,6 +42,8 @@ const templates = {
             description: "Un panel de control lleno de widgets de datos y resúmenes.",
             image: "https://placehold.co/600x400.png",
             imageHint: "data dashboard",
+            type: "2D",
+            author: "DataWeavers"
         },
     ],
     environment: [
@@ -42,6 +52,8 @@ const templates = {
             description: "Un espacio virtual minimalista y relajante para la meditación.",
             image: "https://placehold.co/600x400.png",
             imageHint: "zen garden",
+            type: "VR",
+            author: "GaiaPrime"
         },
     ]
 };
@@ -56,18 +68,24 @@ export default function TemplatesPage() {
                 <Card key={template.title} className="glass-card rounded-2xl overflow-hidden group flex flex-col">
                     <div className="aspect-video relative">
                         <Image src={template.image} alt={template.title} layout="fill" objectFit="cover" data-ai-hint={template.imageHint} className="group-hover:scale-105 transition-transform" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute top-2 right-2">
+                            <Badge className="bg-black/50 backdrop-blur-sm text-white">{template.type}</Badge>
+                        </div>
                     </div>
                     <CardHeader>
                         <CardTitle className="font-headline text-xl">{template.title}</CardTitle>
                     </CardHeader>
-                    <CardContent className="flex-grow">
+                    <CardContent className="flex-grow space-y-3">
                         <p className="text-sm text-muted-foreground">{template.description}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <User className="h-4 w-4" />
+                            <span>Creado por {template.author}</span>
+                        </div>
                     </CardContent>
                     <CardFooter>
                          <Button className="w-full">
-                            <Copy className="mr-2 h-4 w-4" />
-                            Usar Plantilla
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Añadir a mi Biblioteca
                         </Button>
                     </CardFooter>
                 </Card>

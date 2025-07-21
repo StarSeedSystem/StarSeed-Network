@@ -1,5 +1,6 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Library as LibraryIcon, Store, Bot, LayoutTemplate, Folder } from "lucide-react";
@@ -11,17 +12,17 @@ const ecosystemSections = [
         title: "Mis Archivos y Biblioteca",
         description: "Accede a todos tus archivos, avatares y creaciones de IA en un solo lugar.",
         icon: Folder,
-        href: "/profile",
+        href: "/profile", // This will eventually link to a dedicated library page
         hrefLabel: "Ir a mi Biblioteca",
         img: "https://placehold.co/600x400.png",
         imgHint: "digital files folders",
     },
     {
-        title: "Tienda de Apps",
-        description: "Descubre, instala y comparte aplicaciones para expandir tu experiencia en el nexo.",
+        title: "Marketplace del Nexo",
+        description: "Descubre, instala y comparte plantillas, apps, avatares y más desde el repositorio comunitario.",
         icon: Store,
         href: "#",
-        hrefLabel: "Explorar Tienda",
+        hrefLabel: "Explorar Marketplace",
         img: "https://placehold.co/600x400.png",
         imgHint: "app store marketplace",
     },
