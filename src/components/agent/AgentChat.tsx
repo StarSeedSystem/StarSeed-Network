@@ -6,7 +6,7 @@ import { analyzeImage } from "@/ai/flows/analyze-image-flow";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Paperclip, Camera, SendHorizonal, BrainCircuit, User, Video, Capture } from "lucide-react";
+import { Paperclip, Camera, SendHorizonal, BrainCircuit, User, Video, Aperture } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -239,7 +239,7 @@ export function AgentChat() {
                         </Button>
                         {isCameraActive ? (
                              <Button type="button" size="sm" onClick={handleCaptureAndAnalyze} disabled={isLoading || !input.trim()}>
-                                <Capture className="h-5 w-5 mr-2" />
+                                <Aperture className="h-5 w-5 mr-2" />
                                 Capturar
                             </Button>
                         ) : (
