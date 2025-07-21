@@ -1,5 +1,4 @@
 
-
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ProfileFeed } from "@/components/profile/ProfileFeed";
 import type { FeedPostType } from "@/components/dashboard/FeedPost";
 import type { Community } from "@/types/content-types";
-import { db } from "@/data/db";
 import { BackButton } from "@/components/utils/BackButton";
 
 
@@ -32,7 +30,7 @@ const communityMembers = [
     { name: "GaiaPrime", avatar: "https://placehold.co/100x100.png", avatarHint: "glowing goddess", role: "Fundadora" },
     { name: "Helios", avatar: "https://placehold.co/100x100.png", avatarHint: "sun god", role: "Coordinador de Energía" },
     { name: "Starlight", avatar: "https://placehold.co/100x100.png", avatarHint: "glowing astronaut", role: "Miembro" }
-]
+];
 
 async function getCommunityData(slug: string): Promise<Community | null> {
     // In a real app, this fetch would go to an external API server.
@@ -40,10 +38,11 @@ async function getCommunityData(slug: string): Promise<Community | null> {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
     const response = await fetch(`${baseUrl}/api/communities/${slug}`, { cache: 'no-store' });
     
+    if (response.status === 404) {
+        return null;
+    }
+    
     if (!response.ok) {
-        if (response.status === 404) {
-            return null;
-        }
         // You could handle other errors here, e.g., by throwing an error
         throw new Error('Failed to fetch community data');
     }
