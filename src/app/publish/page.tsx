@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { LibraryGrid, LibraryItem } from "@/components/profile/LibraryGrid";
 import Image from "next/image";
 import { LegislativeSettings } from "@/components/publish/LegislativeSettings";
+import { NewsSettings } from "@/components/publish/NewsSettings";
 
 // Mock data for library items, in a real app this would be fetched
 const libraryItems: LibraryItem[] = [
@@ -37,6 +38,7 @@ export default function PublishPage() {
     const [content, setContent] = useState("");
     const [selectedDestinations, setSelectedDestinations] = useState<string[]>(["profile"]);
     const [isLegislative, setIsLegislative] = useState(false);
+    const [isNews, setIsNews] = useState(false);
     const [attachedItem, setAttachedItem] = useState<LibraryItem | null>(null);
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const { toast } = useToast();
@@ -59,7 +61,7 @@ export default function PublishPage() {
             return;
         }
 
-        console.log("Publicando:", { content, destinations: selectedDestinations, attachedItem });
+        console.log("Publicando:", { content, destinations: selectedDestinations, attachedItem, isLegislative, isNews });
 
         toast({
             title: "¡Transmisión Exitosa!",
@@ -68,6 +70,7 @@ export default function PublishPage() {
 
         setContent("");
         setAttachedItem(null);
+        setIsNews(false);
     };
     
     const handleItemSelected = (item: LibraryItem) => {
@@ -158,6 +161,7 @@ export default function PublishPage() {
                             </Dialog>
 
                              {isLegislative && <LegislativeSettings />}
+                             {!isLegislative && <NewsSettings isNews={isNews} onIsNewsChange={setIsNews} />}
                         </div>
                     </div>
                     
@@ -173,3 +177,5 @@ export default function PublishPage() {
         </div>
     );
 }
+
+    

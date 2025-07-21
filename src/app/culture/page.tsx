@@ -1,14 +1,16 @@
 
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Filter, Headset, BotMessageSquare, Sparkles, Map, Calendar, Newspaper } from "lucide-react";
+import { Filter, Headset, BotMessageSquare, Sparkles, Map, Calendar, Newspaper, User } from "lucide-react";
 import Link from "next/link";
 import { ContentCard } from "@/components/content/ContentCard";
 import type { CulturalContent } from "@/types/content-types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 const culturalFeed: CulturalContent[] = [
     {
@@ -48,6 +50,26 @@ const culturalFeed: CulturalContent[] = [
         description: "Tres días de actuaciones en vivo de los mejores músicos algorítmicos y artistas de IA."
     }
 ];
+
+const newsFeed = [
+    {
+        id: "news-1",
+        title: "Nuevas Granjas Verticales Virtuales Ahorran un 30% de Energía en la Red",
+        summary: "La comunidad 'Innovación Sostenible' ha lanzado una actualización de su bioma que reduce drásticamente el consumo de recursos para los entornos virtuales de sus miembros, sentando un precedente para el desarrollo ecológico en la red.",
+        author: { name: "GaiaPrime", avatar: "https://placehold.co/100x100.png", avatarHint: "glowing goddess" },
+        source: "Comunidad: Innovación Sostenible",
+        timestamp: "hace 2 horas"
+    },
+    {
+        id: "news-2",
+        title: "El Colectivo Art-AI.dao Inaugura 'Cyberdelic Dreams', una Galería de Arte Inmersiva",
+        summary: "La tan esperada exhibición de arte generado por IA ya está abierta al público. La experiencia, disponible en VR y AR, invita a los visitantes a un viaje a través de paisajes oníricos creados por la consciencia colectiva del DAO.",
+        author: { name: "Art-AI Collective", avatar: "https://placehold.co/100x100.png", avatarHint: "abstract art" },
+        source: "Comunidad: Arte Ciberdélico",
+        timestamp: "hace 1 día"
+    }
+];
+
 
 export default function CulturePage() {
   return (
@@ -147,10 +169,27 @@ export default function CulturePage() {
                         <CardTitle className="font-headline text-2xl">Noticias de la Red</CardTitle>
                         <CardDescription>Un portal de periodismo ciudadano, verificado por la comunidad.</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                         <div className="bg-background/50 rounded-lg p-8 flex items-center justify-center border-2 border-dashed">
-                            <p className="text-muted-foreground">[Aquí se mostrará el feed de noticias verificadas]</p>
-                        </div>
+                    <CardContent className="space-y-4">
+                        {newsFeed.map(item => (
+                             <Card key={item.id} className="bg-card/80 flex flex-col sm:flex-row gap-4 p-4">
+                                <div className="flex-grow">
+                                    <h3 className="font-headline text-xl font-semibold hover:text-primary transition-colors cursor-pointer">{item.title}</h3>
+                                    <p className="text-sm text-muted-foreground mt-2">{item.summary}</p>
+                                </div>
+                                <div className="flex-shrink-0 sm:w-48 sm:text-right">
+                                    <div className="flex items-center gap-2 justify-end">
+                                        <Avatar className="h-5 w-5">
+                                            <AvatarImage src={item.author.avatar} alt={item.author.name} data-ai-hint={item.author.avatarHint} />
+                                            <AvatarFallback>{item.author.name.substring(0, 2)}</AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-xs font-semibold">{item.author.name}</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">Fuente: {item.source}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">{item.timestamp}</p>
+                                    <Badge variant="secondary" className="mt-2">Verificado por Pares</Badge>
+                                </div>
+                            </Card>
+                        ))}
                     </CardContent>
                 </Card>
             </TabsContent>
@@ -171,3 +210,5 @@ export default function CulturePage() {
     </div>
   );
 }
+
+    
