@@ -14,16 +14,16 @@ export function FederatedEntitySettings({ onAreaChange }: FederatedEntitySetting
     return (
         <Card className="bg-secondary/20 border-secondary/40 animate-in fade-in-50">
             <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-secondary-foreground font-headline">
+                <CardTitle className="flex items-center gap-2 text-secondary-foreground font-headline text-base">
                     <Landmark className="h-5 w-5 text-primary" />
-                    Ajustes de E.F.
+                    Ajustes de Entidad Federativa
                 </CardTitle>
-                <CardDescription>Especifica el área de destino dentro de la Entidad Federativa.</CardDescription>
+                <CardDescription>Especifica el área de destino dentro de la E.F. seleccionada.</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="space-y-2">
                     <Label htmlFor="federation-area">Área de Destino</Label>
-                    <Select onValueChange={onAreaChange}>
+                    <Select onValueChange={onAreaChange} required>
                         <SelectTrigger id="federation-area">
                             <SelectValue placeholder="Seleccionar área..." />
                         </SelectTrigger>
@@ -38,3 +38,5 @@ export function FederatedEntitySettings({ onAreaChange }: FederatedEntitySetting
         </Card>
     );
 }
+
+    

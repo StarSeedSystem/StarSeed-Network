@@ -23,9 +23,9 @@ export function LegislativeSettings({ isLegislativeProposal }: LegislativeSettin
     return (
          <Card className="bg-primary/5 border-primary/20 animate-in fade-in-50">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-primary font-headline">
+                <CardTitle className="flex items-center gap-2 text-primary font-headline text-base">
                     <Gavel className="h-5 w-5" />
-                    Propuesta Legislativa
+                    Configuración de Votación
                 </CardTitle>
                 <CardDescription>Configura los parámetros de la votación para esta publicación.</CardDescription>
             </CardHeader>
@@ -59,7 +59,7 @@ export function LegislativeSettings({ isLegislativeProposal }: LegislativeSettin
                 <div className="space-y-2">
                     <Label htmlFor="voting-period">
                         Establecer Plazo de Votación 
-                        {isLegislativeProposal && <span className="text-destructive"> *</span>}
+                        {isLegislativeProposal && <span className="text-destructive font-bold"> *</span>}
                     </Label>
                     <Select required={isLegislativeProposal}>
                         <SelectTrigger id="voting-period">
@@ -73,6 +73,7 @@ export function LegislativeSettings({ isLegislativeProposal }: LegislativeSettin
                             <SelectItem value="30d">1 Mes</SelectItem>
                         </SelectContent>
                     </Select>
+                     {isLegislativeProposal && <p className="text-xs text-muted-foreground">El plazo es obligatorio para propuestas legislativas.</p>}
                 </div>
 
                 <div className="flex items-center justify-between rounded-lg border border-solar-orange/50 bg-solar-orange/10 p-3">
@@ -89,3 +90,5 @@ export function LegislativeSettings({ isLegislativeProposal }: LegislativeSettin
         </Card>
     );
 }
+
+    
