@@ -1,12 +1,11 @@
 
-
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Image as ImageIcon, Calendar as CalendarIcon, Clock, MapPin, Award, Library, PenSquare } from "lucide-react";
+import { Edit, Image as ImageIcon, Calendar as CalendarIcon, Clock, MapPin, Award, Library, PenSquare, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -35,9 +34,11 @@ import { ProfileFeed } from "./ProfileFeed";
 import type { FeedPostType } from "../dashboard/FeedPost";
 import { NatalChartWidget } from "./NatalChartWidget";
 import { AchievementsWidget } from "../dashboard/AchievementsWidget";
-import { useUser } from "@/context/UserContext";
+import { User } from "@/types/content-types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProfileClientProps {
+  userId: string;
   initialLibraryItems: LibraryItem[];
   initialFolders?: LibraryFolder[];
   viewMode?: "full" | "libraryOnly";
@@ -68,59 +69,167 @@ const userPosts: FeedPostType[] = [
     }
 ]
 
-export function ProfileClient({ initialLibraryItems, initialFolders = [], viewMode = "full" }: ProfileClientProps) {
-  const { user, setUser } = useUser();
+export function ProfileClient({ userId, initialLibraryItems, initialFolders = [], viewMode = "full" }: ProfileClientProps) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [birthDate, setBirthDate] = useState<Date>();
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>(initialLibraryItems);
   const { toast } = useToast();
 
-  const handleSaveChanges = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const newBio = formData.get("bio") as string;
-    
-    setUser(prevUser => ({...prevUser, bio: newBio}));
+  useEffect(() => {
+    const fetchUser = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/user/${userId}`);
+        if (!response.ok) {
+          throw new Error('User not found');
+        }
+        const userData: User = await response.json();
+        setUser(userData);
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
+        toast({
+          title: "Error",
+          description: "Could not load user profile.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    setIsDialogOpen(false);
-     toast({
-      title: "Profile Updated",
-      description: "Your changes have been saved successfully.",
-    });
+    fetchUser();
+  }, [userId, toast]);
+
+  const handleSaveChanges = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user) return;
+
+    const formData = new FormData(e.currentTarget);
+    const updatedData: Partial<User> = {
+      bio: formData.get("bio") as string,
+    };
+
+    try {
+        const response = await fetch(`/api/user/${user.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedData),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update profile');
+        }
+
+        const updatedUser: User = await response.json();
+        setUser(updatedUser); // Update state with the returned user data
+        setIsDialogOpen(false);
+        toast({
+            title: "Profile Updated",
+            description: "Your changes have been saved successfully.",
+        });
+    } catch (error) {
+        console.error("Failed to save changes:", error);
+        toast({
+            title: "Error",
+            description: "Could not save your changes.",
+            variant: "destructive",
+        });
+    }
   };
 
-  const handleAvatarGenerated = (newAvatarUrl: string, description: string) => {
-    setUser(prevUser => ({...prevUser, avatarUrl: newAvatarUrl}));
-    
-    // Add new avatar to library
-    const newLibraryItem: LibraryItem = {
-      id: `img_${Date.now()}`,
-      type: "Avatar",
-      title: description || "New AI Avatar",
-      thumbnail: newAvatarUrl,
-      thumbnailHint: "ai generated",
-      source: "/avatar-generator",
-      folderId: "folder_avatars" // Assuming a folder for avatars exists
-    };
-    setLibraryItems(prev => [newLibraryItem, ...prev]);
+  const handleAvatarGenerated = async (newAvatarUrl: string, description: string) => {
+    if (!user) return;
 
-    if (!user.badges.aiSymbiote) {
-       setUser(prev => ({ ...prev, badges: { ...prev.badges, aiSymbiote: true } }));
-       toast({
-        title: "¡Insignia Desbloqueada!",
-        description: "Has obtenido la insignia 'AI Symbiote'. Tu nuevo avatar está listo y guardado en tu biblioteca.",
-        duration: 5000,
-       });
-    } else {
-        toast({
-            title: "Avatar actualizado",
-            description: "Tu nuevo avatar ha sido guardado en tu biblioteca.",
+    const updatedData: Partial<User> = { 
+        avatarUrl: newAvatarUrl,
+        badges: { ...user.badges, aiSymbiote: true }
+    };
+
+     try {
+        const response = await fetch(`/api/user/${user.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedData),
         });
+        if (!response.ok) throw new Error('Failed to update avatar');
+        
+        const updatedUser: User = await response.json();
+        setUser(updatedUser);
+
+        const newLibraryItem: LibraryItem = {
+          id: `img_${Date.now()}`,
+          type: "Avatar",
+          title: description || "New AI Avatar",
+          thumbnail: newAvatarUrl,
+          thumbnailHint: "ai generated",
+          source: "/avatar-generator",
+          folderId: "folder_avatars"
+        };
+        setLibraryItems(prev => [newLibraryItem, ...prev]);
+
+        if (!user.badges.aiSymbiote) {
+           toast({
+            title: "¡Insignia Desbloqueada!",
+            description: "Has obtenido la insignia 'AI Symbiote'. Tu nuevo avatar está listo y guardado en tu biblioteca.",
+            duration: 5000,
+           });
+        } else {
+            toast({
+                title: "Avatar actualizado",
+                description: "Tu nuevo avatar ha sido guardado en tu biblioteca.",
+            });
+        }
+    } catch (error) {
+        console.error("Failed to update avatar:", error);
+        toast({ title: "Error", description: "Could not update avatar.", variant: "destructive" });
     }
   }
 
-  const handleBannerGenerated = (newBannerUrl: string) => {
-    setUser(prevUser => ({...prevUser, bannerUrl: newBannerUrl}));
+  const handleBannerGenerated = async (newBannerUrl: string) => {
+    if (!user) return;
+    try {
+        const response = await fetch(`/api/user/${user.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bannerUrl: newBannerUrl }),
+        });
+        if (!response.ok) throw new Error('Failed to update banner');
+
+        const updatedUser: User = await response.json();
+        setUser(updatedUser);
+        
+        toast({
+            title: "Banner Updated",
+            description: "Your new banner has been saved.",
+        });
+    } catch (error) {
+        console.error("Failed to update banner:", error);
+        toast({ title: "Error", description: "Could not update banner.", variant: "destructive" });
+    }
+  }
+
+   if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-48 w-full rounded-2xl" />
+        <div className="relative px-4 sm:px-8 pb-8 -mt-24">
+          <div className="flex flex-col sm:flex-row items-start gap-6">
+            <Skeleton className="w-32 h-32 rounded-full border-4 border-background ring-4 ring-primary" />
+            <div className="pt-16 flex-grow space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <div className="text-center py-20">User not found.</div>;
   }
   
   return (

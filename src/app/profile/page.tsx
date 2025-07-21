@@ -32,7 +32,8 @@ const initialFolders: LibraryFolder[] = [
 
 export default function ProfilePage() {
   return (
-      <ProfileClient 
+      <ProfileClient
+        userId="1"
         initialLibraryItems={initialLibraryItems} 
         initialFolders={initialFolders}
         viewMode="full" 
