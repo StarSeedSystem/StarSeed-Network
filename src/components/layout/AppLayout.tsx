@@ -50,7 +50,8 @@ import {
   Bell,
   Store,
   LayoutTemplate,
-  Folder
+  Folder,
+  BrainCircuit,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -98,6 +99,7 @@ const navItems = [
     { href: "/messages", label: "Mensajes", icon: MessageSquare },
     { href: "/notifications", label: "Notificaciones", icon: Bell },
     { href: "/participations", label: "Hub de Conexiones", icon: Users },
+    { href: "/agent", label: "Agente de IA", icon: BrainCircuit },
     {
       label: "Red",
       icon: Network,
