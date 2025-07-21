@@ -49,7 +49,8 @@ import {
   ArrowLeft,
   Bell,
   Store,
-  LayoutTemplate
+  LayoutTemplate,
+  Folder
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -112,9 +113,8 @@ const navItems = [
       label: "Biblioteca",
       icon: Library,
       subItems: [
-        { href: "/profile", label: "Mi Biblioteca" }, // Links to profile's library tab
-        { href: "#", label: "Tienda de Apps", icon: Store },
-        { href: "/library/templates", label: "Plantillas", icon: LayoutTemplate },
+        { href: "/library/my-library", label: "Mi Biblioteca", icon: Folder },
+        { href: "/library/templates", label: "Tienda Virtual", icon: Store },
         { href: "/avatar-generator", label: "Generador de Avatares", icon: Bot },
         { href: "/video-generator", label: "Generador de Videos", icon: Clapperboard },
       ],

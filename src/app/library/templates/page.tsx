@@ -1,11 +1,14 @@
 
 
+"use client";
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LayoutTemplate, PlusCircle, User, Palette, LayoutDashboard as DashboardIcon } from "lucide-react";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 const templates = {
     profile: [
@@ -67,6 +70,16 @@ const templates = {
 type TemplateCategory = keyof typeof templates;
 
 export default function TemplatesPage() {
+    const { toast } = useToast();
+
+    const handleAddToLibrary = (templateTitle: string) => {
+        // In a real app, this would trigger an API call to add the template to the user's library.
+        // For now, we just show a toast notification as feedback.
+        toast({
+            title: "¡Plantilla Guardada!",
+            description: `La plantilla "${templateTitle}" ha sido añadida a tu biblioteca.`,
+        });
+    };
 
     const renderTemplateGrid = (category: TemplateCategory) => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -89,7 +102,7 @@ export default function TemplatesPage() {
                         </div>
                     </CardContent>
                     <CardFooter>
-                         <Button className="w-full">
+                         <Button className="w-full" onClick={() => handleAddToLibrary(template.title)}>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Añadir a mi Biblioteca
                         </Button>

@@ -1,5 +1,4 @@
 
-
 import { ProfileClient } from "@/components/profile/ProfileClient";
 import { NatalChartWidget } from "@/components/profile/NatalChartWidget";
 import { AchievementsWidget } from "@/components/dashboard/AchievementsWidget";
@@ -25,8 +24,12 @@ const initialLibraryItems = [
 ];
 
 
-export default function ProfilePage() {
+export default function MyLibraryPage() {
   return (
-      <ProfileClient initialLibraryItems={initialLibraryItems} viewMode="full" />
+    <div className="space-y-8">
+        {/* This page reuses the ProfileClient component to show the user's library in a dedicated view */}
+        {/* We can hide non-library parts of the profile if needed, but for now this is a good way to keep it DRY */}
+      <ProfileClient initialLibraryItems={initialLibraryItems} viewMode="libraryOnly" />
+    </div>
   );
 }

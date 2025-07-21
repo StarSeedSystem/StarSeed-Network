@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -14,7 +15,7 @@ export function ProfileFeed({ initialFeed }: { initialFeed: FeedPostType[] }) {
       case 'profile':
         return initialFeed.filter(post => post.destinations?.includes("Profile") && post.destinations.length === 1);
       case 'communities':
-        return initialFeed.filter(post => post.destinations && post.destinations.length > 1 && post.destinations.some(d => d !== "Profile"));
+        return initialFeed.filter(post => post.destinations && post.destinations.some(d => d !== "Profile"));
       case 'all':
       default:
         return initialFeed;

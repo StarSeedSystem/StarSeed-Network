@@ -12,7 +12,7 @@ const ecosystemSections = [
         title: "Mis Archivos y Biblioteca",
         description: "Accede a todos tus archivos, avatares y creaciones de IA en un solo lugar.",
         icon: Folder,
-        href: "/profile", // This will eventually link to a dedicated library page
+        href: "/library/my-library",
         hrefLabel: "Ir a mi Biblioteca",
         img: "https://placehold.co/600x400.png",
         imgHint: "digital files folders",
@@ -21,7 +21,7 @@ const ecosystemSections = [
         title: "Tienda Virtual",
         description: "Descubre, instala y comparte plantillas, apps, avatares y más desde el repositorio comunitario.",
         icon: Store,
-        href: "#",
+        href: "/library/templates",
         hrefLabel: "Explorar Tienda Virtual",
         img: "https://placehold.co/600x400.png",
         imgHint: "app store marketplace",
@@ -46,7 +46,7 @@ const ecosystemSections = [
     }
 ]
 
-export default function LibraryHubPage() {
+export default function LibraryPage() {
     return (
         <div className="space-y-8">
             <div>
