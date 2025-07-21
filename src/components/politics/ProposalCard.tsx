@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ThumbsUp, ThumbsDown, MessageSquare, Users, Eye, Bookmark, Minus, Plus } from "lucide-react";
+import { ThumbsUp, ThumbsDown, MessageSquare, Users, Eye, Bookmark, Minus, Plus, Clock } from "lucide-react";
 import { Separator } from "../ui/separator";
 import Link from "next/link";
 import { Progress } from "../ui/progress";
@@ -24,6 +24,7 @@ type ProposalCardProps = {
     summary: string;
     isSaved: boolean;
     onSaveToggle: (isSaved: boolean) => void;
+    timeLeft?: string;
 };
 
 const statusColors: { [key: string]: string } = {
@@ -33,7 +34,7 @@ const statusColors: { [key: string]: string } = {
     "En Mediación": "bg-golden-yellow/20 text-golden-yellow border-golden-yellow/30",
 };
 
-export function ProposalCard({ id, title, proposer, entity, status, stats: initialStats, summary, isSaved, onSaveToggle }: ProposalCardProps) {
+export function ProposalCard({ id, title, proposer, entity, status, stats: initialStats, summary, isSaved, onSaveToggle, timeLeft }: ProposalCardProps) {
   const [stats, setStats] = useState(initialStats);
   const [userVote, setUserVote] = useState<VoteType>(null);
 
@@ -79,6 +80,11 @@ export function ProposalCard({ id, title, proposer, entity, status, stats: initi
   }
 
   const isVotingProposal = status === "En Votación";
+  const totalVotes = isVotingProposal ? (stats.support || 0) + (stats.reject || 0) + (stats.abstain || 0) : 0;
+  const supportPercent = totalVotes > 0 ? (stats.support / totalVotes) * 100 : 0;
+  const rejectPercent = totalVotes > 0 ? (stats.reject / totalVotes) * 100 : 0;
+  const abstainPercent = totalVotes > 0 ? (stats.abstain / totalVotes) * 100 : 0;
+
 
   return (
     <Card className="glass-card rounded-2xl overflow-hidden transition-all hover:border-primary/50 flex flex-col">
@@ -117,21 +123,27 @@ export function ProposalCard({ id, title, proposer, entity, status, stats: initi
             {isVotingProposal && (
                 <>
                     <Separator className="bg-white/10" />
-                    <div className="w-full space-y-3">
-                        <div className="flex justify-around items-center text-center">
-                            <div>
-                                <p className="font-bold text-lg text-sea-green">{stats.support}</p>
-                                <p className="text-xs text-muted-foreground">APOYAN</p>
+                    <div className="w-full space-y-4">
+                        <div className="space-y-2">
+                            <div className="flex w-full h-3 rounded-full overflow-hidden bg-secondary">
+                                <div className="bg-sea-green" style={{ width: `${supportPercent}%` }} />
+                                <div className="bg-coral" style={{ width: `${rejectPercent}%` }} />
+                                <div className="bg-muted" style={{ width: `${abstainPercent}%` }} />
                             </div>
-                             <div>
-                                <p className="font-bold text-lg text-coral">{stats.reject}</p>
-                                <p className="text-xs text-muted-foreground">RECHAZAN</p>
-                            </div>
-                            <div>
-                                <p className="font-bold text-lg">{stats.abstain}</p>
-                                <p className="text-xs text-muted-foreground">SE ABSTIENEN</p>
+                            <div className="flex justify-between text-xs font-medium text-muted-foreground">
+                                <span className="text-sea-green">Apoyan: {stats.support} ({supportPercent.toFixed(1)}%)</span>
+                                <span className="text-coral">Rechazan: {stats.reject} ({rejectPercent.toFixed(1)}%)</span>
+                                <span>Abstienen: {stats.abstain} ({abstainPercent.toFixed(1)}%)</span>
                             </div>
                         </div>
+
+                        {timeLeft && (
+                             <div className="text-sm text-center text-muted-foreground flex items-center justify-center gap-2">
+                                <Clock className="h-4 w-4" />
+                                <span>{timeLeft} para votar</span>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-3 gap-2">
                              <Button variant={userVote === 'support' ? 'secondary' : 'outline'} onClick={() => handleVote('support')} className={cn(userVote === 'support' && "border-sea-green text-sea-green")}>
                                 <ThumbsUp className="mr-2 h-4 w-4" /> Apoyar

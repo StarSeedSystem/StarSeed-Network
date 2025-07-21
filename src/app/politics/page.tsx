@@ -15,16 +15,18 @@ const legislativeProposals = [
     entity: "E.F. Global",
     status: "En Votación",
     stats: { support: 72, reject: 18, abstain: 10 },
-    summary: "Propuesta para establecer que cada individuo es el único propietario de sus datos generados, requiriendo consentimiento explícito para cualquier uso por parte de terceros dentro de la red."
+    summary: "Propuesta para establecer que cada individuo es el único propietario de sus datos generados, requiriendo consentimiento explícito para cualquier uso por parte de terceros dentro de la red.",
+    timeLeft: "6 días restantes"
   },
   {
     id: "prop-002",
     title: "Actualización del Protocolo de Verificación de Identidad",
     proposer: { name: "Comunidad de Seguridad Cibernética", avatar: "https://placehold.co/100x100.png", avatarHint: "cybernetic eye" },
     entity: "E.F. Global",
-    status: "Debate Activo",
-    stats: { comments: 152 },
-    summary: "Revisión del sistema anual de verificación de identidad para incorporar métodos biométricos descentralizados y mejorar la resistencia a la suplantación de identidad."
+    status: "En Votación",
+    stats: { support: 120, reject: 35, abstain: 22 },
+    summary: "Revisión del sistema anual de verificación de identidad para incorporar métodos biométricos descentralizados y mejorar la resistencia a la suplantación de identidad.",
+    timeLeft: "12 días restantes"
   }
 ];
 
