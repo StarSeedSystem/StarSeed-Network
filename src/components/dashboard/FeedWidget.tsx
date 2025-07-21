@@ -2,22 +2,11 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Repeat, Heart, Share } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { FeedPost, FeedPostType } from "./FeedPost";
 
-export interface FeedPostType {
-  author: string;
-  handle: string;
-  avatar: string;
-  avatarHint: string;
-  content: string;
-  comments: number;
-  reposts: number;
-  likes: number;
-}
+export { type FeedPostType };
 
 const followingFeed: FeedPostType[] = [
     {
@@ -44,42 +33,6 @@ const communitiesFeed: FeedPostType[] = [
         likes: 250,
     }
 ];
-
-function FeedPost({ post }: { post: FeedPostType }) {
-  return (
-    <Card className="glass-card rounded-2xl overflow-hidden">
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <Avatar>
-            <AvatarImage src={post.avatar} alt={post.author} data-ai-hint={post.avatarHint} />
-            <AvatarFallback>{post.author.substring(0, 2)}</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="font-bold">{post.author}</p>
-            <p className="text-sm text-muted-foreground">@{post.handle}</p>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-foreground/90">{post.content}</p>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
-          <MessageSquare className="h-4 w-4" /> {post.comments}
-        </Button>
-        <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-green-500">
-          <Repeat className="h-4 w-4" /> {post.reposts}
-        </Button>
-        <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-accent">
-          <Heart className="h-4 w-4" /> {post.likes}
-        </Button>
-        <Button variant="ghost" size="sm" className="text-muted-foreground">
-          <Share className="h-4 w-4" />
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-}
 
 export function FeedWidget({ initialFeed }: { initialFeed: FeedPostType[] }) {
   const [activeFilter, setActiveFilter] = useState<'all' | 'following' | 'communities'>('all');
@@ -120,7 +73,7 @@ export function FeedWidget({ initialFeed }: { initialFeed: FeedPostType[] }) {
         <div className="space-y-4">
             {currentFeed.length > 0 ? (
                 currentFeed.map((item, index) => (
-                    <FeedPost key={`${activeFilter}-${item.author}-${index}`} post={item} />
+                    <FeedPost key={`${activeFilter}-${item.handle}-${index}`} post={item} />
                 ))
             ) : (
                 <Card className="glass-card rounded-2xl p-8 text-center">
