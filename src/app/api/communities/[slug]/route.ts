@@ -1,3 +1,6 @@
+// This file is no longer needed as data is fetched directly
+// in the server component for better performance.
+// We can remove it or leave it for other potential uses.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { doc, getDoc } from "firebase/firestore";

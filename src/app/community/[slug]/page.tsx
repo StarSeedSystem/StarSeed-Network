@@ -2,28 +2,27 @@
 // src/app/community/[slug]/page.tsx
 
 import { notFound } from "next/navigation";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/data/firebase";
 import { CommunityProfile } from "@/components/community/CommunityProfile";
 import type { Community } from "@/types/content-types";
 
-// Helper function to fetch data from our API route.
-// This function runs on the server.
+// This function now runs on the server and fetches data directly from Firestore.
 async function getCommunityData(slug: string): Promise<Community | null> {
-    // In a real app, you'd want to use the full URL for server-side fetches,
-    // often from an environment variable.
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
-    const res = await fetch(`${baseUrl}/api/communities/${slug}`, {
-        cache: 'no-store' // Ensure we get fresh data every time
-    });
+    try {
+        const docRef = doc(db, "communities", slug);
+        const docSnap = await getDoc(docRef);
 
-    if (!res.ok) {
-        // If the response status is 404, we can return null.
-        if (res.status === 404) {
+        if (docSnap.exists()) {
+            return { id: docSnap.id, ...docSnap.data() } as Community;
+        } else {
             return null;
         }
-        // For other errors, we might want to throw an exception.
-        throw new Error('Failed to fetch community data');
+    } catch (error) {
+        console.error(`Error fetching community ${slug}:`, error);
+        // In case of a database error, we can also treat it as not found.
+        return null;
     }
-    return res.json();
 }
 
 // This is a Server Component that fetches data and passes it to a Client Component.
