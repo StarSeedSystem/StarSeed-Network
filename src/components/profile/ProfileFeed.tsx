@@ -1,49 +1,26 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FeedPost, FeedPostType } from "../dashboard/FeedPost";
 
-const profileOnlyFeed: FeedPostType[] = [
-    {
-        author: "Starlight",
-        handle: "starlight.eth",
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "glowing astronaut",
-        content: "My new AI-generated avatar is ready. A small step in forging a new digital identity.",
-        comments: 8,
-        reposts: 1,
-        likes: 42,
-        destinations: ["Profile"]
-    }
-];
-
-const communitiesFeed: FeedPostType[] = [
-    {
-        author: "Starlight",
-        handle: "starlight.eth",
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "glowing astronaut",
-        content: "Just broadcasted my first message across the Nexus! The journey begins.",
-        comments: 2,
-        reposts: 0,
-        likes: 15,
-        destinations: ["Profile", "Innovación Sostenible"]
-    },
-];
-
 export function ProfileFeed({ initialFeed }: { initialFeed: FeedPostType[] }) {
   const [activeFilter, setActiveFilter] = useState<'all' | 'profile' | 'communities'>('all');
   
-  const feedData = {
-    all: initialFeed,
-    profile: profileOnlyFeed,
-    communities: communitiesFeed,
-  };
+  const currentFeed = useMemo(() => {
+    switch(activeFilter) {
+      case 'profile':
+        return initialFeed.filter(post => post.destinations?.includes("Profile") && post.destinations.length === 1);
+      case 'communities':
+        return initialFeed.filter(post => post.destinations && post.destinations.length > 1 && post.destinations.some(d => d !== "Profile"));
+      case 'all':
+      default:
+        return initialFeed;
+    }
+  }, [activeFilter, initialFeed]);
 
-  const currentFeed = feedData[activeFilter];
 
   return (
     <div>
