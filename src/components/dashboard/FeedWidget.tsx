@@ -31,6 +31,7 @@ const communitiesFeed: FeedPostType[] = [
         comments: 50,
         reposts: 30,
         likes: 250,
+        destinations: ["Arte Ciberdélico"]
     }
 ];
 
