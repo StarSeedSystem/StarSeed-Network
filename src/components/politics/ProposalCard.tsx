@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ThumbsUp, ThumbsDown, MessageSquare, Users, Eye, Bookmark, Minus, Plus } from "lucide-react";
 import { Separator } from "../ui/separator";
+import Link from "next/link";
 
 type VoteType = "support" | "reject" | null;
 
@@ -148,8 +149,8 @@ export function ProposalCard({ id, title, proposer, entity, status, stats: initi
                     {isSaved ? <Bookmark className="mr-2 h-4 w-4 fill-current text-primary" /> : <Bookmark className="mr-2 h-4 w-4" />}
                     {isSaved ? "Guardado" : "Guardar"}
                 </Button>
-                <Button className="flex-1">
-                    Ver Detalles
+                <Button asChild className="flex-1">
+                    <Link href={`/politics/proposal/${id}`}>Ver Detalles</Link>
                 </Button>
             </div>
         </CardFooter>
