@@ -48,7 +48,8 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 const authRoutes = ["/login", "/signup"];
 
@@ -128,24 +129,27 @@ function AppSidebar() {
   const renderNavItems = () => (
     navItems.map((item) =>
       item.subItems ? (
-        <Collapsible key={item.label} className="w-full">
+        <Collapsible key={item.label} className="w-full" asChild>
+        <SidebarMenuItem>
           <CollapsibleTrigger asChild>
-              <div className="group/menu-item relative">
-                  <SidebarMenuButton
-                      variant="default"
-                      className="w-full justify-between"
-                      tooltip={item.label}
-                  >
-                      <div className="flex items-center gap-3">
-                          <item.icon className="glowing-icon h-5 w-5" />
-                          <span className={state === 'collapsed' ? 'hidden' : 'inline'}>{item.label}</span>
-                      </div>
-                      <ChevronDown className={`h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180 ${state === 'collapsed' ? 'hidden' : 'inline'}`} />
-                  </SidebarMenuButton>
-              </div>
+              <SidebarMenuButton
+                  variant="default"
+                  className="w-full justify-between"
+              >
+                  <div className="flex items-center gap-3">
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                            <item.icon className="glowing-icon h-5 w-5" />
+                          </TooltipTrigger>
+                          {state === "collapsed" && <TooltipContent side="right">{item.label}</TooltipContent>}
+                      </Tooltip>
+                      <span className={cn(state === 'collapsed' && 'hidden')}>{item.label}</span>
+                  </div>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180", state === 'collapsed' && "hidden")} />
+              </SidebarMenuButton>
           </CollapsibleTrigger>
-          <CollapsibleContent>
-              <SidebarMenuSub className="mt-1">
+          <CollapsibleContent asChild>
+              <SidebarMenuSub>
                   {item.subItems.map((subItem) => (
                   <SidebarMenuItem key={subItem.href}>
                       <SidebarMenuSubButton
@@ -161,13 +165,19 @@ function AppSidebar() {
                   ))}
               </SidebarMenuSub>
           </CollapsibleContent>
+        </SidebarMenuItem>
         </Collapsible>
       ) : (
         <SidebarMenuItem key={item.href}>
-          <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
+          <SidebarMenuButton asChild isActive={pathname === item.href}>
             <Link href={item.href ?? '#'} prefetch={false}>
-              {item.icon && <item.icon className="glowing-icon h-5 w-5" />}
-              <span className={state === 'collapsed' ? 'hidden' : 'inline'}>{item.label}</span>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        {item.icon && <item.icon className="glowing-icon h-5 w-5" />}
+                    </TooltipTrigger>
+                    {state === "collapsed" && <TooltipContent side="right">{item.label}</TooltipContent>}
+                </Tooltip>
+              <span className={cn(state === 'collapsed' && 'hidden')}>{item.label}</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -185,23 +195,23 @@ function AppSidebar() {
           {renderNavItems()}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="p-2">
+      <SidebarFooter>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="justify-start w-full text-left p-2 h-auto">
-              <div className="flex items-center gap-3 w-full">
-                <Avatar className="h-10 w-10 border-2 border-primary/50">
-                  <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="glowing astronaut" />
-                  <AvatarFallback>SN</AvatarFallback>
-                </Avatar>
-                <div className={`flex flex-col truncate transition-opacity duration-200 ${state === 'collapsed' ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                  <span className="font-semibold text-sm">Starlight</span>
-                  <span className="text-xs text-muted-foreground">Nexus Pioneer</span>
+             <Button variant="ghost" className="justify-start w-full text-left p-2 h-auto">
+                <div className="flex items-center gap-3 w-full">
+                    <Avatar className="h-10 w-10 border-2 border-primary/50">
+                    <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="glowing astronaut" />
+                    <AvatarFallback>SN</AvatarFallback>
+                    </Avatar>
+                    <div className={cn("flex flex-col truncate transition-opacity duration-200", state === 'collapsed' && 'opacity-0 w-0 hidden')}>
+                        <span className="font-semibold text-sm">Starlight</span>
+                        <span className="text-xs text-muted-foreground">Nexus Pioneer</span>
+                    </div>
                 </div>
-              </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" className="w-56 glass-card rounded-xl">
+          <DropdownMenuContent side="right" align="start" className="w-56 glass-card rounded-xl mb-2">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
@@ -222,9 +232,10 @@ function AppSidebar() {
 }
 
 function AppHeader() {
+    const { isMobile } = useSidebar();
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-xl md:px-6">
-      <SidebarTrigger />
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-xl md:px-6">
+      {isMobile && <SidebarTrigger />}
       <div className="flex-1 text-center md:text-left">
         {/* Potentially add breadcrumbs or page title here */}
       </div>
@@ -233,8 +244,12 @@ function AppHeader() {
 }
 
 function MainContent({ children }: { children: React.ReactNode }) {
+    const { state, isMobile } = useSidebar();
     return (
-        <div className="flex flex-col flex-1">
+        <div className={cn(
+            "flex flex-col flex-1 transition-[margin-left] duration-300 ease-in-out",
+            !isMobile && (state === 'expanded' ? "ml-[18rem]" : "ml-[4.5rem]")
+        )}>
             <AppHeader />
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 {children}
@@ -256,7 +271,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className="relative flex h-screen">
+      <div className="relative flex h-screen overflow-hidden">
         <AppSidebar />
         <MainContent>{children}</MainContent>
       </div>
