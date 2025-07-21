@@ -1,60 +1,97 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithRedirect, // Import signInWithRedirect
+  getRedirectResult   // Import getRedirectResult
 } from "firebase/auth";
 import { auth } from "@/data/firebase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Chrome, BotMessageSquare } from "lucide-react";
+import { Chrome, BotMessageSquare, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false); // For general loading
+  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true); // Specifically for the redirect check
+
   const router = useRouter();
 
+  useEffect(() => {
+    // This effect runs when the page loads or reloads.
+    // It checks if the user has just been redirected back from Google.
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          // User has successfully signed in via redirect.
+          toast({ title: "Login Successful", description: `Welcome, ${result.user.displayName}!` });
+          router.push("/");
+        }
+      } catch (err: any) {
+        console.error("Error getting redirect result:", err);
+        setError("Failed to complete Google sign-in.");
+      } finally {
+        // Stop the redirect-specific loading indicator
+        setIsCheckingRedirect(false);
+      }
+    };
+    
+    checkRedirect();
+  }, [router]);
+
   const handleSignUp = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      // On successful sign-up, Firebase automatically signs the user in.
-      // The UserContext will detect this, and we can redirect.
       router.push("/"); 
     } catch (err: any) {
       setError(err.message);
-      console.error("Error signing up:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
   
   const handleLogin = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/");
     } catch (err: any) {
       setError("Failed to login. Please check your credentials.");
-      console.error("Error logging in:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
   
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      router.push("/");
-    } catch (err: any) {
-      setError("Failed to sign in with Google.");
-      console.error("Error with Google sign-in:", err);
-    }
+    setError(null);
+    // This will navigate the user away from the app to Google's sign-in page.
+    // There's no need to handle the result here, the useEffect will do it on redirect.
+    await signInWithRedirect(auth, provider);
   };
+  
+  if (isCheckingRedirect) {
+      return (
+          <div className="flex flex-col items-center justify-center min-h-screen">
+              <Loader2 className="h-12 w-12 animate-spin text-primary"/>
+              <p className="mt-4 text-muted-foreground">Verifying authentication...</p>
+          </div>
+      )
+  }
 
   return (
     <Card className="mx-auto max-w-sm w-full glass-card">
@@ -71,53 +108,30 @@ export default function LoginPage() {
         <div className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="pioneer@nexus.io"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <Input id="email" type="email" placeholder="pioneer@nexus.io" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              required 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} />
           </div>
           {error && <p className="text-red-500 text-sm">{error}</p>}
-          <Button type="button" className="w-full" size="lg" onClick={handleLogin}>
-            Login
+          <Button type="button" className="w-full" size="lg" onClick={handleLogin} disabled={isLoading}>
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : 'Login'}
           </Button>
           <div className="mt-2 text-center text-sm">
             Don&apos;t have an account?{" "}
-            <Button variant="link" className="p-0" onClick={handleSignUp}>
-              Sign up
-            </Button>
+            <Button variant="link" className="p-0" onClick={handleSignUp} disabled={isLoading}>Sign up</Button>
           </div>
           <div className="relative mt-2">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card/60 px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+            <div className="relative flex justify-center text-xs uppercase"><span className="bg-card/60 px-2 text-muted-foreground">Or continue with</span></div>
           </div>
            <div className="grid grid-cols-2 gap-2 mt-2">
-              <Button variant="outline" onClick={handleGoogleSignIn}>
-                <Chrome className="mr-2 h-4 w-4" />
-                Google
+              <Button variant="outline" onClick={handleGoogleSignIn} disabled={isLoading}>
+                <Chrome className="mr-2 h-4 w-4" /> Google
               </Button>
               <Button variant="outline" disabled>
-                <BotMessageSquare className="mr-2 h-4 w-4" />
-                AI-Pass
+                <BotMessageSquare className="mr-2 h-4 w-4" /> AI-Pass
               </Button>
             </div>
         </div>

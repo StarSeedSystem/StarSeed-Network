@@ -1,22 +1,31 @@
+
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
-// A functional, read-only demo configuration to ensure connectivity.
+// Your web app's Firebase configuration - THIS IS CORRECT
 const firebaseConfig = {
-  apiKey: "AIzaSyCVK6RorG31wvVpW4AEJgBprS--5uS6sE4",
+  apiKey: "AIzaSyDymU2o51_qnYPu-wug3_UnDeBYP11VY04",
   authDomain: "dev-prototyping-355415.firebaseapp.com",
   projectId: "dev-prototyping-355415",
   storageBucket: "dev-prototyping-355415.appspot.com",
-  messagingSenderId: "367939130765",
-  appId: "1:367939130765:web:86e42b29213444a7f0545d"
+  messagingSenderId: "338980186526",
+  appId: "1:338980186526:web:73c88b067f9a1f5de844f2",
+  measurementId: "G-1W1Y11FN7M"
 };
 
-// Initialize Firebase
-// We need to check if the app is already initialized to avoid errors on hot reloads
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
+// --- CORRECT INITIALIZATION LOGIC ---
+// This robust logic prevents re-initializing the app on hot reloads in development
+let app;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp();
+}
+
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
