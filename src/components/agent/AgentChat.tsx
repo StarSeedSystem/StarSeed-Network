@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect, FormEvent } from "react";
-import { analyzeImage } from "@/ai/flows/analyze-image-flow";
+import { runAgentFlow } from "@/ai/flows/agent-flow";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +22,7 @@ interface Message {
 
 export function AgentChat() {
     const [messages, setMessages] = useState<Message[]>([
-        { id: "1", text: "Hola, soy tu Exocórtex Digital. ¿En qué podemos colaborar hoy? Puedes darme instrucciones, pedirme que analice un archivo o que te ayude a crear algo nuevo.", sender: "agent" }
+        { id: "1", text: "Hola, soy tu Exocórtex Digital. ¿En qué podemos colaborar hoy? Puedes darme instrucciones, pedirme que analice un archivo o que te explique cómo funciona una característica de la red.", sender: "agent" }
     ]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -122,7 +122,7 @@ export function AgentChat() {
         setIsLoading(true);
 
         try {
-            const agentResponse = await analyzeImage({
+            const agentResponse = await runAgentFlow({
                 prompt: userMessage.text,
                 imageDataUri: image,
             });
@@ -145,7 +145,7 @@ export function AgentChat() {
         } finally {
             setIsLoading(false);
             // Turn off camera after analysis
-            if (isCameraActive) {
+            if (isCameraActive && image) {
                 handleToggleCamera();
             }
         }

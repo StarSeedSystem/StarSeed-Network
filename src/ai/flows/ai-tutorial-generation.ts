@@ -26,7 +26,7 @@ export async function generateTutorial(input: GenerateTutorialInput): Promise<Ge
   return generateTutorialFlow(input);
 }
 
-const prompt = ai.definePrompt({
+export const generateTutorialPrompt = ai.definePrompt({
   name: 'generateTutorialPrompt',
   input: {schema: GenerateTutorialInputSchema},
   output: {schema: GenerateTutorialOutputSchema},
@@ -47,7 +47,7 @@ const generateTutorialFlow = ai.defineFlow(
     outputSchema: GenerateTutorialOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await generateTutorialPrompt(input);
     return output!;
   }
 );
