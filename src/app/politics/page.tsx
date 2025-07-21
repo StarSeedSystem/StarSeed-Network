@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProposalCard } from "@/components/politics/ProposalCard";
 import { Gavel, PlaySquare, Scale } from "lucide-react";
+import { AdvancedFilter } from "@/components/politics/AdvancedFilter";
 
 const legislativeProposals = [
   {
@@ -56,6 +57,8 @@ export default function PoliticsPage() {
           El parlamento digital de la red. Aquí se proponen, debaten y gestionan las decisiones que nos afectan a todos.
         </p>
       </div>
+
+       <AdvancedFilter />
 
       <Tabs defaultValue="legislative" className="w-full">
         <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 bg-card/60 rounded-xl h-auto">

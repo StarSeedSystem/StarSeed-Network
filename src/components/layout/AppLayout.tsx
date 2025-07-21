@@ -13,11 +13,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarInset,
-  SidebarTrigger,
-  SidebarSeparator,
   SidebarMenuSub,
   SidebarMenuSubButton,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -40,7 +38,6 @@ import {
   Sparkles,
   PenSquare,
   Library,
-  BookOpen,
   Settings,
   LogOut,
   ChevronDown,
@@ -50,7 +47,6 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
 
 const authRoutes = ["/login", "/signup"];
 
@@ -105,8 +101,8 @@ const navItems = [
       label: "Biblioteca",
       icon: Library,
       subItems: [
-        { href: "/library/apps", label: "Apps Favoritas" },
-        { href: "/library/files", label: "Archivos Recientes" },
+        { href: "#", label: "Apps Favoritas" },
+        { href: "#", label: "Archivos Recientes" },
         { href: "/avatar-generator", label: "AI Avatar Generator", icon: Bot },
         { href: "/video-generator", label: "AI Video Generator", icon: Clapperboard },
       ],
@@ -116,9 +112,9 @@ const navItems = [
       icon: Info,
       subItems: [
         { href: "/info/constitution", label: "Constitución" },
-        { href: "/info/vision", label: "Fundamentos y Visión" },
-        { href: "/info/manual", label: "Funcionamiento de la Red" },
-        { href: "/info/guides", label: "Diccionario y Guías" },
+        { href: "#", label: "Fundamentos y Visión" },
+        { href: "#", label: "Funcionamiento de la Red" },
+        { href: "#", label: "Diccionario y Guías" },
       ],
     },
 ];
@@ -242,12 +238,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <div className="relative flex h-screen">
         <AppSidebar />
-        <SidebarInset>
-            <AppHeader />
-            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-                {children}
-            </main>
-        </SidebarInset>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <AppHeader />
+          <div className="pt-6">
+            {children}
+          </div>
+        </main>
       </div>
     </SidebarProvider>
   );
