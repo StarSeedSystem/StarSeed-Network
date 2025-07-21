@@ -36,6 +36,7 @@ import {
   Users,
   Sun,
   Moon,
+  Clapperboard,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -76,6 +77,7 @@ function AppLogo() {
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/profile", label: "Profile", icon: User },
+  { href: "/video-generator", label: "Video Generator", icon: Clapperboard },
   { href: "/achievements", label: "Achievements", icon: Star },
   { href: "/communities", label: "Communities", icon: Users },
   { href: "/tutorials", label: "AI Tutorials", icon: BotMessageSquare },
