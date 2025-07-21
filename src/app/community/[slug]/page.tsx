@@ -1,14 +1,8 @@
 
-import { notFound } from "next/navigation";
-import { db } from "@/data/db";
-import { EntityProfile } from "@/components/profile/EntityProfile";
+// This is a Server Component by default
+import { CommunityClient } from "@/components/community/CommunityClient";
 
-export default async function CommunityProfilePage({ params }: { params: { slug: string } }) {
-    const data = await db.communities.findUnique(params.slug);
-
-    if (!data) {
-        notFound();
-    }
-
-    return <EntityProfile data={data} />;
+export default function CommunityProfilePage({ params }: { params: { slug: string } }) {
+    // We pass the slug to the Client Component, which will handle all data fetching and rendering logic.
+    return <CommunityClient slug={params.slug} />;
 }

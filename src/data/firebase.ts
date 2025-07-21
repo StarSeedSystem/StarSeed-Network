@@ -5,14 +5,14 @@ import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 // TODO: Add your own Firebase configuration from your Firebase project settings
-// IMPORTANT: Replace with your actual Firebase configuration
+// IMPORTANT: This is a read-only demo configuration. Replace with your own.
 const firebaseConfig = {
-  apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  authDomain: "your-project-id.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "your-sender-id",
-  appId: "your-app-id"
+  apiKey: "AIzaSyCVK6RorG31wvVpW4AEJgBprS--5uS6sE4",
+  authDomain: "dev-prototyping-355415.firebaseapp.com",
+  projectId: "dev-prototyping-355415",
+  storageBucket: "dev-prototyping-355415.appspot.com",
+  messagingSenderId: "367939130765",
+  appId: "1:367939130765:web:86e42b29213444a7f0545d"
 };
 
 // Initialize Firebase
