@@ -1,8 +1,16 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/data/db';
+import { db } from '@/data/firebase';
+import { collection, getDocs } from "firebase/firestore";
 
 export async function GET(request: NextRequest) {
-  const federations = await db.federations.find();
-  return NextResponse.json(federations);
+  try {
+    const querySnapshot = await getDocs(collection(db, "federations"));
+    const federations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return NextResponse.json(federations);
+  } catch (error) {
+    console.error("Error fetching federations: ", error);
+    const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
 }
