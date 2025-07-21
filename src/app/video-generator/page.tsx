@@ -19,8 +19,8 @@ export default function VideoGeneratorPage() {
         if (!prompt.trim()) {
             toast({
                 variant: "destructive",
-                title: "Prompt is empty",
-                description: "Please enter a prompt to generate a video.",
+                title: "El prompt está vacío",
+                description: "Por favor, introduce un prompt para generar un video.",
             });
             return;
         }
@@ -32,18 +32,18 @@ export default function VideoGeneratorPage() {
                 if (result.videoDataUri) {
                     setVideoUrl(result.videoDataUri);
                     toast({
-                        title: "Video Generated!",
-                        description: "Your new video is ready.",
+                        title: "¡Video Generado!",
+                        description: "Tu nuevo video está listo.",
                     });
                 } else {
-                     throw new Error("The AI flow did not return a video.");
+                     throw new Error("El flujo de IA no devolvió un video.");
                 }
             } catch (error) {
-                console.error("Video generation error:", error);
-                const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+                console.error("Error en la generación de video:", error);
+                const errorMessage = error instanceof Error ? error.message : "Ocurrió un error desconocido.";
                 toast({
                     variant: "destructive",
-                    title: "Video Generation Failed",
+                    title: "Falló la Generación de Video",
                     description: errorMessage,
                 });
             }
@@ -55,18 +55,18 @@ export default function VideoGeneratorPage() {
             <Card className="glass-card rounded-2xl">
                 <CardHeader>
                     <CardTitle className="font-headline text-3xl flex items-center gap-2">
-                        <Clapperboard className="text-primary h-8 w-8" />
-                        AI Video Generator
+                        <Clapperboard className="text-primary h-8 w-8 glowing-icon" />
+                        Generador de Videos con IA
                     </CardTitle>
                     <CardDescription>
-                        Create stunning short videos from your text prompts using the power of generative AI.
+                       Crea impresionantes videos cortos a partir de tus prompts de texto usando el poder de la IA generativa.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-2">
                          <Textarea
                             id="video-prompt"
-                            placeholder="e.g., A majestic dragon soaring over a mystical forest at dawn."
+                            placeholder="Ej: Un majestuoso dragón sobrevolando un bosque místico al amanecer."
                             className="min-h-[100px] text-base"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
@@ -77,12 +77,12 @@ export default function VideoGeneratorPage() {
                         {isPending ? (
                             <>
                                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                Generating... (this can take a minute)
+                                Generando... (esto puede tardar un minuto)
                             </>
                         ) : (
                              <>
                                 <Sparkles className="mr-2 h-5 w-5" />
-                                Generate Video
+                                Generar Video
                             </>
                         )}
                     </Button>
@@ -90,16 +90,16 @@ export default function VideoGeneratorPage() {
                      {isPending && !videoUrl && (
                         <Alert className="bg-primary/10 border-primary/20 text-center">
                             <Loader2 className="h-5 w-5 text-primary animate-spin mx-auto mb-2" />
-                            <AlertTitle className="font-headline text-primary">Your video is being created...</AlertTitle>
+                            <AlertTitle className="font-headline text-primary">Tu video se está creando...</AlertTitle>
                             <AlertDescription className="text-foreground/80">
-                                The AI is working its magic. This process can take up to a minute. Please be patient.
+                                La IA está haciendo su magia. Este proceso puede tardar hasta un minuto. Por favor, sé paciente.
                             </AlertDescription>
                         </Alert>
                     )}
 
                     {videoUrl && (
                          <div className="space-y-4">
-                            <h3 className="text-xl font-headline font-semibold text-center">Your Generated Video</h3>
+                            <h3 className="text-xl font-headline font-semibold text-center">Tu Video Generado</h3>
                             <div className="aspect-video w-full bg-black rounded-lg overflow-hidden border-2 border-primary">
                                 <video
                                     src={videoUrl}
@@ -108,7 +108,7 @@ export default function VideoGeneratorPage() {
                                     loop
                                     className="w-full h-full object-contain"
                                 >
-                                    Your browser does not support the video tag.
+                                    Tu navegador no soporta la etiqueta de video.
                                 </video>
                             </div>
                         </div>

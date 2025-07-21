@@ -45,10 +45,17 @@ async function videoToDataUri(video: MediaPart): Promise<string> {
     // The video URL from Veo requires the API key for access
     const videoUrl = `${video.media!.url}&key=${process.env.GEMINI_API_KEY}`;
     const response = await fetch(videoUrl);
-    if (!response.ok) {
+    if (!response.ok || !response.body) {
         throw new Error(`Failed to fetch video: ${response.statusText}`);
     }
-    const videoBuffer = await response.buffer();
+    
+    // Convert stream to buffer
+    const chunks: Buffer[] = [];
+    for await (const chunk of response.body) {
+        chunks.push(chunk as Buffer);
+    }
+    const videoBuffer = Buffer.concat(chunks);
+
     const base64Video = videoBuffer.toString('base64');
     const contentType = response.headers.get('content-type') || 'video/mp4';
     return `data:${contentType};base64,${base64Video}`;

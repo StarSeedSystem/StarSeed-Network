@@ -106,10 +106,10 @@ const navItems = [
       label: "Biblioteca",
       icon: Library,
       subItems: [
+        { href: "/avatar-generator", label: "Generador de Avatares", icon: Bot },
+        { href: "/video-generator", label: "Generador de Videos", icon: Clapperboard },
         { href: "#", label: "Apps Favoritas" },
         { href: "#", label: "Archivos Recientes" },
-        { href: "/avatar-generator", label: "AI Avatar Generator", icon: Bot },
-        { href: "/video-generator", label: "AI Video Generator", icon: Clapperboard },
       ],
     },
     {
@@ -214,16 +214,16 @@ function AppSidebar() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="right" align="start" className="w-56 glass-card rounded-xl mb-2">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+                <span>Ajustes</span>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Link href="/login" className="flex items-center w-full" prefetch={false}>
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Log Out</span>
+                <span>Cerrar Sesión</span>
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
