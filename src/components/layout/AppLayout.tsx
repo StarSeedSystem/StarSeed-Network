@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -15,6 +16,8 @@ import {
   SidebarInset,
   SidebarTrigger,
   SidebarSeparator,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -27,19 +30,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "../ui/button";
 import {
-  Home,
+  LayoutDashboard,
   User,
-  Star,
+  MessageSquare,
+  Users,
+  Network,
+  Gavel,
+  GraduationCap,
+  Sparkles,
+  PenSquare,
+  Library,
+  BookOpen,
   Settings,
   LogOut,
-  BotMessageSquare,
-  Users,
-  Sun,
-  Moon,
-  Clapperboard,
-  PenSquare,
+  ChevronDown
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
 const authRoutes = ["/login", "/signup"];
 
@@ -76,17 +84,43 @@ function AppLogo() {
 }
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: Home },
-  { href: "/profile", label: "Profile", icon: User },
-  { href: "/publish", label: "Publicar", icon: PenSquare },
-  { href: "/video-generator", label: "Video Generator", icon: Clapperboard },
-  { href: "/achievements", label: "Achievements", icon: Star },
-  { href: "/communities", label: "Communities", icon: Users },
-  { href: "/tutorials", label: "AI Tutorials", icon: BotMessageSquare },
+    { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/profile", label: "Perfil", icon: User },
+    { href: "/messages", label: "Mensajes", icon: MessageSquare },
+    { href: "/participations", label: "Participaciones", icon: Users },
+    {
+      label: "Red",
+      icon: Network,
+      subItems: [
+        { href: "/politics", label: "Política", icon: Gavel },
+        { href: "/education", label: "Educación", icon: GraduationCap },
+        { href: "/culture", label: "Cultura", icon: Sparkles },
+      ],
+    },
+    { href: "/publish", label: "Publicar", icon: PenSquare },
+    {
+      label: "Biblioteca",
+      icon: Library,
+      subItems: [
+        { href: "/library/apps", label: "Apps Favoritas" },
+        { href: "/library/files", label: "Archivos Recientes" },
+      ],
+    },
+    {
+      label: "Información",
+      icon: BookOpen,
+      subItems: [
+        { href: "/info/constitution", label: "Constitución" },
+        { href: "/info/vision", label: "Fundamentos y Visión" },
+        { href: "/info/manual", label: "Funcionamiento de la Red" },
+        { href: "/info/guides", label: "Diccionario y Guías" },
+      ],
+    },
 ];
 
 function AppSidebar() {
   const pathname = usePathname();
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -94,16 +128,52 @@ function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton asChild isActive={pathname === item.href}>
-                <Link href={item.href} prefetch={false}>
-                  <item.icon className="glowing-icon" />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {navItems.map((item) =>
+            item.subItems ? (
+              <Collapsible key={item.label} className="w-full">
+                <CollapsibleTrigger asChild>
+                    <div className="group/menu-item relative">
+                        <SidebarMenuButton
+                            variant="default"
+                            className="w-full justify-between"
+                        >
+                            <div className="flex items-center gap-2">
+                                <item.icon className="glowing-icon" />
+                                <span>{item.label}</span>
+                            </div>
+                            <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                        </SidebarMenuButton>
+                    </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                    <SidebarMenuSub className="mt-1">
+                        {item.subItems.map((subItem) => (
+                        <SidebarMenuItem key={subItem.href}>
+                            <SidebarMenuSubButton
+                            asChild
+                            isActive={pathname === subItem.href}
+                            >
+                            <Link href={subItem.href ?? '#'} prefetch={false}>
+                                {subItem.icon && <subItem.icon />}
+                                <span>{subItem.label}</span>
+                            </Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuItem>
+                        ))}
+                    </SidebarMenuSub>
+                </CollapsibleContent>
+              </Collapsible>
+            ) : (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton asChild isActive={pathname === item.href}>
+                  <Link href={item.href ?? '#'} prefetch={false}>
+                    {item.icon && <item.icon className="glowing-icon" />}
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          )}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-2">
