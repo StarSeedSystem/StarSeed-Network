@@ -4,6 +4,7 @@ import { FeedWidget } from "@/components/dashboard/FeedWidget";
 import { NatalChartWidget } from "@/components/profile/NatalChartWidget";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ListVideo, Award } from "lucide-react";
+import { AchievementsWidget } from "@/components/dashboard/AchievementsWidget";
 
 export default function ProfilePage() {
   return (
@@ -32,6 +33,7 @@ export default function ProfilePage() {
         </div>
         <div className="space-y-8">
             <NatalChartWidget />
+            <AchievementsWidget />
         </div>
       </div>
     </div>
