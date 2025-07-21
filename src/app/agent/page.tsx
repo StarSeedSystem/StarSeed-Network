@@ -15,7 +15,7 @@ export default function AgentPage() {
         </p>
       </div>
 
-      <div className="flex-grow">
+      <div className="flex-grow min-h-0">
           <AgentChat />
       </div>
     </div>
