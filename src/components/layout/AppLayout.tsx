@@ -48,6 +48,8 @@ import {
   Bot,
   ArrowLeft,
   Bell,
+  Store,
+  LayoutTemplate
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -106,13 +108,15 @@ const navItems = [
     },
     { href: "/publish", label: "Publicar", icon: PenSquare },
     {
+      href: "/library",
       label: "Biblioteca",
       icon: Library,
       subItems: [
+        { href: "/profile", label: "Mi Biblioteca" }, // Links to profile's library tab
+        { href: "#", label: "Tienda de Apps", icon: Store },
+        { href: "/library/templates", label: "Plantillas", icon: LayoutTemplate },
         { href: "/avatar-generator", label: "Generador de Avatares", icon: Bot },
         { href: "/video-generator", label: "Generador de Videos", icon: Clapperboard },
-        { href: "#", label: "Apps Favoritas" },
-        { href: "#", label: "Archivos Recientes" },
       ],
     },
     {
@@ -146,7 +150,10 @@ function AppSidebar() {
               <SidebarMenuButton
                   variant="default"
                   className="w-full justify-between"
+                  asChild
+                  isActive={item.href && pathname.startsWith(item.href)}
               >
+                 <Link href={item.href ?? '#'} prefetch={false}>
                   <div className="flex items-center gap-3">
                       <Tooltip>
                           <TooltipTrigger asChild>
@@ -157,6 +164,7 @@ function AppSidebar() {
                       <span className={cn(state === 'collapsed' && 'hidden')}>{item.label}</span>
                   </div>
                   <ChevronDown className={cn("h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180", state === 'collapsed' && "hidden")} />
+                 </Link>
               </SidebarMenuButton>
           </CollapsibleTrigger>
           <CollapsibleContent asChild>
@@ -226,13 +234,13 @@ function AppSidebar() {
             <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/settings" className="flex items-center w-full" prefetch={false}>
+              <Link href="/settings" className="flex items-center w-full" prefetch={false} onClick={handleLinkClick}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Ajustes</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/login" className="flex items-center w-full" prefetch={false}>
+              <Link href="/login" className="flex items-center w-full" prefetch={false} onClick={handleLinkClick}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Cerrar Sesión</span>
               </Link>
