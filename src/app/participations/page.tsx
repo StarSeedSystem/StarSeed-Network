@@ -4,10 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Users, Shield, BookOpen, Handshake, Globe, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Link from "next/link";
 
 const communities = [
     {
         name: "Innovación Sostenible",
+        slug: "innovacion-sostenible",
         description: "Comunidad dedicada a encontrar e implementar soluciones ecológicas en la red.",
         members: 125,
         avatar: "https://placehold.co/100x100.png",
@@ -17,6 +19,7 @@ const communities = [
     },
     {
         name: "Arte Ciberdélico",
+        slug: "arte-ciberdelico",
         description: "Colectivo de artistas y programadores explorando la creatividad emergente a través de la IA.",
         members: 342,
         avatar: "https://placehold.co/100x100.png",
@@ -26,6 +29,7 @@ const communities = [
     },
      {
         name: "E.F. Localidad Central",
+        slug: "ef-localidad-central",
         description: "Entidad territorial para la gobernanza local y proyectos comunitarios.",
         members: 1530,
         avatar: "https://placehold.co/100x100.png",
@@ -38,6 +42,7 @@ const communities = [
 const politicalParties = [
     {
         name: "Partido: Futuro Transhumanista",
+        slug: "partido-futuro-transhumanista",
         description: "Agrupación que impulsa políticas para la evolución tecnológica y biológica consciente.",
         members: 89,
         avatar: "https://placehold.co/100x100.png",
@@ -50,6 +55,7 @@ const politicalParties = [
 const studyGroups = [
     {
         name: "Grupo de Estudio: Redes Neuronales Descentralizadas",
+        slug: "grupo-redes-neuronales",
         description: "Investigación y desarrollo de arquitecturas de IA que operan en entornos P2P.",
         members: 45,
         avatar: "https://placehold.co/100x100.png",
@@ -59,6 +65,7 @@ const studyGroups = [
     },
     {
         name: "Taller de Diseño de Avatares VRM",
+        slug: "taller-avatares-vrm",
         description: "Aprendizaje colaborativo sobre las herramientas y técnicas para crear avatares 3D interoperables.",
         members: 78,
         avatar: "https://placehold.co/100x100.png",
@@ -71,6 +78,7 @@ const studyGroups = [
 const alliances = [
     {
         name: "Alianza por la Soberanía Digital",
+        slug: "alianza-soberania-digital",
         description: "Colaboración entre 'Innovación Sostenible' y la 'E.F. Localidad Central' para desarrollar estándares de datos.",
         members: 2, // Representa a los 2 grupos
         avatar: "https://placehold.co/100x100.png",
@@ -100,7 +108,9 @@ const ParticipationCard = ({ item }: { item: (typeof communities)[0] }) => (
                 {item.members.toLocaleString()} {item.type === 'Alianza Estratégica' ? 'Grupos' : 'Miembros'}
             </p>
         </div>
-        <Button variant="outline">Ir al Perfil</Button>
+        <Button asChild variant="outline">
+            <Link href={`/community/${item.slug}`}>Ir al Perfil</Link>
+        </Button>
     </Card>
 );
 
