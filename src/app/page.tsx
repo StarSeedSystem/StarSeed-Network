@@ -1,12 +1,6 @@
 
-"use client";
-
-import { FeedWidget, FeedPostType } from "@/components/dashboard/FeedWidget";
-import { AchievementsWidget } from "@/components/dashboard/AchievementsWidget";
-import { TutorialsWidget } from "@/components/dashboard/TutorialsWidget";
-import { PoliticalSummaryWidget } from "@/components/dashboard/PoliticalSummaryWidget";
-import { ProjectsWidget } from "@/components/dashboard/ProjectsWidget";
-import { LearningPathWidget } from "@/components/dashboard/LearningPathWidget";
+import { FeedPostType } from "@/components/dashboard/FeedWidget";
+import { DashboardClient } from "@/components/dashboard/DashboardClient";
 
 const initialFeed: FeedPostType[] = [
   {
@@ -18,6 +12,7 @@ const initialFeed: FeedPostType[] = [
     comments: 12,
     reposts: 5,
     likes: 42,
+    destinations: ["Profile"]
   },
   {
     author: "GaiaPrime",
@@ -34,24 +29,6 @@ const initialFeed: FeedPostType[] = [
 
 export default function DashboardPage() {
   return (
-    <div className="flex flex-col lg:flex-row gap-8">
-      {/* Columna Izquierda */}
-      <div className="w-full lg:w-1/4 space-y-8">
-        <PoliticalSummaryWidget />
-        <AchievementsWidget />
-        <TutorialsWidget />
-      </div>
-
-      {/* Columna Central (Principal) */}
-      <div className="w-full lg:w-1/2 space-y-8">
-        <FeedWidget initialFeed={initialFeed} />
-      </div>
-
-      {/* Columna Derecha */}
-      <div className="w-full lg:w-1/4 space-y-8">
-        <ProjectsWidget />
-        <LearningPathWidget />
-      </div>
-    </div>
+    <DashboardClient initialFeed={initialFeed} />
   );
 }
