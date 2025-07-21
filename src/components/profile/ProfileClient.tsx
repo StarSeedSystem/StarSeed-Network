@@ -34,7 +34,7 @@ import { ProfileFeed } from "./ProfileFeed";
 import type { FeedPostType } from "../dashboard/FeedPost";
 
 interface ProfileClientProps {
-  libraryItems: LibraryItem[];
+  initialLibraryItems: LibraryItem[];
 }
 
 const userPosts: FeedPostType[] = [
@@ -62,7 +62,7 @@ const userPosts: FeedPostType[] = [
     }
 ]
 
-export function ProfileClient({ libraryItems }: ProfileClientProps) {
+export function ProfileClient({ initialLibraryItems }: ProfileClientProps) {
   const [avatarUrl, setAvatarUrl] = useState("https://placehold.co/128x128.png");
   const [bannerUrl, setBannerUrl] = useState("https://placehold.co/1200x400.png");
   const [bio, setBio] = useState(
@@ -72,7 +72,9 @@ export function ProfileClient({ libraryItems }: ProfileClientProps) {
   const [birthDate, setBirthDate] = useState<Date>();
   const [badges, setBadges] = useState<{ [key: string]: boolean }>({
     nexusPioneer: true, // Example of a pre-earned badge
+    aiSymbiote: false,
   });
+  const [libraryItems, setLibraryItems] = useState<LibraryItem[]>(initialLibraryItems);
   const { toast } = useToast();
 
   const handleSaveChanges = (e: React.FormEvent<HTMLFormElement>) => {
@@ -88,10 +90,21 @@ export function ProfileClient({ libraryItems }: ProfileClientProps) {
     });
   };
 
-  const handleAvatarGenerated = (newAvatarUrl: string) => {
+  const handleAvatarGenerated = (newAvatarUrl: string, description: string) => {
     setAvatarUrl(newAvatarUrl);
     
-    // Only grant badge and show toast if it's the first time
+    // Add new avatar to library
+    const newLibraryItem: LibraryItem = {
+      id: `img_${Date.now()}`,
+      type: "Avatar",
+      title: description || "New AI Avatar",
+      thumbnail: newAvatarUrl,
+      thumbnailHint: "ai generated",
+      source: "/avatar-generator"
+    };
+    setLibraryItems(prev => [newLibraryItem, ...prev]);
+
+    // Only grant badge and show special toast if it's the first time
     if (!badges.aiSymbiote) {
        setBadges(prev => ({ ...prev, aiSymbiote: true }));
        toast({
@@ -102,11 +115,9 @@ export function ProfileClient({ libraryItems }: ProfileClientProps) {
     } else {
         toast({
             title: "Avatar actualizado",
-            description: "Tu nuevo avatar ha sido guardado.",
+            description: "Tu nuevo avatar ha sido guardado en tu biblioteca.",
         });
     }
-
-    // In a real app, this would also add the new avatar to the libraryItems
   }
   
   return (

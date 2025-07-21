@@ -16,7 +16,7 @@ export function AIAvatarGenerator({
   onAvatarGenerated,
 }: {
   currentAvatar?: string;
-  onAvatarGenerated: (url: string) => void;
+  onAvatarGenerated: (url: string, description: string) => void;
 }) {
   const [description, setDescription] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -59,7 +59,7 @@ export function AIAvatarGenerator({
 
   const handleUseAvatar = () => {
     if (generatedAvatar) {
-      onAvatarGenerated(generatedAvatar);
+      onAvatarGenerated(generatedAvatar, description);
       setGeneratedAvatar(null);
     }
   };

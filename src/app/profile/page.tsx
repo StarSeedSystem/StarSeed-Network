@@ -5,7 +5,7 @@ import { NatalChartWidget } from "@/components/profile/NatalChartWidget";
 import { AchievementsWidget } from "@/components/dashboard/AchievementsWidget";
 
 // Placeholder data for generated content. In a real app, this would come from a database.
-const libraryItems = [
+const initialLibraryItems = [
     {
         id: "vid_001",
         type: "Video",
@@ -28,7 +28,7 @@ const libraryItems = [
 export default function ProfilePage() {
   return (
     <div className="space-y-8">
-      <ProfileClient libraryItems={libraryItems} />
+      <ProfileClient initialLibraryItems={initialLibraryItems} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* The main content area including Badges and Library is now managed within ProfileClient */}
         <div className="lg:col-span-2" />
