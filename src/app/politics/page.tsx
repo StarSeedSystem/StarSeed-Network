@@ -1,85 +1,54 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { db } from "@/data/firebase";
+import { DocumentData } from "firebase/firestore";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProposalCard } from "@/components/politics/ProposalCard";
-import { Gavel, PlaySquare, Scale } from "lucide-react";
-import { AdvancedFilter, FilterState } from "@/components/politics/AdvancedFilter";
+import { Gavel, PlaySquare, Scale, PlusCircle, Loader2 } from "lucide-react";
 
-const legislativeProposals = [
-  {
-    id: "prop-001",
-    title: "Ley de Soberanía de Datos Personales",
-    proposer: { name: "Alianza por la Privacidad Digital", avatar: "https://placehold.co/100x100.png", avatarHint: "digital shield" },
-    entity: "E.F. Global",
-    status: "En Votación",
-    stats: { support: 72, reject: 18, abstain: 10 },
-    summary: "Propuesta para establecer que cada individuo es el único propietario de sus datos generados, requiriendo consentimiento explícito para cualquier uso por parte de terceros dentro de la red.",
-    timeLeft: "6 días restantes"
-  },
-  {
-    id: "prop-002",
-    title: "Actualización del Protocolo de Verificación de Identidad",
-    proposer: { name: "Comunidad de Seguridad Cibernética", avatar: "https://placehold.co/100x100.png", avatarHint: "cybernetic eye" },
-    entity: "E.F. Global",
-    status: "En Votación",
-    stats: { support: 120, reject: 35, abstain: 22 },
-    summary: "Revisión del sistema anual de verificación de identidad para incorporar métodos biométricos descentralizados y mejorar la resistencia a la suplantación de identidad.",
-    timeLeft: "12 días restantes"
-  }
-];
-
-const executiveProjects = [
-    {
-        id: "proj-001",
-        title: "Implementación de la Red de Energía Comunitaria",
-        proposer: { name: "Legislativo Aprobado #742", avatar: "https://placehold.co/100x100.png", avatarHint: "green energy" },
-        entity: "E.F. Localidad Central",
-        status: "En Progreso",
-        stats: { progress: 65, volunteers: 42 },
-        summary: "Despliegue de la infraestructura para la red de energía solar compartida. Fase actual: Instalación de paneles en espacios comunitarios."
-    }
-];
-
-const judicialCases = [
-    {
-        id: "case-001",
-        title: "Disputa de Recursos en el Entorno Virtual 'Bosque Primordial'",
-        proposer: { name: "Mediación Comunitaria", avatar: "https://placehold.co/100x100.png", avatarHint: "balanced scales" },
-        entity: "Tribunal Comunitario",
-        status: "En Mediación",
-        stats: { participants: 5 },
-        summary: "Conflicto entre dos comunidades sobre el uso y modificación de un activo digital compartido en un Entorno Virtual Persistente. Se busca una solución restaurativa."
-    }
-];
+// This is the new, dynamic Politics Page component.
 
 export default function PoliticsPage() {
-  const [filters, setFilters] = useState<FilterState>({
-    entity: "all",
-    status: "all",
-    tags: "",
-    saved: false,
-  });
+  const [proposals, setProposals] = useState<DocumentData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mapeo para mantener el estado "guardado" de cada tarjeta.
-  // En una app real, esto podría venir de un contexto o API de usuario.
-  const [savedStates, setSavedStates] = useState<{ [key: string]: boolean }>({});
+  useEffect(() => {
+    // Set up the real-time listener for the 'proposals' collection
+    const proposalsCollection = collection(db, "proposals");
+    const q = query(proposalsCollection, orderBy("createdAt", "desc"));
 
-  const handleSaveToggle = (id: string, isSaved: boolean) => {
-    setSavedStates(prev => ({ ...prev, [id]: isSaved }));
-  };
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const proposalsData = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        setProposals(proposalsData);
+        setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching proposals: ", error);
+        setIsLoading(false);
+    });
 
-  const filterItems = (items: any[]) => {
-    if (!filters.saved) {
-      return items;
-    }
-    return items.filter(item => savedStates[item.id]);
-  };
-  
+    // Cleanup the listener when the component unmounts
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="space-y-8">
-       <AdvancedFilter filters={filters} onFilterChange={setFilters} />
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold font-headline">Centro Político</h1>
+        <Button asChild>
+          <Link href="/participations/create/proposal">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Crear Propuesta
+          </Link>
+        </Button>
+      </div>
 
       <Tabs defaultValue="legislative" className="w-full">
         <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 bg-card/60 rounded-xl h-auto">
@@ -87,50 +56,44 @@ export default function PoliticsPage() {
             <Gavel className="mr-2 h-5 w-5" />
             Legislativo
           </TabsTrigger>
-          <TabsTrigger value="executive" className="rounded-lg py-2 text-base">
+          <TabsTrigger value="executive" className="rounded-lg py-2 text-base" disabled>
             <PlaySquare className="mr-2 h-5 w-5" />
             Ejecutivo
           </TabsTrigger>
-           <TabsTrigger value="judicial" className="rounded-lg py-2 text-base">
+           <TabsTrigger value="judicial" className="rounded-lg py-2 text-base" disabled>
             <Scale className="mr-2 h-5 w-5" />
             Judicial
           </TabsTrigger>
         </TabsList>
+        
         <TabsContent value="legislative" className="mt-6">
-            <div className="space-y-6">
-                {filterItems(legislativeProposals).map(proposal => (
-                    <ProposalCard 
-                      key={proposal.id} 
-                      {...proposal} 
-                      isSaved={savedStates[proposal.id] || false}
-                      onSaveToggle={(isSaved) => handleSaveToggle(proposal.id, isSaved)}
-                    />
-                ))}
-            </div>
-        </TabsContent>
-        <TabsContent value="executive" className="mt-6">
-            <div className="space-y-6">
-                {filterItems(executiveProjects).map(proposal => (
-                    <ProposalCard 
-                      key={proposal.id} 
-                      {...proposal}
-                      isSaved={savedStates[proposal.id] || false}
-                      onSaveToggle={(isSaved) => handleSaveToggle(proposal.id, isSaved)}
-                    />
-                ))}
-            </div>
-        </TabsContent>
-         <TabsContent value="judicial" className="mt-6">
-            <div className="space-y-6">
-                {filterItems(judicialCases).map(proposal => (
-                    <ProposalCard 
-                      key={proposal.id} 
-                      {...proposal}
-                      isSaved={savedStates[proposal.id] || false}
-                      onSaveToggle={(isSaved) => handleSaveToggle(proposal.id, isSaved)}
-                    />
-                ))}
-            </div>
+            {isLoading ? (
+                <div className="flex justify-center items-center py-16">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            ) : proposals.length > 0 ? (
+                <div className="space-y-6">
+                    {proposals.map(proposal => (
+                        <ProposalCard 
+                          key={proposal.id} 
+                          id={proposal.id}
+                          title={proposal.title}
+                          proposer={{ name: proposal.authorName, avatar: "", avatarHint: "user avatar" }}
+                          summary={proposal.summary}
+                          status={proposal.status}
+                          stats={{ support: proposal.votes.for, reject: proposal.votes.against, abstain: proposal.votes.abstain }}
+                          timeLeft="N/A" // This can be calculated later
+                          isSaved={false} // Saved state can be implemented later
+                          onSaveToggle={() => {}} // Dummy function for now
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-16 bg-card/50 rounded-lg">
+                    <h3 className="text-xl font-semibold">No Hay Propuestas Activas</h3>
+                    <p className="text-muted-foreground mt-2">Sé el primero en presentar una nueva iniciativa.</p>
+                </div>
+            )}
         </TabsContent>
       </Tabs>
     </div>
