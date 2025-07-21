@@ -3,11 +3,12 @@
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LayoutTemplate, PlusCircle, User, Palette, LayoutDashboard as DashboardIcon, Cpu, VrHeadset, Diamond, Files, Bot } from "lucide-react";
+import { LayoutTemplate, PlusCircle, User, Palette, LayoutDashboard as DashboardIcon, Cpu, Diamond, Files, Bot, Search, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 
 const templates = {
     profile: [
@@ -37,17 +38,14 @@ const environments = [
 const avatars = [
     { title: "Avatar 'Solarpunk'", description: "Un avatar que fusiona tecnología y naturaleza.", image: "https://placehold.co/600x400.png", imageHint: "solarpunk character", type: "Humanoide", author: "Helios" },
     { title: "Avatar 'Entidad de Datos'", description: "Una forma de avatar no-corpórea hecha de pura información.", image: "https://placehold.co/600x400.png", imageHint: "data entity", type: "Abstracto", author: "DataWeavers" },
+];
+
+const recommendations = [
+    apps[0],
+    environments[0],
+    avatars[0],
+    templates.profile[0],
 ]
-
-type TemplateCategory = 'profile' | 'ui' | 'dashboard';
-type AssetCategory = 'apps' | 'environments' | 'avatars' | 'templates';
-
-const allAssets = {
-    apps,
-    environments,
-    avatars,
-    templates,
-}
 
 type AssetItem = {
     title: string;
@@ -113,8 +111,20 @@ export default function TemplatesPage() {
                 </div>
             </div>
 
-            <Tabs defaultValue="apps" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-card/60 rounded-xl h-auto">
+            <Card className="glass-card p-4">
+                <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input placeholder="Buscar en la Tienda: apps, avatares, plantillas..." className="pl-12 h-14 text-lg bg-background/50" />
+                    <Button size="lg" className="absolute right-2 top-1/2 -translate-y-1/2">Buscar</Button>
+                </div>
+            </Card>
+
+            <Tabs defaultValue="recommendations" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-card/60 rounded-xl h-auto">
+                     <TabsTrigger value="recommendations" className="rounded-lg py-2 text-base">
+                        <Sparkles className="mr-2 h-4 w-4"/>
+                        Recomendados
+                    </TabsTrigger>
                     <TabsTrigger value="apps" className="rounded-lg py-2 text-base">
                         <Cpu className="mr-2 h-4 w-4"/>
                         Apps
@@ -132,6 +142,7 @@ export default function TemplatesPage() {
                         Plantillas
                     </TabsTrigger>
                 </TabsList>
+                <TabsContent value="recommendations" className="mt-6">{renderAssetGrid(recommendations)}</TabsContent>
                 <TabsContent value="apps" className="mt-6">{renderAssetGrid(apps)}</TabsContent>
                 <TabsContent value="environments" className="mt-6">{renderAssetGrid(environments)}</TabsContent>
                 <TabsContent value="avatars" className="mt-6">{renderAssetGrid(avatars)}</TabsContent>
