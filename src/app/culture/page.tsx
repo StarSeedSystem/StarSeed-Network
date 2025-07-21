@@ -74,13 +74,6 @@ const newsFeed = [
 export default function CulturePage() {
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold font-headline">Cultura</h1>
-        <p className="text-lg text-muted-foreground mt-2">
-          El espacio para la expresión social, artística y la creación de nuevos mundos.
-        </p>
-      </div>
-
        <Tabs defaultValue="feed" className="w-full">
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-card/60 rounded-xl h-auto">
                 <TabsTrigger value="feed" className="rounded-lg py-2 text-base">

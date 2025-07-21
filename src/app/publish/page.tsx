@@ -56,7 +56,7 @@ const categories = {
     ]
 }
 
-type MainArea = 'politics' | 'culture' | 'education' | null;
+type MainArea = 'politics' | 'culture' | null;
 
 export default function PublishPage() {
     const [content, setContent] = useState("");
@@ -217,13 +217,6 @@ export default function PublishPage() {
         <div className="container mx-auto max-w-5xl py-8">
             <Card className="glass-card rounded-2xl">
                 <CardHeader>
-                    <CardTitle className="font-headline text-3xl flex items-center gap-2">
-                        <PenSquare className="text-primary h-8 w-8 glowing-icon" />
-                        Crear Publicación
-                    </CardTitle>
-                    <CardDescription>
-                       Forja tu mensaje en el Lienzo de Creación y difúndelo a través del Nexo.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     {/* Step 1 */}
@@ -234,7 +227,7 @@ export default function PublishPage() {
                                 <Button variant="outline" className="h-32 flex-col gap-2 text-base" onClick={() => setSelectedArea('culture')}>
                                     <Sparkles className="h-8 w-8 text-primary"/> Cultura
                                 </Button>
-                                <Button variant="outline" className="h-32 flex-col gap-2 text-base" onClick={() => setSelectedArea('education')}>
+                                <Button variant="outline" className="h-32 flex-col gap-2 text-base" onClick={() => setSelectedArea('culture')}>
                                     <GraduationCap className="h-8 w-8 text-primary"/> Educación
                                 </Button>
                                  <Button variant="outline" className="h-32 flex-col gap-2 text-base" onClick={() => setSelectedArea('politics')}>
@@ -276,5 +269,3 @@ export default function PublishPage() {
         </div>
     );
 }
-
-    

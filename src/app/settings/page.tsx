@@ -11,13 +11,6 @@ import { NotificationSettings } from "@/components/settings/NotificationSettings
 export default function SettingsPage() {
     return (
         <div className="space-y-8">
-            <div>
-                <h1 className="text-4xl font-bold font-headline">Ajustes</h1>
-                <p className="text-lg text-muted-foreground mt-2">
-                    Gestiona tu cuenta, tu perfil y tus preferencias de privacidad.
-                </p>
-            </div>
-
             <Tabs defaultValue="profile" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-card/60 rounded-xl h-auto">
                     <TabsTrigger value="profile" className="rounded-lg py-2 text-base">

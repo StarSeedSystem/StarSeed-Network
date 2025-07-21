@@ -1,8 +1,7 @@
 
-
 "use client";
 
-import React from "react";
+import React, { createContext, useContext, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -52,6 +51,7 @@ import {
   LayoutTemplate,
   Folder,
   BrainCircuit,
+  PanelLeft,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -60,6 +60,33 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 
 const authRoutes = ["/login", "/signup"];
+
+// Context for Header
+type HeaderContextType = {
+  headerInfo: { icon: React.ReactNode, title: string, subtitle: string } | null;
+  setHeaderInfo: React.Dispatch<React.SetStateAction<{ icon: React.ReactNode, title: string, subtitle: string } | null>>;
+};
+
+const HeaderContext = createContext<HeaderContextType | null>(null);
+
+export const useHeader = () => {
+    const context = useContext(HeaderContext);
+    if (!context) {
+        throw new Error('useHeader must be used within a HeaderProvider');
+    }
+    return context;
+};
+
+const HeaderProvider = ({ children }: { children: React.ReactNode }) => {
+    const [headerInfo, setHeaderInfo] = useState<{ icon: React.ReactNode, title: string, subtitle: string } | null>(null);
+
+    return (
+        <HeaderContext.Provider value={{ headerInfo, setHeaderInfo }}>
+            {children}
+        </HeaderContext.Provider>
+    );
+};
+
 
 function AppLogo() {
   return (
@@ -253,19 +280,68 @@ function AppSidebar() {
 }
 
 function AppHeader() {
-    const { isMobile } = useSidebar();
-  return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-xl md:px-6">
-      {isMobile && <SidebarTrigger />}
-      <div className="flex-1 text-center md:text-left">
-        {/* Potentially add breadcrumbs or page title here */}
-      </div>
-    </header>
-  );
+    const { isMobile, toggleSidebar } = useSidebar();
+    const { headerInfo } = useHeader();
+    const pathname = usePathname();
+
+    const isSpecialPage = pathname.startsWith('/community/') || pathname.startsWith('/politics/proposal/') || viewModePages.includes(pathname);
+    
+    // A mapping from path prefixes to their header info
+    const pageHeaders: { [key: string]: { icon: React.ReactNode, title: string, subtitle: string } } = {
+        '/': { icon: <LayoutDashboard className="h-8 w-8 text-primary"/>, title: "Dashboard", subtitle: "Tu centro de mando personalizado y proactivo." },
+        '/dashboard': { icon: <LayoutDashboard className="h-8 w-8 text-primary"/>, title: "Dashboard", subtitle: "Tu centro de mando personalizado y proactivo." },
+        '/profile': { icon: <User className="h-8 w-8 text-primary"/>, title: "Perfil", subtitle: "Tu identidad digital y escaparate personal." },
+        '/messages': { icon: <MessageSquare className="h-8 w-8 text-primary"/>, title: "Mensajes", subtitle: "Conversaciones directas y seguras." },
+        '/notifications': { icon: <Bell className="h-8 w-8 text-primary"/>, title: "Notificaciones", subtitle: "Toda tu actividad reciente en la red, en un solo lugar." },
+        '/participations': { icon: <Users className="h-8 w-8 text-primary"/>, title: "Hub de Conexiones", subtitle: "Tu centro para descubrir, crear y gestionar todas tus interacciones en la Red." },
+        '/agent': { icon: <BrainCircuit className="h-8 w-8 text-primary"/>, title: "Agente de IA", subtitle: "Tu compañero de IA proactivo para la co-creación, automatización y exploración." },
+        '/politics': { icon: <Gavel className="h-8 w-8 text-primary"/>, title: "Red de Política", subtitle: "El parlamento digital de la red. Aquí se proponen, debaten y gestionan las decisiones que nos afectan a todos." },
+        '/education': { icon: <GraduationCap className="h-8 w-8 text-primary"/>, title: "Educación", subtitle: "La base de conocimiento libre y universal de la Red. Aprende, crea y comparte." },
+        '/culture': { icon: <Sparkles className="h-8 w-8 text-primary"/>, title: "Cultura", subtitle: "El espacio para la expresión social, artística y la creación de nuevos mundos." },
+        '/publish': { icon: <PenSquare className="h-8 w-8 text-primary"/>, title: "Crear Publicación", subtitle: "Forja tu mensaje en el Lienzo de Creación y difúndelo a través del Nexo." },
+        '/library': { icon: <Library className="h-8 w-8 text-primary"/>, title: "Biblioteca del Nexo", subtitle: "Tu ecosistema extensible de apps, archivos, avatares y plantillas." },
+        '/library/my-library': { icon: <Folder className="h-8 w-8 text-primary"/>, title: "Mi Biblioteca", subtitle: "Tu ecosistema personal de apps, archivos y creaciones de IA." },
+        '/library/templates': { icon: <Store className="h-8 w-8 text-primary"/>, title: "Tienda Virtual", subtitle: "Descubre, instala y comparte activos creados por la comunidad del Nexo." },
+        '/info/constitution': { icon: <Info className="h-8 w-8 text-primary"/>, title: "Constitución de la Red StarSeed", subtitle: "Las leyes fundamentales, derechos, límites y principios que guían a nuestra sociedad." },
+        '/settings': { icon: <Settings className="h-8 w-8 text-primary"/>, title: "Ajustes", subtitle: "Gestiona tu cuenta, tu perfil y tus preferencias de privacidad." },
+        '/avatar-generator': { icon: <Bot className="h-8 w-8 text-primary"/>, title: "Generador de Avatares con IA", subtitle: "Forja una nueva identidad virtual." },
+        '/video-generator': { icon: <Clapperboard className="h-8 w-8 text-primary"/>, title: "Generador de Videos con IA", subtitle: "Crea videos cortos a partir de prompts de texto." },
+    };
+
+    const currentHeader = headerInfo || pageHeaders[pathname] || null;
+
+    return (
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-xl md:px-6 justify-between">
+            <div className="flex items-center gap-4">
+                {isMobile && <Button variant="ghost" size="icon" onClick={toggleSidebar}><PanelLeft className="h-5 w-5"/></Button>}
+                {currentHeader && !isSpecialPage && (
+                    <div className="flex items-center gap-3">
+                         <div className="hidden sm:block">
+                            {currentHeader.icon}
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold font-headline">{currentHeader.title}</h1>
+                        </div>
+                    </div>
+                )}
+            </div>
+            <div>
+                 {/* Right-aligned content, e.g., action buttons, can go here */}
+            </div>
+        </header>
+    );
 }
+
+const viewModePages = ['/library/my-library'];
 
 function MainContent({ children }: { children: React.ReactNode }) {
     const { state, isMobile } = useSidebar();
+    const { headerInfo } = useHeader();
+    const pathname = usePathname();
+
+    const isSpecialPage = pathname.startsWith('/community/') || pathname.startsWith('/politics/proposal/') || viewModePages.includes(pathname);
+    const pageInfo = pageHeaders[pathname];
+
     return (
         <div className={cn(
             "flex flex-col flex-1 transition-[margin-left] duration-300 ease-in-out",
@@ -273,11 +349,50 @@ function MainContent({ children }: { children: React.ReactNode }) {
         )}>
             <AppHeader />
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+                 {pageInfo && !isSpecialPage && (
+                    <div className="mb-6 md:hidden">
+                        <div className="flex items-center gap-3">
+                            {pageInfo.icon}
+                            <h1 className="text-3xl font-bold font-headline">{pageInfo.title}</h1>
+                        </div>
+                        <p className="text-lg text-muted-foreground mt-2">{pageInfo.subtitle}</p>
+                    </div>
+                 )}
+                 {headerInfo && (
+                     <div className="mb-6">
+                         <div className="flex items-center gap-3">
+                             {headerInfo.icon}
+                             <h1 className="text-3xl font-bold font-headline">{headerInfo.title}</h1>
+                         </div>
+                         <p className="text-lg text-muted-foreground mt-2">{headerInfo.subtitle}</p>
+                     </div>
+                 )}
                 {children}
             </main>
         </div>
     );
 }
+
+const pageHeaders: { [key: string]: { icon: React.ReactNode, title: string, subtitle: string } } = {
+    '/': { icon: <LayoutDashboard className="h-8 w-8 text-primary"/>, title: "Dashboard", subtitle: "Tu centro de mando personalizado y proactivo." },
+    '/dashboard': { icon: <LayoutDashboard className="h-8 w-8 text-primary"/>, title: "Dashboard", subtitle: "Tu centro de mando personalizado y proactivo." },
+    '/profile': { icon: <User className="h-8 w-8 text-primary"/>, title: "Perfil", subtitle: "Tu identidad digital y escaparate personal." },
+    '/messages': { icon: <MessageSquare className="h-8 w-8 text-primary"/>, title: "Mensajes", subtitle: "Conversaciones directas y seguras." },
+    '/notifications': { icon: <Bell className="h-8 w-8 text-primary"/>, title: "Notificaciones", subtitle: "Toda tu actividad reciente en la red, en un solo lugar." },
+    '/participations': { icon: <Users className="h-8 w-8 text-primary"/>, title: "Hub de Conexiones", subtitle: "Tu centro para descubrir, crear y gestionar todas tus interacciones en la Red." },
+    '/agent': { icon: <BrainCircuit className="h-8 w-8 text-primary"/>, title: "Agente de IA", subtitle: "Tu compañero de IA proactivo para la co-creación, automatización y exploración." },
+    '/politics': { icon: <Gavel className="h-8 w-8 text-primary"/>, title: "Red de Política", subtitle: "El parlamento digital de la red. Aquí se proponen, debaten y gestionan las decisiones que nos afectan a todos." },
+    '/education': { icon: <GraduationCap className="h-8 w-8 text-primary"/>, title: "Educación", subtitle: "La base de conocimiento libre y universal de la Red. Aprende, crea y comparte." },
+    '/culture': { icon: <Sparkles className="h-8 w-8 text-primary"/>, title: "Cultura", subtitle: "El espacio para la expresión social, artística y la creación de nuevos mundos." },
+    '/publish': { icon: <PenSquare className="h-8 w-8 text-primary"/>, title: "Crear Publicación", subtitle: "Forja tu mensaje en el Lienzo de Creación y difúndelo a través del Nexo." },
+    '/library': { icon: <Library className="h-8 w-8 text-primary"/>, title: "Biblioteca del Nexo", subtitle: "Tu ecosistema extensible de apps, archivos, avatares y plantillas." },
+    '/library/my-library': { icon: <Folder className="h-8 w-8 text-primary"/>, title: "Mi Biblioteca", subtitle: "Tu ecosistema personal de apps, archivos y creaciones de IA." },
+    '/library/templates': { icon: <Store className="h-8 w-8 text-primary"/>, title: "Tienda Virtual", subtitle: "Descubre, instala y comparte activos creados por la comunidad del Nexo." },
+    '/info/constitution': { icon: <Info className="h-8 w-8 text-primary"/>, title: "Constitución de la Red StarSeed", subtitle: "Las leyes fundamentales, derechos, límites y principios que guían a nuestra sociedad." },
+    '/settings': { icon: <Settings className="h-8 w-8 text-primary"/>, title: "Ajustes", subtitle: "Gestiona tu cuenta, tu perfil y tus preferencias de privacidad." },
+    '/avatar-generator': { icon: <Bot className="h-8 w-8 text-primary"/>, title: "Generador de Avatares con IA", subtitle: "Forja una nueva identidad virtual." },
+    '/video-generator': { icon: <Clapperboard className="h-8 w-8 text-primary"/>, title: "Generador de Videos con IA", subtitle: "Crea videos cortos a partir de prompts de texto." },
+};
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -292,10 +407,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className="relative flex h-screen overflow-hidden">
-        <AppSidebar />
-        <MainContent>{children}</MainContent>
-      </div>
+      <HeaderProvider>
+        <div className="relative flex h-screen overflow-hidden">
+          <AppSidebar />
+          <MainContent>{children}</MainContent>
+        </div>
+      </HeaderProvider>
     </SidebarProvider>
   );
 }

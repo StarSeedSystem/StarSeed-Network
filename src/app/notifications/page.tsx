@@ -138,7 +138,6 @@ export default function NotificationsPage() {
                 <CardHeader>
                     <div className="flex justify-between items-center">
                          <div className="flex items-center gap-3">
-                            <Bell className="h-8 w-8 text-primary" />
                              <div>
                                 <CardTitle className="font-headline text-3xl">Notificaciones</CardTitle>
                                 <CardDescription>Toda tu actividad reciente en la red, en un solo lugar.</CardDescription>

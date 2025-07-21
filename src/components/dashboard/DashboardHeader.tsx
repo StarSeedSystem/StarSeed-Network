@@ -11,13 +11,7 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ isEditing, onEditToggle }: DashboardHeaderProps) {
     return (
-        <div className="flex items-center justify-between">
-            <div>
-                <h1 className="text-4xl font-bold font-headline">Dashboard</h1>
-                <p className="text-lg text-muted-foreground mt-2">
-                    Tu centro de mando personalizado y proactivo.
-                </p>
-            </div>
+        <div className="flex items-center justify-end">
             <div>
                 {isEditing ? (
                     <div className="flex gap-2">

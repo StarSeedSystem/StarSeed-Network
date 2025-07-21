@@ -146,13 +146,6 @@ const ConnectionCard = ({ item }: { item: (typeof myCommunities)[0] }) => (
 export default function ConnectionsHubPage() {
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold font-headline">Hub de Conexiones</h1>
-        <p className="text-lg text-muted-foreground mt-2">
-          Tu centro para descubrir, crear y gestionar todas tus interacciones en la Red.
-        </p>
-      </div>
-      
       <Card className="glass-card p-4">
         <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -330,4 +323,3 @@ export default function ConnectionsHubPage() {
     </div>
   );
 }
-

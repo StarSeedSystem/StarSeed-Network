@@ -77,13 +77,6 @@ export default function PoliticsPage() {
   
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold font-headline">Red de Política</h1>
-        <p className="text-lg text-muted-foreground mt-2">
-          El parlamento digital de la red. Aquí se proponen, debaten y gestionan las decisiones que nos afectan a todos.
-        </p>
-      </div>
-
        <AdvancedFilter filters={filters} onFilterChange={setFilters} />
 
       <Tabs defaultValue="legislative" className="w-full">

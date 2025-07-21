@@ -45,13 +45,6 @@ const educationalFeed: EducationalContent[] = [
 export default function EducationPage() {
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold font-headline">Educación</h1>
-        <p className="text-lg text-muted-foreground mt-2">
-          La base de conocimiento libre y universal de la Red. Aprende, crea y comparte.
-        </p>
-      </div>
-
        <Card className="glass-card p-4">
             <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-grow">
@@ -80,4 +73,3 @@ export default function EducationPage() {
     </div>
   );
 }
-

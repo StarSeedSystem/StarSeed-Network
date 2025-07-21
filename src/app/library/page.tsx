@@ -49,18 +49,6 @@ const ecosystemSections = [
 export default function LibraryPage() {
     return (
         <div className="space-y-8">
-            <div>
-                <div className="flex items-center gap-3">
-                    <LibraryIcon className="h-10 w-10 text-primary" />
-                    <div>
-                        <h1 className="text-4xl font-bold font-headline">Biblioteca del Nexo</h1>
-                        <p className="text-lg text-muted-foreground mt-1">
-                            Tu ecosistema extensible de apps, archivos, avatares y plantillas.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
             <Card className="glass-card p-4">
                 <div className="relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

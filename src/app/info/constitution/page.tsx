@@ -7,7 +7,6 @@ export default function ConstitutionPage() {
        <Card className="glass-card">
          <CardHeader>
            <div className="flex items-center gap-4">
-             <BookOpen className="h-8 w-8 text-primary" />
              <div>
                <CardTitle className="font-headline text-3xl">Constitución de la Red StarSeed</CardTitle>
                <CardDescription>Las leyes fundamentales, derechos, límites y principios que guían a nuestra sociedad.</CardDescription>
