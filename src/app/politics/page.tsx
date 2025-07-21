@@ -60,11 +60,21 @@ export default function PoliticsPage() {
     saved: false,
   });
 
-  // En una aplicación real, usarías estos filtros para obtener datos de una API
-  const filteredLegislative = legislativeProposals.filter(p => !filters.saved);
-  const filteredExecutive = executiveProjects.filter(p => !filters.saved);
-  const filteredJudicial = judicialCases.filter(p => !filters.saved);
+  // Mapeo para mantener el estado "guardado" de cada tarjeta.
+  // En una app real, esto podría venir de un contexto o API de usuario.
+  const [savedStates, setSavedStates] = useState<{ [key: string]: boolean }>({});
 
+  const handleSaveToggle = (id: string, isSaved: boolean) => {
+    setSavedStates(prev => ({ ...prev, [id]: isSaved }));
+  };
+
+  const filterItems = (items: any[]) => {
+    if (!filters.saved) {
+      return items;
+    }
+    return items.filter(item => savedStates[item.id]);
+  };
+  
   return (
     <div className="space-y-8">
       <div>
@@ -93,22 +103,37 @@ export default function PoliticsPage() {
         </TabsList>
         <TabsContent value="legislative" className="mt-6">
             <div className="space-y-6">
-                {filteredLegislative.map(proposal => (
-                    <ProposalCard key={proposal.id} {...proposal} isSaved={filters.saved} />
+                {filterItems(legislativeProposals).map(proposal => (
+                    <ProposalCard 
+                      key={proposal.id} 
+                      {...proposal} 
+                      isSaved={savedStates[proposal.id] || false}
+                      onSaveToggle={(isSaved) => handleSaveToggle(proposal.id, isSaved)}
+                    />
                 ))}
             </div>
         </TabsContent>
         <TabsContent value="executive" className="mt-6">
             <div className="space-y-6">
-                {filteredExecutive.map(proposal => (
-                    <ProposalCard key={proposal.id} {...proposal} isSaved={filters.saved} />
+                {filterItems(executiveProjects).map(proposal => (
+                    <ProposalCard 
+                      key={proposal.id} 
+                      {...proposal}
+                      isSaved={savedStates[proposal.id] || false}
+                      onSaveToggle={(isSaved) => handleSaveToggle(proposal.id, isSaved)}
+                    />
                 ))}
             </div>
         </TabsContent>
          <TabsContent value="judicial" className="mt-6">
             <div className="space-y-6">
-                {judicialCases.map(proposal => (
-                    <ProposalCard key={proposal.id} {...proposal} isSaved={filters.saved} />
+                {filterItems(judicialCases).map(proposal => (
+                    <ProposalCard 
+                      key={proposal.id} 
+                      {...proposal}
+                      isSaved={savedStates[proposal.id] || false}
+                      onSaveToggle={(isSaved) => handleSaveToggle(proposal.id, isSaved)}
+                    />
                 ))}
             </div>
         </TabsContent>

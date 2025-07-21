@@ -20,7 +20,8 @@ type ProposalCardProps = {
     status: string;
     stats: { [key: string]: number };
     summary: string;
-    isSaved?: boolean;
+    isSaved: boolean;
+    onSaveToggle: (isSaved: boolean) => void;
 };
 
 const statusColors: { [key: string]: string } = {
@@ -30,8 +31,7 @@ const statusColors: { [key: string]: string } = {
     "En Mediación": "bg-golden-yellow/20 text-golden-yellow border-golden-yellow/30",
 };
 
-export function ProposalCard({ title, proposer, entity, status, stats: initialStats, summary, isSaved: initialIsSaved = false }: ProposalCardProps) {
-  const [isSaved, setIsSaved] = useState(initialIsSaved);
+export function ProposalCard({ id, title, proposer, entity, status, stats: initialStats, summary, isSaved, onSaveToggle }: ProposalCardProps) {
   const [stats, setStats] = useState(initialStats);
   const [userVote, setUserVote] = useState<VoteType>(null);
 
@@ -55,6 +55,10 @@ export function ProposalCard({ title, proposer, entity, status, stats: initialSt
         
         return newStats;
     });
+  };
+  
+  const handleSaveClick = () => {
+    onSaveToggle(!isSaved);
   };
 
   const getStatsIcon = (key: string, value: number) => {
@@ -140,8 +144,8 @@ export function ProposalCard({ title, proposer, entity, status, stats: initialSt
             <Separator className="bg-white/10" />
 
             <div className="flex items-center gap-2 w-full">
-                 <Button variant="outline" className="flex-1" onClick={() => setIsSaved(!isSaved)}>
-                    {isSaved ? <Bookmark className="mr-2 h-4 w-4 fill-current" /> : <Bookmark className="mr-2 h-4 w-4" />}
+                 <Button variant="outline" className="flex-1" onClick={handleSaveClick}>
+                    {isSaved ? <Bookmark className="mr-2 h-4 w-4 fill-current text-primary" /> : <Bookmark className="mr-2 h-4 w-4" />}
                     {isSaved ? "Guardado" : "Guardar"}
                 </Button>
                 <Button className="flex-1">
