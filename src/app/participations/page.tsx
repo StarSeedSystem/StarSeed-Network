@@ -1,13 +1,15 @@
 
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star } from "lucide-react";
+import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star, Activity, Gavel, PlaySquare } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Image from "next/image";
+import { Progress } from "@/components/ui/progress";
 
 const myCommunities = [
     {
@@ -97,7 +99,30 @@ const recommendations = [
         avatarHint: "green future",
         type: "political_party"
     }
-]
+];
+
+const activeParticipations = {
+    votes: [{
+        id: "prop-001",
+        title: "Ley de Soberanía de Datos Personales",
+        entity: "E.F. Global",
+        timeLeft: "6 días restantes"
+    }],
+    tasks: [{
+        title: "Revisar Documentación de API",
+        project: "Implementación de la Red de Energía Comunitaria"
+    }],
+    events: [{
+        title: "Festival de Música Algorítmica",
+        date: "Este Sábado",
+    }],
+    projects: [{
+        title: "Escribir artículo sobre Permacultura",
+        progress: 40,
+        role: "Investigador Principal"
+    }]
+};
+
 
 const ConnectionCard = ({ item }: { item: (typeof myCommunities)[0] }) => (
     <Card className="glass-card flex items-center p-4 gap-4">
@@ -190,7 +215,11 @@ export default function ConnectionsHubPage() {
       </div>
       
        <Tabs defaultValue="communities" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-card/60 rounded-xl h-auto">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 bg-card/60 rounded-xl h-auto">
+          <TabsTrigger value="participations" className="rounded-lg py-2 text-base">
+            <Activity className="mr-2 h-5 w-5" />
+            Participaciones ({activeParticipations.votes.length + activeParticipations.tasks.length + activeParticipations.events.length + activeParticipations.projects.length})
+          </TabsTrigger>
           <TabsTrigger value="communities" className="rounded-lg py-2 text-base">
             <Users className="mr-2 h-5 w-5" />
             Comunidades ({myCommunities.length})
@@ -212,6 +241,57 @@ export default function ConnectionsHubPage() {
             Partidos ({myPoliticalParties.length})
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="participations" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="glass-card">
+                    <CardHeader><CardTitle className="font-headline text-xl flex items-center gap-2"><Gavel className="text-primary"/>Votaciones Pendientes</CardTitle></CardHeader>
+                    <CardContent className="space-y-3">
+                        {activeParticipations.votes.map(vote => (
+                            <div key={vote.id} className="p-3 rounded-lg bg-secondary/70">
+                                <p className="font-semibold">{vote.title}</p>
+                                <p className="text-sm text-muted-foreground">{vote.timeLeft}</p>
+                                <Button variant="link" asChild className="p-0 h-auto mt-1"><Link href={`/politics/proposal/${vote.id}`}>Ir a Votar</Link></Button>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+                 <Card className="glass-card">
+                    <CardHeader><CardTitle className="font-headline text-xl flex items-center gap-2"><PlaySquare className="text-primary"/>Tareas Voluntarias</CardTitle></CardHeader>
+                    <CardContent className="space-y-3">
+                       {activeParticipations.tasks.map(task => (
+                            <div key={task.title} className="p-3 rounded-lg bg-secondary/70">
+                                <p className="font-semibold">{task.title}</p>
+                                <p className="text-sm text-muted-foreground">Proyecto: {task.project}</p>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+                 <Card className="glass-card">
+                    <CardHeader><CardTitle className="font-headline text-xl flex items-center gap-2"><Calendar className="text-primary"/>Eventos Próximos</CardTitle></CardHeader>
+                    <CardContent className="space-y-3">
+                        {activeParticipations.events.map(event => (
+                            <div key={event.title} className="p-3 rounded-lg bg-secondary/70">
+                                <p className="font-semibold">{event.title}</p>
+                                <p className="text-sm text-muted-foreground">{event.date}</p>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+                 <Card className="glass-card">
+                    <CardHeader><CardTitle className="font-headline text-xl flex items-center gap-2"><Star className="text-primary"/>Proyectos Activos</CardTitle></CardHeader>
+                    <CardContent className="space-y-4">
+                        {activeParticipations.projects.map(project => (
+                             <div key={project.title} className="p-3 rounded-lg bg-secondary/70">
+                                <p className="font-semibold">{project.title}</p>
+                                <p className="text-sm text-muted-foreground">Mi Rol: {project.role}</p>
+                                <Progress value={project.progress} className="mt-2 h-1.5" />
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            </div>
+        </TabsContent>
 
         <TabsContent value="communities" className="mt-6">
             <div className="space-y-4">
