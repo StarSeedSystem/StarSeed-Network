@@ -1,2 +1,39 @@
-
-{}
+{
+  "1": {
+    "id": "1",
+    "name": "Starlight",
+    "handle": "starlight.eth",
+    "bio": "Pioneering the new digital frontier. Building a decentralized future, one block at a time.",
+    "avatarUrl": "https://placehold.co/100x100.png",
+    "bannerUrl": "https://placehold.co/1200x400.png",
+    "birthData": {
+      "date": "1990-04-15T00:00:00.000Z",
+      "time": "14:30",
+      "location": "New York, USA"
+    },
+    "badges": {
+      "verified": true,
+      "pioneer": true,
+      "aiSymbiote": false
+    },
+    "natalChart": {
+      "sun": {
+        "sign": "Aries",
+        "house": 4
+      },
+      "moon": {
+        "sign": "Leo",
+        "house": 8
+      },
+      "rising": {
+        "sign": "Sagittarius"
+      }
+    },
+    "privacySettings": {
+      "profileVisibility": "public",
+      "showBadges": "public",
+      "showNatalChart": "friends",
+      "showLibrary": "private"
+    }
+  }
+}
