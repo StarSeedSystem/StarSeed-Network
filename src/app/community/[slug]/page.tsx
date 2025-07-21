@@ -35,10 +35,20 @@ const communityMembers = [
 ]
 
 async function getCommunityData(slug: string): Promise<Community | null> {
-    // In a real app, this would fetch this from your database.
-    // We are simulating that with our db object.
-    const community = await db.communities.findUnique(slug);
-    return community;
+    // In a real app, this fetch would go to an external API server.
+    // For now, it hits our own Next.js API route.
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
+    const response = await fetch(`${baseUrl}/api/communities/${slug}`, { cache: 'no-store' });
+    
+    if (!response.ok) {
+        if (response.status === 404) {
+            return null;
+        }
+        // You could handle other errors here, e.g., by throwing an error
+        throw new Error('Failed to fetch community data');
+    }
+    
+    return response.json();
 }
 
 export default async function CommunityProfilePage({ params }: { params: { slug: string } }) {
