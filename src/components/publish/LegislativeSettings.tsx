@@ -23,7 +23,7 @@ export function LegislativeSettings() {
                     <Gavel className="h-5 w-5" />
                     Propuesta Legislativa
                 </CardTitle>
-                <CardDescription>Configura los parámetros para esta propuesta en la Entidad Federativa.</CardDescription>
+                <CardDescription>Configura los parámetros de la votación para esta publicación.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="space-y-2">
