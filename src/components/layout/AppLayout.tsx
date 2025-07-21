@@ -117,8 +117,6 @@ const navItems = [
       subItems: [
         { href: "/library/my-library", label: "Mi Biblioteca", icon: Folder },
         { href: "/library/templates", label: "Tienda Virtual", icon: Store },
-        { href: "/avatar-generator", label: "Generador de Avatares", icon: Bot },
-        { href: "/video-generator", label: "Generador de Videos", icon: Clapperboard },
       ],
     },
     {

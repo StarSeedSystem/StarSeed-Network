@@ -6,23 +6,30 @@ import { runAgentFlow } from "@/ai/flows/agent-flow";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Paperclip, Camera, SendHorizonal, BrainCircuit, User, Video, Aperture } from "lucide-react";
+import { Paperclip, Camera, SendHorizonal, BrainCircuit, User, Video, Aperture, Loader2, Library } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Image from "next/image";
 
+interface Media {
+    type: 'image' | 'video';
+    dataUri: string;
+    title: string;
+}
+
 interface Message {
     id: string;
     text: string;
     sender: "user" | "agent";
     image?: string;
+    media?: Media;
 }
 
 export function AgentChat() {
     const [messages, setMessages] = useState<Message[]>([
-        { id: "1", text: "Hola, soy tu Exocórtex Digital. ¿En qué podemos colaborar hoy? Puedes darme instrucciones, pedirme que analice un archivo o que te explique cómo funciona una característica de la red.", sender: "agent" }
+        { id: "1", text: "Hola, soy tu Exocórtex Digital. ¿En qué podemos colaborar hoy? Puedes pedirme que genere un avatar o un video, que analice una imagen, o que te explique cómo funciona una característica de la red.", sender: "agent" }
     ]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -130,7 +137,8 @@ export function AgentChat() {
             const aiMessage: Message = {
                 id: `agent-${Date.now()}`,
                 text: agentResponse.answer,
-                sender: "agent"
+                sender: "agent",
+                media: agentResponse.media
             };
             setMessages(prev => [...prev, aiMessage]);
 
@@ -150,6 +158,14 @@ export function AgentChat() {
             }
         }
     };
+
+    const handleAddToLibrary = (media: Media) => {
+        // In a real app, this would save the media to the user's library in the database.
+        toast({
+            title: "¡Guardado en la Biblioteca!",
+            description: `'${media.title}' ha sido añadido a tu biblioteca.`,
+        });
+    }
 
     return (
         <div className="h-full flex flex-col glass-card rounded-2xl overflow-hidden">
@@ -174,6 +190,24 @@ export function AgentChat() {
                                     <Image src={message.image} alt="User capture" width={300} height={200} className="rounded-lg" />
                                 )}
                                 <p className="whitespace-pre-wrap">{message.text}</p>
+                                {message.media && (
+                                    <div className="space-y-2">
+                                        {message.media.type === 'image' && (
+                                            <Image src={message.media.dataUri} alt={message.media.title} width={300} height={300} className="rounded-lg border-2 border-primary/50" />
+                                        )}
+                                        {message.media.type === 'video' && (
+                                            <div className="aspect-video w-full bg-black rounded-lg overflow-hidden border-2 border-primary">
+                                                <video src={message.media.dataUri} controls autoPlay loop className="w-full h-full object-contain">
+                                                    Tu navegador no soporta la etiqueta de video.
+                                                </video>
+                                            </div>
+                                        )}
+                                         <Button variant="secondary" size="sm" onClick={() => handleAddToLibrary(message.media!)}>
+                                            <Library className="mr-2 h-4 w-4" />
+                                            Añadir a mi Biblioteca
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}
@@ -215,7 +249,7 @@ export function AgentChat() {
             <div className="p-4 border-t border-white/10 bg-card/50">
                 <form onSubmit={handleSubmit} className="relative">
                      <Textarea
-                        placeholder={isCameraActive ? "Escribe qué quieres que analice en la imagen..." : "Escribe un comando o haz una pregunta..."}
+                        placeholder={isCameraActive ? "Escribe qué quieres que analice en la imagen..." : "Escribe un comando, ej: 'genera un video de un gato espacial'"}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -244,7 +278,7 @@ export function AgentChat() {
                             </Button>
                         ) : (
                              <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-                                <SendHorizonal className="h-5 w-5" />
+                                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizonal className="h-5 w-5" />}
                                 <span className="sr-only">Enviar Mensaje</span>
                             </Button>
                         )}
