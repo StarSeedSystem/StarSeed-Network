@@ -1,22 +1,36 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BrainCircuit } from "lucide-react";
+
+"use client";
+
+import { useState } from "react";
 import { AgentChat } from "@/components/agent/AgentChat";
+import { AgentSidebar } from "@/components/agent/AgentSidebar";
+
+export type ActiveContext = {
+  id: string;
+  type: 'project' | 'history' | 'new';
+  title: string;
+  description: string;
+};
 
 export default function AgentPage() {
-  return (
-    <div className="h-[calc(100vh-theme(spacing.16)-2*theme(spacing.8))] flex flex-col">
-       <div className="mb-4">
-        <h1 className="text-4xl font-bold font-headline flex items-center gap-3">
-          <BrainCircuit className="h-10 w-10 text-primary glowing-icon" />
-          Exocórtex Digital
-        </h1>
-        <p className="text-lg text-muted-foreground mt-2">
-          Tu compañero de IA proactivo para la co-creación, automatización y exploración.
-        </p>
-      </div>
+  const [activeContext, setActiveContext] = useState<ActiveContext>({
+    id: 'new-chat',
+    type: 'new',
+    title: 'Exocórtex Digital',
+    description: 'Tu compañero de IA proactivo para la co-creación, automatización y exploración.'
+  });
 
-      <div className="flex-grow min-h-0">
-          <AgentChat />
+  return (
+    <div className="h-[calc(100vh-theme(spacing.16)-2*theme(spacing.8))] flex gap-6">
+      <div className="w-1/3 lg:w-1/4 h-full">
+        <AgentSidebar activeContextId={activeContext.id} onContextChange={setActiveContext} />
+      </div>
+      <div className="flex-grow min-h-0 h-full">
+        <AgentChat 
+          key={activeContext.id} // Re-mount chat when context changes
+          title={activeContext.title}
+          description={activeContext.description}
+        />
       </div>
     </div>
   );

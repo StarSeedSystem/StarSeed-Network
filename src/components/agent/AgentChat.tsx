@@ -27,7 +27,12 @@ interface Message {
     media?: Media;
 }
 
-export function AgentChat() {
+interface AgentChatProps {
+    title: string;
+    description: string;
+}
+
+export function AgentChat({ title, description }: AgentChatProps) {
     const [messages, setMessages] = useState<Message[]>([
         { id: "1", text: "Hola, soy tu Exocórtex Digital. ¿En qué podemos colaborar hoy? Puedes pedirme que genere un avatar o un video, que analice una imagen, o que te explique cómo funciona una característica de la red.", sender: "agent" }
     ]);
@@ -169,6 +174,16 @@ export function AgentChat() {
 
     return (
         <div className="h-full flex flex-col glass-card rounded-2xl overflow-hidden">
+             <div className="p-4 border-b border-white/10">
+                <h2 className="text-xl font-bold font-headline flex items-center gap-3">
+                  <BrainCircuit className="h-6 w-6 text-primary glowing-icon" />
+                  {title}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {description}
+                </p>
+              </div>
+
             <ScrollArea className="flex-grow p-6" ref={scrollAreaRef}>
                 <div className="space-y-8">
                     {messages.map((message) => (
