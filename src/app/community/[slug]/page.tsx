@@ -1,18 +1,17 @@
 
 
-"use client";
-
-import { useState, useEffect } from "react";
+import { notFound, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Check, Edit, PenSquare, Users, Info, PlusCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { Bell, Check, Users, Info, PenSquare, ArrowLeft, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileFeed } from "@/components/profile/ProfileFeed";
 import type { FeedPostType } from "@/components/dashboard/FeedPost";
-import { useRouter, useParams } from "next/navigation";
 import type { Community } from "@/types/content-types";
+import { db } from "@/data/db";
+import { BackButton } from "@/components/utils/BackButton";
 
 
 const communityPosts: FeedPostType[] = [
@@ -35,56 +34,23 @@ const communityMembers = [
     { name: "Starlight", avatar: "https://placehold.co/100x100.png", avatarHint: "glowing astronaut", role: "Miembro" }
 ]
 
-export default function CommunityProfilePage() {
-    const router = useRouter();
-    const params = useParams();
-    const slug = params.slug as string;
-    
-    const [data, setData] = useState<Community | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+async function getCommunityData(slug: string): Promise<Community | null> {
+    // In a real app, you would fetch this from your database.
+    // We are simulating that with our db object.
+    const community = await db.communities.findUnique(slug);
+    return community;
+}
 
-    useEffect(() => {
-        if (slug) {
-            const fetchCommunity = async () => {
-                setIsLoading(true);
-                 try {
-                    const response = await fetch(`/api/communities/${slug}`);
-                    if (!response.ok) {
-                        throw new Error('Community not found');
-                    }
-                    const communityData = await response.json();
-                    setData(communityData);
-                } catch (error) {
-                    console.error("Failed to fetch community", error);
-                    setData(null);
-                } finally {
-                    setIsLoading(false);
-                }
-            };
-            fetchCommunity();
-        }
-    }, [slug]);
+export default async function CommunityProfilePage({ params }: { params: { slug: string } }) {
+    const data = await getCommunityData(params.slug);
 
-    if (isLoading) {
-        return <div className="flex justify-center items-center h-full"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
-    }
-    
     if (!data) {
-        return (
-             <div className="text-center py-10">
-                <h1 className="text-2xl font-bold">Comunidad no encontrada</h1>
-                <p className="text-muted-foreground">Esta comunidad no existe o ha sido movida.</p>
-                <Button onClick={() => router.push('/participations')} className="mt-4">Volver al Hub de Conexiones</Button>
-            </div>
-        );
+        return notFound();
     }
 
     return (
         <div className="space-y-8">
-            <Button variant="outline" size="sm" onClick={() => router.back()} className="mb-4">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Volver
-            </Button>
+            <BackButton />
             <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
                 <Image src={data.banner} alt="Profile Banner" layout="fill" objectFit="cover" data-ai-hint={data.bannerHint} />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
@@ -163,7 +129,7 @@ export default function CommunityProfilePage() {
                         <Card className="glass-card">
                             <CardHeader>
                                 <CardTitle>Acerca de {data.name}</CardTitle>
-                            </CardHeader>
+                            </Header>
                             <CardContent className="prose prose-invert max-w-none text-foreground/80">
                                 <p>{data.longDescription}</p>
                                 <h3 className="font-headline text-xl text-primary mt-6">Reglas y Principios</h3>
