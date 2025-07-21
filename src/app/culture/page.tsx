@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Filter, Headset, BotMessageSquare, Sparkles, Map, Calendar, Newspaper, User } from "lucide-react";
+import { Filter, Headset, BotMessageSquare, Sparkles, Map, Calendar, Newspaper, User, Folder, Store } from "lucide-react";
 import Link from "next/link";
 import { ContentCard } from "@/components/content/ContentCard";
 import type { CulturalContent } from "@/types/content-types";
@@ -105,24 +105,7 @@ export default function CulturePage() {
                 </TabsTrigger>
             </TabsList>
             <TabsContent value="feed" className="mt-6">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <Card className="glass-card flex flex-col items-center justify-center text-center p-6">
-                        <Headset className="h-12 w-12 text-primary glowing-icon mb-4" />
-                        <CardTitle className="font-headline text-2xl">Crear Entorno Virtual</CardTitle>
-                        <CardDescription className="mt-2">Describe tu visión y deja que la IA genere un nuevo mundo para ti y tu comunidad.</CardDescription>
-                        <Button size="lg" className="mt-4 shadow-lg shadow-primary/30">Empezar Creación</Button>
-                    </Card>
-                    <Card className="glass-card flex flex-col items-center justify-center text-center p-6">
-                        <BotMessageSquare className="h-12 w-12 text-accent glowing-icon mb-4" />
-                        <CardTitle className="font-headline text-2xl">Crear Avatar con IA</CardTitle>
-                        <CardDescription className="mt-2">Genera una nueva identidad virtual a través del Agente de IA.</CardDescription>
-                        <Button size="lg" variant="outline" className="mt-4" asChild>
-                            <Link href="/agent">Ir al Agente de IA</Link>
-                        </Button>
-                    </Card>
-                </div>
-                
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-headline">Feed Cultural</h2>
                     <Button variant="outline">
                         <Filter className="mr-2 h-4 w-4" />
@@ -130,7 +113,7 @@ export default function CulturePage() {
                     </Button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {culturalFeed.map((item) => (
                     <ContentCard key={item.id} content={item} />
                     ))}
@@ -199,7 +182,34 @@ export default function CulturePage() {
                         <CardTitle className="font-headline text-2xl">Entornos Virtuales (EVP)</CardTitle>
                         <CardDescription>Explora, crea e interactúa en mundos virtuales persistentes.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Card className="glass-card flex flex-col items-center justify-center text-center p-6 bg-primary/10">
+                                <Headset className="h-12 w-12 text-primary glowing-icon mb-4" />
+                                <CardTitle className="font-headline text-2xl">Crear Entorno Virtual</CardTitle>
+                                <CardDescription className="mt-2">Describe tu visión y deja que la IA genere un nuevo mundo para ti y tu comunidad.</CardDescription>
+                                <Button size="lg" className="mt-4 shadow-lg shadow-primary/30">Empezar Creación</Button>
+                            </Card>
+                            <Card className="glass-card flex flex-col items-center justify-center text-center p-6 bg-accent/10">
+                                <BotMessageSquare className="h-12 w-12 text-accent glowing-icon mb-4" />
+                                <CardTitle className="font-headline text-2xl">Crear Avatar con IA</CardTitle>
+                                <CardDescription className="mt-2">Genera una nueva identidad virtual a través del Agente de IA.</CardDescription>
+                                <Button size="lg" variant="outline" className="mt-4" asChild>
+                                    <Link href="/agent">Ir al Agente de IA</Link>
+                                </Button>
+                            </Card>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                             <Button variant="outline" className="h-20 text-lg" asChild>
+                                <Link href="/library/my-library"><Headset className="mr-2 h-5 w-5"/>Mis Entornos</Link>
+                            </Button>
+                            <Button variant="outline" className="h-20 text-lg" asChild>
+                                <Link href="/library/my-library"><User className="mr-2 h-5 w-5"/>Mis Avatares</Link>
+                            </Button>
+                             <Button variant="outline" className="h-20 text-lg" asChild>
+                                <Link href="/library/templates"><Store className="mr-2 h-5 w-5"/>Tienda Virtual</Link>
+                            </Button>
+                        </div>
                          <div className="bg-background/50 rounded-lg p-8 flex items-center justify-center border-2 border-dashed">
                             <p className="text-muted-foreground">[Aquí se mostrará la galería de Entornos Virtuales]</p>
                         </div>
@@ -210,5 +220,3 @@ export default function CulturePage() {
     </div>
   );
 }
-
-    
