@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Repeat, Heart, Share, SendHorizonal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
+import { Textarea } from "../ui/textarea";
 
 export interface FeedPostType {
   author: string;
@@ -26,6 +27,9 @@ export function FeedPost({ post }: { post: FeedPostType }) {
   const [isLiked, setIsLiked] = useState(false);
   const [reposts, setReposts] = useState(post.reposts);
   const [isReposted, setIsReposted] = useState(false);
+  const [comments, setComments] = useState(post.comments);
+  const [showComments, setShowComments] = useState(false);
+  const [newComment, setNewComment] = useState("");
 
   const handleLike = () => {
     if (isLiked) {
@@ -45,6 +49,14 @@ export function FeedPost({ post }: { post: FeedPostType }) {
     setIsReposted(!isReposted);
   };
 
+  const handleAddComment = () => {
+      if (newComment.trim()) {
+        setComments(comments + 1);
+        setNewComment("");
+        // In a real app, you would add the comment to a list of comments
+      }
+  }
+
   return (
     <Card className="glass-card rounded-2xl overflow-hidden flex flex-col">
       <CardHeader>
@@ -60,7 +72,7 @@ export function FeedPost({ post }: { post: FeedPostType }) {
         </div>
       </CardHeader>
       <CardContent className="flex-grow">
-        <p className="text-foreground/90">{post.content}</p>
+        <p className="text-foreground/90 whitespace-pre-wrap">{post.content}</p>
       </CardContent>
       <CardFooter className="flex flex-col items-start gap-4">
         {post.destinations && post.destinations.length > 0 && (
@@ -71,29 +83,53 @@ export function FeedPost({ post }: { post: FeedPostType }) {
             </div>
         )}
         <div className="flex justify-between w-full">
-            <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
-            <MessageSquare className="h-4 w-4" /> {post.comments}
+            <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-primary" onClick={() => setShowComments(!showComments)}>
+                <MessageSquare className="h-4 w-4" /> {comments}
             </Button>
             <Button 
-            variant="ghost" 
-            size="sm" 
-            className={cn("flex items-center gap-2 text-muted-foreground hover:text-sea-green", isReposted && "text-sea-green")}
-            onClick={handleRepost}
+                variant="ghost" 
+                size="sm" 
+                className={cn("flex items-center gap-2 text-muted-foreground hover:text-sea-green", isReposted && "text-sea-green")}
+                onClick={handleRepost}
             >
-            <Repeat className="h-4 w-4" /> {reposts}
+                <Repeat className="h-4 w-4" /> {reposts}
             </Button>
             <Button 
-            variant="ghost" 
-            size="sm" 
-            className={cn("flex items-center gap-2 text-muted-foreground hover:text-accent", isLiked && "text-accent")}
-            onClick={handleLike}
+                variant="ghost" 
+                size="sm" 
+                className={cn("flex items-center gap-2 text-muted-foreground hover:text-accent", isLiked && "text-accent")}
+                onClick={handleLike}
             >
-            <Heart className={cn("h-4 w-4", isLiked && "fill-current")} /> {likes}
+                <Heart className={cn("h-4 w-4", isLiked && "fill-current")} /> {likes}
             </Button>
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-sky-blue">
-            <Share className="h-4 w-4" />
+                <Share className="h-4 w-4" />
             </Button>
         </div>
+         {showComments && (
+            <div className="w-full pt-4 mt-4 border-t border-white/10 space-y-4">
+                 {/* This would be a list of actual comments */}
+                <div className="flex gap-3">
+                     <Avatar className="h-8 w-8">
+                        <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="glowing astronaut" />
+                        <AvatarFallback>SN</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 space-y-2">
+                        <Textarea 
+                            placeholder="Escribe tu respuesta..." 
+                            className="bg-background/50 text-sm"
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                        />
+                        <div className="flex justify-end">
+                            <Button size="sm" onClick={handleAddComment} disabled={!newComment.trim()}>
+                                Responder
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
       </CardFooter>
     </Card>
   );
