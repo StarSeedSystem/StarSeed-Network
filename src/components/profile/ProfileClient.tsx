@@ -30,7 +30,7 @@ import { AIBannerGenerator } from "./AIBannerGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BadgesGrid } from "./BadgesGrid";
-import { LibraryGrid, LibraryItem } from "./LibraryGrid";
+import { LibraryGrid, LibraryItem, LibraryFolder } from "./LibraryGrid";
 import { ProfileFeed } from "./ProfileFeed";
 import type { FeedPostType } from "../dashboard/FeedPost";
 import { NatalChartWidget } from "./NatalChartWidget";
@@ -38,6 +38,7 @@ import { AchievementsWidget } from "../dashboard/AchievementsWidget";
 
 interface ProfileClientProps {
   initialLibraryItems: LibraryItem[];
+  initialFolders?: LibraryFolder[];
   viewMode?: "full" | "libraryOnly";
 }
 
@@ -66,7 +67,7 @@ const userPosts: FeedPostType[] = [
     }
 ]
 
-export function ProfileClient({ initialLibraryItems, viewMode = "full" }: ProfileClientProps) {
+export function ProfileClient({ initialLibraryItems, initialFolders = [], viewMode = "full" }: ProfileClientProps) {
   const [avatarUrl, setAvatarUrl] = useState("https://placehold.co/128x128.png");
   const [bannerUrl, setBannerUrl] = useState("https://placehold.co/1200x400.png");
   const [bio, setBio] = useState(
@@ -104,7 +105,8 @@ export function ProfileClient({ initialLibraryItems, viewMode = "full" }: Profil
       title: description || "New AI Avatar",
       thumbnail: newAvatarUrl,
       thumbnailHint: "ai generated",
-      source: "/avatar-generator"
+      source: "/avatar-generator",
+      folderId: "folder_avatars" // Assuming a folder for avatars exists
     };
     setLibraryItems(prev => [newLibraryItem, ...prev]);
 
@@ -273,7 +275,7 @@ export function ProfileClient({ initialLibraryItems, viewMode = "full" }: Profil
                     <BadgesGrid earnedBadges={badges} />
                     </TabsContent>
                     <TabsContent value="library" className="mt-6">
-                        <LibraryGrid items={libraryItems} />
+                        <LibraryGrid items={libraryItems} folders={initialFolders} />
                     </TabsContent>
                 </Tabs>
             </div>
@@ -281,7 +283,7 @@ export function ProfileClient({ initialLibraryItems, viewMode = "full" }: Profil
     )}
     {viewMode === "libraryOnly" && (
          <div className="px-4 sm:px-8">
-             <LibraryGrid items={libraryItems} />
+             <LibraryGrid items={libraryItems} folders={initialFolders} />
          </div>
     )}
     </>

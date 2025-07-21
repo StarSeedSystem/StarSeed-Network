@@ -1,13 +1,15 @@
 
+
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import { Video, Image as ImageIcon, PlusCircle, CheckCircle } from "lucide-react";
+import { Video, Image as ImageIcon, PlusCircle, CheckCircle, Folder, LayoutGrid, X, File, FolderPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Input } from "../ui/input";
 
 export interface LibraryItem {
     id: string;
@@ -16,10 +18,17 @@ export interface LibraryItem {
     thumbnail: string;
     thumbnailHint: string;
     source: string;
+    folderId?: string;
+}
+
+export interface LibraryFolder {
+    id: string;
+    name: string;
 }
 
 interface LibraryGridProps {
     items: LibraryItem[];
+    folders: LibraryFolder[];
     selectionMode?: boolean;
     onItemSelected?: (item: LibraryItem) => void;
 }
@@ -30,8 +39,12 @@ const typeIcons = {
     Image: <ImageIcon className="h-4 w-4" />,
 }
 
-export function LibraryGrid({ items, selectionMode = false, onItemSelected }: LibraryGridProps) {
+export function LibraryGrid({ items, folders: initialFolders, selectionMode = false, onItemSelected }: LibraryGridProps) {
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [folders, setFolders] = useState<LibraryFolder[]>(initialFolders);
+    const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+    const [isAddingFolder, setIsAddingFolder] = useState(false);
+    const [newFolderName, setNewFolderName] = useState("");
 
     const handleItemClick = (item: LibraryItem) => {
         if (selectionMode && onItemSelected) {
@@ -39,7 +52,24 @@ export function LibraryGrid({ items, selectionMode = false, onItemSelected }: Li
             onItemSelected(item);
         }
     };
+
+    const handleAddNewFolder = () => {
+        if(newFolderName.trim() !== "") {
+            const newFolder: LibraryFolder = {
+                id: `folder_${Date.now()}`,
+                name: newFolderName,
+            };
+            setFolders([...folders, newFolder]);
+            setNewFolderName("");
+            setIsAddingFolder(false);
+        }
+    };
     
+    const filteredItems = useMemo(() => {
+        if (!activeFolderId) return items;
+        return items.filter(item => item.folderId === activeFolderId);
+    }, [activeFolderId, items]);
+
     const renderItemCard = (item: LibraryItem) => {
         const isSelected = selectedId === item.id;
         const cardContent = (
@@ -53,7 +83,7 @@ export function LibraryGrid({ items, selectionMode = false, onItemSelected }: Li
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-2 left-2 text-white">
                         <div className="flex items-center gap-1.5 text-xs bg-black/50 backdrop-blur-sm rounded-full px-2 py-1">
-                            {typeIcons[item.type as keyof typeof typeIcons] || <ImageIcon className="h-4 w-4" />}
+                            {typeIcons[item.type as keyof typeof typeIcons] || <File className="h-4 w-4" />}
                             <span>{item.type}</span>
                         </div>
                     </div>
@@ -91,30 +121,73 @@ export function LibraryGrid({ items, selectionMode = false, onItemSelected }: Li
     return (
         <Card className="glass-card bg-transparent border-none shadow-none">
             <CardHeader>
-                <div className="flex justify-between items-center">
-                    <div>
-                        <CardTitle className="font-headline">Mi Biblioteca</CardTitle>
-                        <CardDescription>Tu ecosistema personal de apps, archivos y creaciones de IA.</CardDescription>
-                    </div>
-                    {!selectionMode && (
-                         <Button variant="outline">
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Añadir
-                        </Button>
-                    )}
-                </div>
+                <CardTitle className="font-headline">Mi Biblioteca</CardTitle>
+                <CardDescription>Tu ecosistema personal de apps, archivos y creaciones de IA.</CardDescription>
             </CardHeader>
             <CardContent>
-                {items.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {items.map(renderItemCard)}
-                    </div>
-                ) : (
-                    <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-muted-foreground/20 rounded-lg">
-                        <p>Tu biblioteca está vacía.</p>
-                        <p className="text-sm">Empieza a crear avatares, videos o publicaciones para verlos aquí.</p>
-                    </div>
-                )}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    {/* Sidebar de Carpetas */}
+                    <aside className="md:col-span-1 space-y-4">
+                        <h3 className="font-headline text-lg font-semibold px-2">Carpetas</h3>
+                        <div className="space-y-1">
+                           <Button 
+                                variant={!activeFolderId ? 'secondary' : 'ghost'} 
+                                className="w-full justify-start"
+                                onClick={() => setActiveFolderId(null)}
+                            >
+                                <LayoutGrid className="mr-2 h-4 w-4"/> Todos los Archivos
+                            </Button>
+                           {folders.map(folder => (
+                                <Button 
+                                    key={folder.id}
+                                    variant={activeFolderId === folder.id ? 'secondary' : 'ghost'} 
+                                    className="w-full justify-start"
+                                    onClick={() => setActiveFolderId(folder.id)}
+                                >
+                                    <Folder className="mr-2 h-4 w-4" /> {folder.name}
+                                </Button>
+                           ))}
+                           {isAddingFolder ? (
+                                <div className="p-2 space-y-2">
+                                    <Input 
+                                        placeholder="Nombre de la carpeta..."
+                                        value={newFolderName}
+                                        onChange={(e) => setNewFolderName(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleAddNewFolder()}
+                                        autoFocus
+                                    />
+                                    <div className="flex gap-2 justify-end">
+                                        <Button variant="ghost" size="sm" onClick={() => setIsAddingFolder(false)}>Cancelar</Button>
+                                        <Button size="sm" onClick={handleAddNewFolder}>Crear</Button>
+                                    </div>
+                                </div>
+                           ) : (
+                                <Button variant="outline" className="w-full justify-start" onClick={() => setIsAddingFolder(true)}>
+                                    <FolderPlus className="mr-2 h-4 w-4" /> Nueva Carpeta
+                                </Button>
+                           )}
+                        </div>
+                    </aside>
+
+                    {/* Grilla de Contenido */}
+                    <main className="md:col-span-3">
+                        {filteredItems.length > 0 ? (
+                            <div className={cn(
+                                "grid gap-4",
+                                selectionMode 
+                                ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                                : "grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3"
+                                )}>
+                                {filteredItems.map(renderItemCard)}
+                            </div>
+                        ) : (
+                            <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-muted-foreground/20 rounded-lg h-full flex flex-col justify-center items-center">
+                                <p className="font-semibold text-lg">Esta carpeta está vacía.</p>
+                                <p className="text-sm">Añade archivos o crea contenido para verlo aquí.</p>
+                            </div>
+                        )}
+                    </main>
+                </div>
             </CardContent>
         </Card>
     );
