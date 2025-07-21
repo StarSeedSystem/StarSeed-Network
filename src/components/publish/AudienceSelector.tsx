@@ -5,7 +5,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { User, Globe, Users, Landmark, Shield } from "lucide-react";
-import { useEffect } from "react";
 
 const destinations = [
     { id: "profile", label: "Mi Perfil Personal", icon: User, type: "personal" },
@@ -17,7 +16,7 @@ const destinations = [
 
 interface AudienceSelectorProps {
     selectedDestinations: string[];
-    onSelectionChange: (selected: string[], isLegislative: boolean) => void;
+    onSelectionChange: (selectedIds: string[], isFederationSelected: boolean) => void;
 }
 
 export function AudienceSelector({ selectedDestinations, onSelectionChange }: AudienceSelectorProps) {
@@ -27,12 +26,12 @@ export function AudienceSelector({ selectedDestinations, onSelectionChange }: Au
             ? [...selectedDestinations, id] 
             : selectedDestinations.filter(destId => destId !== id);
         
-        const isLegislative = newSelection.some(selId => {
+        const isFederationSelected = newSelection.some(selId => {
             const dest = destinations.find(d => d.id === selId);
             return dest?.type === 'federation';
         });
 
-        onSelectionChange(newSelection, isLegislative);
+        onSelectionChange(newSelection, isFederationSelected);
     };
 
     return (

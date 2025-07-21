@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { SendHorizonal, PenSquare, Paperclip, X } from "lucide-react";
+import { SendHorizonal, PenSquare, Paperclip, X, Gavel } from "lucide-react";
 import { AudienceSelector } from "@/components/publish/AudienceSelector";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -13,6 +13,8 @@ import { LibraryGrid, LibraryItem } from "@/components/profile/LibraryGrid";
 import Image from "next/image";
 import { LegislativeSettings } from "@/components/publish/LegislativeSettings";
 import { NewsSettings } from "@/components/publish/NewsSettings";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 // Mock data for library items, in a real app this would be fetched
 const libraryItems: LibraryItem[] = [
@@ -37,7 +39,8 @@ const libraryItems: LibraryItem[] = [
 export default function PublishPage() {
     const [content, setContent] = useState("");
     const [selectedDestinations, setSelectedDestinations] = useState<string[]>(["profile"]);
-    const [isLegislative, setIsLegislative] = useState(false);
+    const [isFederationSelected, setIsFederationSelected] = useState(false);
+    const [isCreatingVote, setIsCreatingVote] = useState(false);
     const [isNews, setIsNews] = useState(false);
     const [attachedItem, setAttachedItem] = useState<LibraryItem | null>(null);
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
@@ -61,7 +64,7 @@ export default function PublishPage() {
             return;
         }
 
-        console.log("Publicando:", { content, destinations: selectedDestinations, attachedItem, isLegislative, isNews });
+        console.log("Publicando:", { content, destinations: selectedDestinations, attachedItem, isCreatingVote, isNews });
 
         toast({
             title: "¡Transmisión Exitosa!",
@@ -71,6 +74,7 @@ export default function PublishPage() {
         setContent("");
         setAttachedItem(null);
         setIsNews(false);
+        setIsCreatingVote(false);
     };
     
     const handleItemSelected = (item: LibraryItem) => {
@@ -78,10 +82,16 @@ export default function PublishPage() {
         setIsLibraryOpen(false);
     };
 
-    const handleDestinationChange = (selectedIds: string[], isLegislative: boolean) => {
+    const handleDestinationChange = (selectedIds: string[], isFedSelected: boolean) => {
         setSelectedDestinations(selectedIds);
-        setIsLegislative(isLegislative);
+        setIsFederationSelected(isFedSelected);
+        // If no federation is selected anymore, disable the vote creation
+        if (!isFedSelected) {
+            setIsCreatingVote(false);
+        }
     };
+
+    const isLegislative = isFederationSelected && isCreatingVote;
 
     return (
         <div className="container mx-auto max-w-5xl py-8">
@@ -99,7 +109,7 @@ export default function PublishPage() {
                     <div>
                         <h3 className="text-lg font-headline font-semibold mb-2">Paso 1: Intención y Ámbito</h3>
                         <p className="text-sm text-muted-foreground mb-4">
-                            Selecciona dónde resonará tu mensaje. Publicar en una Entidad Federativa activará las opciones de propuesta legislativa.
+                            Selecciona dónde resonará tu mensaje. Publicar en una Entidad Federativa te dará la opción de crear una propuesta legislativa.
                         </p>
                         <AudienceSelector 
                             selectedDestinations={selectedDestinations} 
@@ -139,7 +149,7 @@ export default function PublishPage() {
                             )}
                         </div>
                         <div className="space-y-4 md:col-span-1">
-                             <h3 className="text-lg font-headline font-semibold mb-2">Herramientas</h3>
+                             <h3 className="text-lg font-headline font-semibold mb-2">Paso 3: Herramientas y Opciones</h3>
                              <Dialog open={isLibraryOpen} onOpenChange={setIsLibraryOpen}>
                                 <DialogTrigger asChild>
                                      <Button variant="outline" disabled={!!attachedItem} className="w-full justify-start">
@@ -159,13 +169,23 @@ export default function PublishPage() {
                                     </div>
                                 </DialogContent>
                             </Dialog>
+                             
+                             {isFederationSelected && (
+                                <div className="flex items-center space-x-2 rounded-lg border p-3 bg-secondary/40 border-secondary/60">
+                                    <Checkbox id="add-vote" checked={isCreatingVote} onCheckedChange={(checked) => setIsCreatingVote(!!checked)} />
+                                    <Label htmlFor="add-vote" className="flex items-center gap-2 font-semibold">
+                                        <Gavel className="h-4 w-4" />
+                                        Añadir Votación
+                                    </Label>
+                                </div>
+                             )}
 
                              {isLegislative && <LegislativeSettings />}
                              {!isLegislative && <NewsSettings isNews={isNews} onIsNewsChange={setIsNews} />}
                         </div>
                     </div>
                     
-                    <div className="flex justify-end">
+                    <div className="flex justify-end pt-4 border-t border-white/10">
                         <Button size="lg" className="w-full sm:w-auto shadow-lg shadow-primary/30" onClick={handlePublish}>
                             <SendHorizonal className="mr-2 h-5 w-5" />
                             Transmitir al Nexo
@@ -177,5 +197,3 @@ export default function PublishPage() {
         </div>
     );
 }
-
-    
