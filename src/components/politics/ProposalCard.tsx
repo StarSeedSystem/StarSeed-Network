@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { ThumbsUp, ThumbsDown, MessageSquare, Users, Eye, Bookmark, Minus, Plus } from "lucide-react";
 import { Separator } from "../ui/separator";
 import Link from "next/link";
+import { Progress } from "../ui/progress";
 
 type VoteType = "support" | "reject" | null;
 
@@ -67,7 +68,12 @@ export function ProposalCard({ id, title, proposer, entity, status, stats: initi
         case 'comments': return <div className="flex items-center gap-1.5"><MessageSquare className="h-4 w-4 text-primary" /> <span>{value} Comentarios</span></div>;
         case 'volunteers': return <div className="flex items-center gap-1.5"><Users className="h-4 w-4 text-sky-blue" /> <span>{value} Voluntarios</span></div>;
         case 'participants': return <div className="flex items-center gap-1.5"><Users className="h-4 w-4 text-sky-blue" /> <span>{value} Participantes</span></div>;
-        case 'progress': return <div className="w-full"><div className="text-sm font-semibold mb-1">{value}% Progreso</div><div className="w-full bg-secondary rounded-full h-2.5"><div className="bg-electric-lime h-2.5 rounded-full" style={{width: `${value}%`}}></div></div></div>;
+        case 'progress': return (
+            <div className="w-full flex-grow">
+                <div className="text-sm font-semibold mb-1">{value}% Progreso</div>
+                <Progress value={value} className="h-2"/>
+            </div>
+        );
         default: return null;
     }
   }
@@ -101,7 +107,6 @@ export function ProposalCard({ id, title, proposer, entity, status, stats: initi
         <CardFooter className="flex flex-col gap-4">
             <div className="flex items-center flex-wrap gap-x-4 gap-y-2 w-full">
                  {Object.entries(stats).map(([key, value]) => {
-                     // Hide voting stats from the main area if it's a voting proposal
                      if (isVotingProposal && (key === 'support' || key === 'reject' || key === 'abstain')) {
                          return null;
                      }
