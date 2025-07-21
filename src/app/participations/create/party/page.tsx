@@ -15,9 +15,6 @@ import { ArrowLeft, Check, Flag, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { slugify } from "@/lib/utils";
 
-// This is a new, focused creation page for Political Parties.
-// It follows the same pattern as the community creation page.
-
 export default function CreatePartyPage() {
     const router = useRouter();
     const { toast } = useToast();
@@ -49,22 +46,22 @@ export default function CreatePartyPage() {
             members: 1,
             creatorId: authUser.uid,
             avatar: `https://avatar.vercel.sh/${partySlug}.png`,
+            avatarHint: "party logo",
             banner: `https://placehold.co/1200x400/000000/ffffff?text=${partyName}`,
+            bannerHint: "political banner",
             createdAt: serverTimestamp(),
-            ideology: "Not defined", // Example additional field
+            ideology: "Not defined", 
         };
         
         try {
-            // Use the slug as the document ID in the 'parties' collection
-            const partyRef = doc(db, "parties", partySlug);
+            const partyRef = doc(db, "politicalParties", partySlug);
             await setDoc(partyRef, partyData);
 
             toast({
                 title: "¡Partido Político Creado!",
                 description: `El partido "${partyName}" ha sido registrado en la red.`,
             });
-            // Redirect to the newly created party's page
-            router.push(`/politics/party/${partySlug}`);
+            router.push(`/party/${partySlug}`);
 
         } catch (error) {
              console.error("Error creating political party:", error);

@@ -11,7 +11,7 @@ async function getEntityData(slug: string): Promise<PoliticalParty | null> {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            return { id: docSnap.id, ...docSnap.data() } as PoliticalParty;
+            return { type: 'political_party', id: docSnap.id, ...docSnap.data() } as PoliticalParty;
         } else {
             return null;
         }

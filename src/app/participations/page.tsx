@@ -1,8 +1,9 @@
 
-
 "use client";
 
 import { useState, useEffect } from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/data/firebase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star, Activity, Gavel, PlaySquare, Loader2 } from "lucide-react";
@@ -11,9 +12,8 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import Image from "next/image";
 import { Progress } from "@/components/ui/progress";
-import type { Community, FederatedEntity, StudyGroup, PoliticalParty } from "@/types/content-types";
+import type { AnyEntity } from "@/types/content-types";
 
 const recommendations = [
     {
@@ -81,7 +81,7 @@ const activeParticipations = {
 };
 
 type ConnectionCardProps = {
-    item: Community | FederatedEntity | StudyGroup | PoliticalParty;
+    item: AnyEntity;
 }
 
 const ConnectionCard = ({ item }: ConnectionCardProps) => {
@@ -115,34 +115,33 @@ const ConnectionCard = ({ item }: ConnectionCardProps) => {
 };
 
 export default function ConnectionsHubPage() {
-    const [myCommunities, setMyCommunities] = useState<Community[]>([]);
-    const [myFederations, setMyFederations] = useState<FederatedEntity[]>([]);
-    const [myStudyGroups, setMyStudyGroups] = useState<StudyGroup[]>([]);
-    const [myPoliticalParties, setMyPoliticalParties] = useState<PoliticalParty[]>([]);
+    const [myCommunities, setMyCommunities] = useState<AnyEntity[]>([]);
+    const [myFederations, setMyFederations] = useState<AnyEntity[]>([]);
+    const [myStudyGroups, setMyStudyGroups] = useState<AnyEntity[]>([]);
+    const [myPoliticalParties, setMyPoliticalParties] = useState<AnyEntity[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchAllData = async () => {
             setIsLoading(true);
             try {
-                const [communitiesRes, federationsRes, groupsRes, partiesRes] = await Promise.all([
-                    fetch('/api/communities'),
-                    fetch('/api/federations'),
-                    fetch('/api/study-groups'),
-                    fetch('/api/political-parties'),
-                ]);
+                const collections: { key: string; setter: Function; type: AnyEntity['type'] }[] = [
+                    { key: 'communities', setter: setMyCommunities, type: 'community' },
+                    { key: 'federations', setter: setMyFederations, type: 'federation' },
+                    { key: 'studyGroups', setter: setMyStudyGroups, type: 'study_group' },
+                    { key: 'politicalParties', setter: setMyPoliticalParties, type: 'political_party' },
+                ];
 
-                if (!communitiesRes.ok || !federationsRes.ok || !groupsRes.ok || !partiesRes.ok) {
-                    throw new Error('Failed to fetch connection data');
-                }
+                const promises = collections.map(async ({ key, setter, type }) => {
+                    const querySnapshot = await getDocs(collection(db, key));
+                    const data = querySnapshot.docs.map(doc => ({ type, id: doc.id, ...doc.data() } as AnyEntity));
+                    setter(data);
+                });
 
-                setMyCommunities(await communitiesRes.json());
-                setMyFederations(await federationsRes.json());
-                setMyStudyGroups(await groupsRes.json());
-                setMyPoliticalParties(await partiesRes.json());
+                await Promise.all(promises);
 
             } catch (error) {
-                console.error(error);
+                console.error("Error fetching connection data from Firestore: ", error);
             } finally {
                 setIsLoading(false);
             }
@@ -151,7 +150,7 @@ export default function ConnectionsHubPage() {
         fetchAllData();
     }, []);
 
-    const renderList = (items: (Community | FederatedEntity | StudyGroup | PoliticalParty)[]) => {
+    const renderList = (items: AnyEntity[]) => {
         if (isLoading) {
             return <div className="flex justify-center items-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
         }
@@ -160,7 +159,7 @@ export default function ConnectionsHubPage() {
         }
         return (
             <div className="space-y-4">
-                {items.map((item) => <ConnectionCard key={item.slug} item={item} />)}
+                {items.map((item) => <ConnectionCard key={item.id} item={item} />)}
             </div>
         );
     };
@@ -184,10 +183,10 @@ export default function ConnectionsHubPage() {
             </CardHeader>
             <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/community"><Globe className="h-5 w-5 text-primary"/><span>Comunidad</span></Link></Button>
-                <Button variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Landmark className="h-5 w-5 text-primary"/><span>E.F.</span></Button>
-                <Button variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Calendar className="h-5 w-5 text-primary"/><span>Evento</span></Button>
-                <Button variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><BookOpen className="h-5 w-5 text-primary"/><span>Grupo Estudio</span></Button>
-                <Button variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Shield className="h-5 w-5 text-primary"/><span>Partido Político</span></Button>
+                <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/federation"><Landmark className="h-5 w-5 text-primary"/><span>E.F.</span></Link></Button>
+                <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center" disabled><Link href="#"><Calendar className="h-5 w-5 text-primary"/><span>Evento</span></Link></Button>
+                <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/study-group"><BookOpen className="h-5 w-5 text-primary"/><span>Grupo Estudio</span></Link></Button>
+                <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/party"><Shield className="h-5 w-5 text-primary"/><span>Partido Político</span></Link></Button>
             </CardContent>
         </Card>
         <Card className="glass-card">
@@ -294,7 +293,7 @@ export default function ConnectionsHubPage() {
             <Landmark className="mr-2 h-5 w-5" />
             Entidades ({myFederations.length})
           </TabsTrigger>
-           <TabsTrigger value="events" className="rounded-lg py-2 text-base">
+           <TabsTrigger value="events" className="rounded-lg py-2 text-base" disabled>
             <Calendar className="mr-2 h-5 w-5" />
             Eventos (0)
           </TabsTrigger>

@@ -11,7 +11,7 @@ async function getEntityData(slug: string): Promise<FederatedEntity | null> {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            return { id: docSnap.id, ...docSnap.data() } as FederatedEntity;
+            return { type: 'federation', id: docSnap.id, ...docSnap.data() } as FederatedEntity;
         } else {
             return null;
         }

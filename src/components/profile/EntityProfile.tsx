@@ -1,4 +1,6 @@
 
+"use client";
+
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,10 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BackButton } from "@/components/utils/BackButton";
 import { AnyEntity } from "@/types/content-types";
-
-// Mock data, will be replaced by dynamic data
-const communityPosts: any[] = [];
-const communityMembers: any[] = [];
 
 type EntityProfileProps = {
     data: AnyEntity;
@@ -87,7 +85,7 @@ export function EntityProfile({ data }: EntityProfileProps) {
                     <TabsContent value="members" className="mt-6">
                          <Card className="glass-card">
                             <CardHeader>
-                                <CardTitle>Miembros ({communityMembers.length})</CardTitle>
+                                <CardTitle>Miembros ({data.members})</CardTitle>
                                 <CardDescription>Las personas que dan vida a esta entidad.</CardDescription>
                             </CardHeader>
                              <CardContent className="text-center p-8">

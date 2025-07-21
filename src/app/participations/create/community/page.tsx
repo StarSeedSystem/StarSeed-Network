@@ -11,17 +11,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Check, Image as ImageIcon, Users, Wand2, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Users } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import Image from "next/image";
 import { slugify } from "@/lib/utils";
 
 export default function CreateCommunityPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const { user: authUser } = useUser(); // Get authenticated user
+    const { user: authUser } = useUser();
 
     const [isLoading, setIsLoading] = useState(false);
     const [communityName, setCommunityName] = useState("");
@@ -49,14 +47,15 @@ export default function CreateCommunityPage() {
             description: communityDescription,
             longDescription: communityLongDescription,
             members: 1,
-            creatorId: authUser.uid, // Link the creator
-            avatar: `https://avatar.vercel.sh/${communitySlug}.png`,
+            creatorId: authUser.uid,
+            avatar: `https://avatar.vercel.sh/${communitySlug}.png?size=128`,
+            avatarHint: "community logo",
             banner: "https://placehold.co/1200x400.png",
+            bannerHint: "abstract landscape",
             createdAt: serverTimestamp(),
         };
         
         try {
-            // Use the slug as the document ID for easy retrieval
             const communityRef = doc(db, "communities", communitySlug);
             await setDoc(communityRef, communityData);
 

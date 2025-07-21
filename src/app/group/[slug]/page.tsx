@@ -11,7 +11,7 @@ async function getEntityData(slug: string): Promise<StudyGroup | null> {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            return { id: docSnap.id, ...docSnap.data() } as StudyGroup;
+            return { type: 'study_group', id: docSnap.id, ...docSnap.data() } as StudyGroup;
         } else {
             return null;
         }

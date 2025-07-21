@@ -1,5 +1,4 @@
 
-
 export interface Author {
     name: string;
     avatar: string;
@@ -33,6 +32,7 @@ export interface NatalChartData {
 }
 
 interface BaseEntity {
+    id: string;
     slug: string;
     name: string;
     description: string;
