@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Video, Image as ImageIcon, PlusCircle } from "lucide-react";
 
-interface LibraryItem {
+export interface LibraryItem {
     id: string;
     type: "Video" | "Avatar" | "Image" | string;
     title: string;
@@ -30,7 +30,7 @@ export function LibraryGrid({ items }: LibraryGridProps) {
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle>Mi Biblioteca</CardTitle>
+                        <CardTitle className="font-headline">Mi Biblioteca</CardTitle>
                         <CardDescription>Tu ecosistema personal de apps, archivos y avatares.</CardDescription>
                     </div>
                     <Button variant="outline">

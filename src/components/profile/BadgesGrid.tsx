@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Star, Zap, BrainCircuit, Users, Award, ShieldCheck, Gem } from "lucide-react";
@@ -21,16 +22,16 @@ export function BadgesGrid({ earnedBadges }: { earnedBadges: { [key: string]: bo
         <CardDescription>A showcase of your accomplishments and status within the Nexus.</CardDescription>
       </CardHeader>
       <CardContent>
-        <TooltipProvider>
+        <TooltipProvider delayDuration={0}>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-6">
             {allAchievements.map((ach) => {
               const isEarned = earnedBadges[ach.id];
               return (
-                <Tooltip key={ach.id} delayDuration={0}>
+                <Tooltip key={ach.id}>
                     <TooltipTrigger asChild>
                         <div className={cn(
                           "flex flex-col items-center gap-2 cursor-pointer group",
-                          !isEarned && "opacity-30 grayscale"
+                          !isEarned && "opacity-30 grayscale hover:opacity-70 hover:grayscale-0"
                         )}>
                             <div className={cn(
                               "w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center border-2 border-primary/30 transition-all group-hover:border-accent group-hover:scale-110",

@@ -5,7 +5,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Image as ImageIcon, Calendar as CalendarIcon, Clock, MapPin } from "lucide-react";
+import { Edit, Image as ImageIcon, Calendar as CalendarIcon, Clock, MapPin, Award, Library } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -27,9 +27,16 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { AIBannerGenerator } from "./AIBannerGenerator";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BadgesGrid } from "./BadgesGrid";
+import { LibraryGrid, LibraryItem } from "./LibraryGrid";
 
 
-export function ProfileClient() {
+interface ProfileClientProps {
+  libraryItems: LibraryItem[];
+}
+
+export function ProfileClient({ libraryItems }: ProfileClientProps) {
   const [avatarUrl, setAvatarUrl] = useState("https://placehold.co/128x128.png");
   const [bannerUrl, setBannerUrl] = useState("https://placehold.co/1200x400.png");
   const [bio, setBio] = useState(
@@ -37,7 +44,9 @@ export function ProfileClient() {
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [birthDate, setBirthDate] = useState<Date>();
-  const [badges, setBadges] = useState<{ [key: string]: boolean }>({});
+  const [badges, setBadges] = useState<{ [key: string]: boolean }>({
+    nexusPioneer: true, // Example of a pre-earned badge
+  });
   const { toast } = useToast();
 
   const handleSaveChanges = (e: React.FormEvent<HTMLFormElement>) => {
@@ -47,15 +56,31 @@ export function ProfileClient() {
     setBio(newBio);
     // Logic to save other fields would go here
     setIsDialogOpen(false);
+     toast({
+      title: "Profile Updated",
+      description: "Your changes have been saved successfully.",
+    });
   };
 
   const handleAvatarGenerated = (newAvatarUrl: string) => {
     setAvatarUrl(newAvatarUrl);
-    setBadges(prev => ({ ...prev, aiSymbiote: true }));
-    toast({
-      title: "¡Insignia Desbloqueada!",
-      description: "Has obtenido la insignia 'AI Symbiote'. Tu nuevo avatar está listo y guardado en tu biblioteca.",
-    });
+    
+    // Only grant badge and show toast if it's the first time
+    if (!badges.aiSymbiote) {
+       setBadges(prev => ({ ...prev, aiSymbiote: true }));
+       toast({
+        title: "¡Insignia Desbloqueada!",
+        description: "Has obtenido la insignia 'AI Symbiote'. Tu nuevo avatar está listo y guardado en tu biblioteca.",
+        duration: 5000,
+       });
+    } else {
+        toast({
+            title: "Avatar actualizado",
+            description: "Tu nuevo avatar ha sido guardado.",
+        });
+    }
+
+    // In a real app, this would also add the new avatar to the libraryItems
   }
   
   return (
@@ -87,7 +112,7 @@ export function ProfileClient() {
             <AvatarFallback>SN</AvatarFallback>
           </Avatar>
           <div className="pt-16 flex-grow">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-2">
                 <div>
                     <h1 className="text-3xl font-bold font-headline">Starlight</h1>
                     <p className="text-muted-foreground">@starlight.eth</p>
@@ -160,7 +185,7 @@ export function ProfileClient() {
 
                       <PrivacySettings />
                       
-                      <DialogFooter>
+                      <DialogFooter className="sticky bottom-0 bg-background/80 backdrop-blur-sm pt-4 -mx-1 -mb-1 px-1">
                         <DialogClose asChild>
                             <Button type="button" variant="ghost">Cancel</Button>
                         </DialogClose>
@@ -173,6 +198,26 @@ export function ProfileClient() {
             <p className="mt-4 text-foreground/90">{bio}</p>
           </div>
         </div>
+      </div>
+      <div className="px-4 sm:px-8">
+        <Tabs defaultValue="badges" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-card/60 rounded-xl">
+            <TabsTrigger value="badges" className="rounded-lg">
+                <Award className="mr-2 h-4 w-4"/>
+                Insignias
+            </TabsTrigger>
+            <TabsTrigger value="library" className="rounded-lg">
+                <Library className="mr-2 h-4 w-4"/>
+                Biblioteca
+            </TabsTrigger>
+            </TabsList>
+            <TabsContent value="badges" className="mt-6">
+            <BadgesGrid earnedBadges={badges} />
+            </TabsContent>
+            <TabsContent value="library" className="mt-6">
+                <LibraryGrid items={libraryItems} />
+            </TabsContent>
+        </Tabs>
       </div>
     </>
   );
