@@ -48,7 +48,7 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { Sheet, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const authRoutes = ["/login", "/signup"];
 
@@ -181,15 +181,9 @@ function AppSidebar() {
         <AppLogo />
       </SidebarHeader>
       <SidebarContent>
-        {state === 'expanded' ? (
-          <SidebarMenu>
-            {renderNavItems()}
-          </SidebarMenu>
-        ) : (
-          <div className="flex flex-col items-center gap-1 px-1">
-            {renderNavItems()}
-          </div>
-        )}
+        <SidebarMenu>
+          {renderNavItems()}
+        </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-2">
         <DropdownMenu>
@@ -228,47 +222,19 @@ function AppSidebar() {
 }
 
 function AppHeader() {
-  const isMobile = useIsMobile();
-  if (!isMobile) return null;
-
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/50 px-4 backdrop-blur-xl md:justify-end">
-      <AppLogo />
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <MenuIcon className="h-6 w-6" />
-          <span className="sr-only">Toggle Menu</span>
-        </Button>
-      </SheetTrigger>
+    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-xl md:px-6">
+      <SidebarTrigger />
+      <div className="flex-1 text-center md:text-left">
+        {/* Potentially add breadcrumbs or page title here */}
+      </div>
     </header>
   );
 }
 
-function MenuIcon(props: React.SVGProps<SVGSVGElement>) {
-    return (
-      <svg
-        {...props}
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <line x1="4" x2="20" y1="12" y2="12" />
-        <line x1="4" x2="20" y1="6" y2="6" />
-        <line x1="4" x2="20" y1="18" y2="18" />
-      </svg>
-    )
-}
-
 function MainContent({ children }: { children: React.ReactNode }) {
-    const { state } = useSidebar();
     return (
-        <div className="flex flex-col flex-1 transition-[margin-left] duration-300 ease-in-out group-data-[state=expanded]/sidebar-wrapper:ml-[--sidebar-width] group-data-[state=collapsed]/sidebar-wrapper:ml-[--sidebar-width-icon]">
+        <div className="flex flex-col flex-1">
             <AppHeader />
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 {children}
