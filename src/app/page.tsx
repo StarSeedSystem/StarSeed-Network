@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from "react";
-import { CreatePostWidget } from "@/components/dashboard/CreatePostWidget";
 import { FeedWidget, FeedPostType } from "@/components/dashboard/FeedWidget";
 import { AchievementsWidget } from "@/components/dashboard/AchievementsWidget";
 import { TutorialsWidget } from "@/components/dashboard/TutorialsWidget";
@@ -31,27 +30,10 @@ const initialFeed: FeedPostType[] = [
 ];
 
 export default function DashboardPage() {
-  const [feed, setFeed] = useState<FeedPostType[]>(initialFeed);
-
-  const handleCreatePost = (content: string) => {
-    const newPost: FeedPostType = {
-      author: "Starlight",
-      handle: "starlight.eth",
-      avatar: "https://placehold.co/100x100.png",
-      avatarHint: "glowing astronaut",
-      content: content,
-      comments: 0,
-      reposts: 0,
-      likes: 0,
-    };
-    setFeed(prevFeed => [newPost, ...prevFeed]);
-  };
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
-        <CreatePostWidget onPostCreated={handleCreatePost} />
-        <FeedWidget initialFeed={feed} />
+        <FeedWidget initialFeed={initialFeed} />
       </div>
       <div className="space-y-6">
         <AchievementsWidget />
