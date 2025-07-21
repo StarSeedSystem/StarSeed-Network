@@ -214,38 +214,14 @@ export default function ConnectionsHubPage() {
         </Card>
       </div>
       
-       <Tabs defaultValue="communities" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 bg-card/60 rounded-xl h-auto">
-          <TabsTrigger value="participations" className="rounded-lg py-2 text-base">
-            <Activity className="mr-2 h-5 w-5" />
-            Participaciones ({activeParticipations.votes.length + activeParticipations.tasks.length + activeParticipations.events.length + activeParticipations.projects.length})
-          </TabsTrigger>
-          <TabsTrigger value="communities" className="rounded-lg py-2 text-base">
-            <Users className="mr-2 h-5 w-5" />
-            Comunidades ({myCommunities.length})
-          </TabsTrigger>
-          <TabsTrigger value="federations" className="rounded-lg py-2 text-base">
-            <Landmark className="mr-2 h-5 w-5" />
-            Entidades ({myFederations.length})
-          </TabsTrigger>
-           <TabsTrigger value="events" className="rounded-lg py-2 text-base">
-            <Calendar className="mr-2 h-5 w-5" />
-            Eventos (0)
-          </TabsTrigger>
-          <TabsTrigger value="study_groups" className="rounded-lg py-2 text-base">
-            <BookOpen className="mr-2 h-5 w-5" />
-            Grupos ({myStudyGroups.length})
-          </TabsTrigger>
-          <TabsTrigger value="political_parties" className="rounded-lg py-2 text-base">
-            <Shield className="mr-2 h-5 w-5" />
-            Partidos ({myPoliticalParties.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="participations" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="glass-card">
-                    <CardHeader><CardTitle className="font-headline text-xl flex items-center gap-2"><Gavel className="text-primary"/>Votaciones Pendientes</CardTitle></CardHeader>
+       <div className="space-y-6">
+            <h2 className="text-3xl font-bold font-headline flex items-center gap-3">
+                <Activity className="h-8 w-8 text-primary"/>
+                Mis Participaciones Activas
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                 <Card className="glass-card">
+                    <CardHeader><CardTitle className="font-headline text-xl flex items-center gap-2"><Gavel className="text-primary"/>Votaciones</CardTitle></CardHeader>
                     <CardContent className="space-y-3">
                         {activeParticipations.votes.map(vote => (
                             <div key={vote.id} className="p-3 rounded-lg bg-secondary/70">
@@ -291,7 +267,31 @@ export default function ConnectionsHubPage() {
                     </CardContent>
                 </Card>
             </div>
-        </TabsContent>
+       </div>
+
+       <Tabs defaultValue="communities" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-card/60 rounded-xl h-auto">
+          <TabsTrigger value="communities" className="rounded-lg py-2 text-base">
+            <Users className="mr-2 h-5 w-5" />
+            Comunidades ({myCommunities.length})
+          </TabsTrigger>
+          <TabsTrigger value="federations" className="rounded-lg py-2 text-base">
+            <Landmark className="mr-2 h-5 w-5" />
+            Entidades ({myFederations.length})
+          </TabsTrigger>
+           <TabsTrigger value="events" className="rounded-lg py-2 text-base">
+            <Calendar className="mr-2 h-5 w-5" />
+            Eventos (0)
+          </TabsTrigger>
+          <TabsTrigger value="study_groups" className="rounded-lg py-2 text-base">
+            <BookOpen className="mr-2 h-5 w-5" />
+            Grupos ({myStudyGroups.length})
+          </TabsTrigger>
+          <TabsTrigger value="political_parties" className="rounded-lg py-2 text-base">
+            <Shield className="mr-2 h-5 w-5" />
+            Partidos ({myPoliticalParties.length})
+          </TabsTrigger>
+        </TabsList>
 
         <TabsContent value="communities" className="mt-6">
             <div className="space-y-4">
@@ -330,3 +330,4 @@ export default function ConnectionsHubPage() {
     </div>
   );
 }
+
