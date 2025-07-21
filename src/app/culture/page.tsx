@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Filter, Headset, BotMessageSquare, Sparkles, Map, Calendar, Newspaper, VrHeadset } from "lucide-react";
+import { Filter, Headset, BotMessageSquare, Sparkles, Map, Calendar, Newspaper } from "lucide-react";
 import Link from "next/link";
 import { ContentCard } from "@/components/content/ContentCard";
 import type { CulturalContent } from "@/types/content-types";
@@ -78,7 +78,7 @@ export default function CulturePage() {
                     Noticias
                 </TabsTrigger>
                  <TabsTrigger value="vr" className="rounded-lg py-2 text-base">
-                    <VrHeadset className="mr-2 h-5 w-5" />
+                    <Headset className="mr-2 h-5 w-5" />
                     Entornos Virtuales
                 </TabsTrigger>
             </TabsList>
