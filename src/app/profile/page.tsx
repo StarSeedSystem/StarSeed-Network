@@ -47,7 +47,7 @@ export default function ProfilePage() {
                 <FeedWidget />
               </TabsContent>
               <TabsContent value="badges" className="mt-6">
-                <BadgesGrid />
+                <BadgesGrid earnedBadges={{}} />
               </TabsContent>
               <TabsContent value="library" className="mt-6">
                 <LibraryPlaceholder />

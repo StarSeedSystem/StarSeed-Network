@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Filter, VrHeadset, BotMessageSquare } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 const culturalContent = [
     {
@@ -51,7 +52,9 @@ export default function CulturePage() {
                 <BotMessageSquare className="h-12 w-12 text-accent glowing-icon mb-4" />
                 <CardTitle className="font-headline text-2xl">Crear Avatar con IA</CardTitle>
                 <CardDescription className="mt-2">Genera una nueva identidad virtual a partir de una descripción en lenguaje natural.</CardDescription>
-                <Button size="lg" variant="outline" className="mt-4">Ir al Generador de Avatares</Button>
+                <Button size="lg" variant="outline" className="mt-4" asChild>
+                    <Link href="/avatar-generator">Ir al Generador de Avatares</Link>
+                </Button>
             </Card>
       </div>
       

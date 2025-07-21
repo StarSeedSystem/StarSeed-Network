@@ -46,6 +46,7 @@ import {
   ChevronDown,
   Info,
   Clapperboard,
+  Bot,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -106,6 +107,7 @@ const navItems = [
       subItems: [
         { href: "/library/apps", label: "Apps Favoritas" },
         { href: "/library/files", label: "Archivos Recientes" },
+        { href: "/avatar-generator", label: "AI Avatar Generator", icon: Bot },
         { href: "/video-generator", label: "AI Video Generator", icon: Clapperboard },
       ],
     },

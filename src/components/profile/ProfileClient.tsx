@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { AIBannerGenerator } from "./AIBannerGenerator";
+import { useToast } from "@/hooks/use-toast";
 
 
 export function ProfileClient() {
@@ -35,6 +36,8 @@ export function ProfileClient() {
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [birthDate, setBirthDate] = useState<Date>();
+  const [badges, setBadges] = useState<{ [key: string]: boolean }>({});
+  const { toast } = useToast();
 
   const handleSaveChanges = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -44,6 +47,15 @@ export function ProfileClient() {
     // Logic to save other fields would go here
     setIsDialogOpen(false);
   };
+
+  const handleAvatarGenerated = (newAvatarUrl: string) => {
+    setAvatarUrl(newAvatarUrl);
+    setBadges(prev => ({ ...prev, aiSymbiote: true }));
+    toast({
+      title: "Avatar Actualizado!",
+      description: "Tu nuevo avatar generado por IA ha sido establecido y has ganado la insignia 'AI Symbiote'."
+    })
+  }
   
   return (
     <>
@@ -93,7 +105,7 @@ export function ProfileClient() {
                       </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSaveChanges} className="space-y-6 max-h-[70vh] overflow-y-auto p-1 pr-4">
-                      <AIAvatarGenerator currentAvatar={avatarUrl} onAvatarGenerated={setAvatarUrl} />
+                      <AIAvatarGenerator currentAvatar={avatarUrl} onAvatarGenerated={handleAvatarGenerated} />
                       
                       <div className="space-y-2">
                         <Label htmlFor="bio">Bio</Label>
