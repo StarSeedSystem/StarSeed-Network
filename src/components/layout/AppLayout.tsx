@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React from "react";
@@ -152,7 +153,7 @@ function AppSidebar() {
           <CollapsibleContent asChild>
               <SidebarMenuSub>
                   {item.subItems.map((subItem) => (
-                  <SidebarMenuItem key={subItem.href}>
+                  <SidebarMenuItem key={`${subItem.label}-${subItem.href}`}>
                       <SidebarMenuSubButton
                       asChild
                       isActive={pathname === subItem.href}
