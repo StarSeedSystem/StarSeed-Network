@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Filter, VrHeadset, BotMessageSquare } from "lucide-react";
+import { Filter, Headset, BotMessageSquare } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -43,7 +43,7 @@ export default function CulturePage() {
 
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="glass-card flex flex-col items-center justify-center text-center p-6">
-                 <VrHeadset className="h-12 w-12 text-primary glowing-icon mb-4" />
+                 <Headset className="h-12 w-12 text-primary glowing-icon mb-4" />
                 <CardTitle className="font-headline text-2xl">Crear Entorno Virtual</CardTitle>
                 <CardDescription className="mt-2">Describe tu visión y deja que la IA genere un nuevo mundo para ti y tu comunidad.</CardDescription>
                  <Button size="lg" className="mt-4 shadow-lg shadow-primary/30">Empezar Creación</Button>
