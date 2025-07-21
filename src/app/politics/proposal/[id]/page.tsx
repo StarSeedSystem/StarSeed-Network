@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Gavel, MessageSquare, Tag, ThumbsDown, ThumbsUp, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommentSection } from "@/components/politics/CommentSection";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 // Mock data, in a real app this would be fetched based on the id
 const legislativeProposals = {
@@ -39,9 +39,11 @@ const statusColors: { [key: string]: string } = {
     "En Votación": "bg-sky-blue/20 text-sky-blue border-sky-blue/30",
 };
 
-export default function ProposalDetailPage({ params }: { params: { id: string } }) {
+export default function ProposalDetailPage() {
     const router = useRouter();
-    const proposal = legislativeProposals[params.id as keyof typeof legislativeProposals];
+    const params = useParams();
+    const proposalId = params.id as string;
+    const proposal = legislativeProposals[proposalId as keyof typeof legislativeProposals];
 
     if (!proposal) {
         return <div className="text-center">Propuesta no encontrada.</div>
