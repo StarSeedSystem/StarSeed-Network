@@ -1,33 +1,47 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Filter, Headset, BotMessageSquare } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
+import { ContentCard } from "@/components/content/ContentCard";
+import type { CulturalContent } from "@/types/content-types";
 
-const culturalContent = [
+const culturalFeed: CulturalContent[] = [
     {
+        id: "art-001",
         title: "Galería de Arte Ciberdélico 'Sueños de Neón'",
         type: "Entorno Virtual",
-        author: "@Art-AI.dao",
+        author: { name: "@Art-AI.dao", avatar: "https://placehold.co/100x100.png", avatarHint: "abstract art" },
         image: "https://placehold.co/600x400.png",
         imageHint: "neon art",
         description: "Sumérgete en una exposición de arte generado por la consciencia colectiva."
     },
     {
+        id: "env-002",
         title: "Bosque Primordial: Meditación en VR",
         type: "Entorno Virtual",
-        author: "@GaiaPrime",
+        author: { name: "@GaiaPrime", avatar: "https://placehold.co/100x100.png", avatarHint: "glowing goddess" },
         image: "https://placehold.co/600x400.png",
         imageHint: "enchanted forest",
         description: "Un espacio de sanación y conexión con la naturaleza digital, reactivo a tus datos biométricos."
     },
     {
+        id: "avatar-003",
         title: "Mi Nuevo Avatar Solarpunk",
         type: "Avatar 3D",
-        author: "@Helios",
+        author: { name: "@Helios", avatar: "https://placehold.co/100x100.png", avatarHint: "sun god" },
         image: "https://placehold.co/400x400.png",
         imageHint: "solarpunk character",
         description: "Comparto mi última creación de avatar para que la usen libremente."
+    },
+    {
+        id: "event-001",
+        title: "Festival de Música Algorítmica",
+        type: "Evento",
+        author: { name: "@SynthWeavers", avatar: "https://placehold.co/100x100.png", avatarHint: "sound waves" },
+        image: "https://placehold.co/600x400.png",
+        imageHint: "music festival",
+        description: "Tres días de actuaciones en vivo de los mejores músicos algorítmicos y artistas de IA."
     }
 ];
 
@@ -67,16 +81,8 @@ export default function CulturePage() {
       </div>
 
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {culturalContent.map((item, index) => (
-          <Card key={index} className="glass-card rounded-2xl overflow-hidden group">
-            <div className="aspect-video relative">
-                 <Image src={item.image} alt={item.title} layout="fill" objectFit="cover" className="group-hover:scale-105 transition-transform duration-300" data-ai-hint={item.imageHint} />
-            </div>
-            <CardHeader>
-              <CardDescription>{item.type} por {item.author}</CardDescription>
-              <CardTitle className="font-headline text-xl">{item.title}</CardTitle>
-            </CardHeader>
-          </Card>
+        {culturalFeed.map((item) => (
+          <ContentCard key={item.id} content={item} />
         ))}
       </div>
     </div>
