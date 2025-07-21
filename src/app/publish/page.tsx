@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LibraryGrid, LibraryItem } from "@/components/profile/LibraryGrid";
 import Image from "next/image";
+import { LegislativeSettings } from "@/components/publish/LegislativeSettings";
 
 // Mock data for library items, in a real app this would be fetched
 const libraryItems: LibraryItem[] = [
@@ -35,6 +36,7 @@ const libraryItems: LibraryItem[] = [
 export default function PublishPage() {
     const [content, setContent] = useState("");
     const [selectedDestinations, setSelectedDestinations] = useState<string[]>(["profile"]);
+    const [isLegislative, setIsLegislative] = useState(false);
     const [attachedItem, setAttachedItem] = useState<LibraryItem | null>(null);
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const { toast } = useToast();
@@ -73,8 +75,13 @@ export default function PublishPage() {
         setIsLibraryOpen(false);
     };
 
+    const handleDestinationChange = (selectedIds: string[], isLegislative: boolean) => {
+        setSelectedDestinations(selectedIds);
+        setIsLegislative(isLegislative);
+    };
+
     return (
-        <div className="container mx-auto max-w-3xl py-8">
+        <div className="container mx-auto max-w-5xl py-8">
             <Card className="glass-card rounded-2xl">
                 <CardHeader>
                     <CardTitle className="font-headline text-3xl flex items-center gap-2">
@@ -82,69 +89,79 @@ export default function PublishPage() {
                         Crear Publicación
                     </CardTitle>
                     <CardDescription>
-                        Forja tu mensaje y difúndelo a través del Nexo. ¿Qué quieres compartir con el universo hoy?
+                        Forja tu mensaje en el Lienzo de Creación y difúndelo a través del Nexo.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div>
                         <h3 className="text-lg font-headline font-semibold mb-2">Paso 1: Intención y Ámbito</h3>
                         <p className="text-sm text-muted-foreground mb-4">
-                            Selecciona dónde resonará tu mensaje. Puedes elegir múltiples destinos para una máxima difusión.
+                            Selecciona dónde resonará tu mensaje. Publicar en una Entidad Federativa activará las opciones de propuesta legislativa.
                         </p>
                         <AudienceSelector 
                             selectedDestinations={selectedDestinations} 
-                            onSelectionChange={setSelectedDestinations}
+                            onSelectionChange={handleDestinationChange}
                         />
                     </div>
-
-                    <div>
-                        <h3 className="text-lg font-headline font-semibold mb-2">Paso 2: Contenido de la Transmisión</h3>
-                         <Textarea
-                            placeholder="Escribe tu mensaje aquí..."
-                            className="min-h-[150px] text-base"
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                        />
-                    </div>
-
-                    {attachedItem && (
-                        <div className="relative group">
-                             <CardTitle className="text-sm font-semibold mb-2">Contenido Adjunto</CardTitle>
-                             <div className="rounded-lg overflow-hidden relative aspect-video max-h-64 border border-primary/20">
-                                <Image src={attachedItem.thumbnail} alt={attachedItem.title} layout="fill" objectFit="cover" />
-                             </div>
-                             <Button 
-                                variant="destructive" 
-                                size="icon" 
-                                className="absolute top-8 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => setAttachedItem(null)}
-                            >
-                                <X className="h-4 w-4" />
-                             </Button>
-                        </div>
-                    )}
                     
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <Dialog open={isLibraryOpen} onOpenChange={setIsLibraryOpen}>
-                            <DialogTrigger asChild>
-                                 <Button variant="outline" disabled={!!attachedItem}>
-                                    <Paperclip className="mr-2 h-4 w-4" />
-                                    Adjuntar Archivo de Biblioteca
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="glass-card max-w-4xl h-[80vh] flex flex-col">
-                                <DialogHeader>
-                                    <DialogTitle>Selecciona un Archivo de tu Biblioteca</DialogTitle>
-                                    <DialogDescription>
-                                        Elige un elemento generado por IA para adjuntarlo a tu publicación.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="flex-grow overflow-auto -mx-6 px-6">
-                                     <LibraryGrid items={libraryItems} selectionMode onItemSelected={handleItemSelected} />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                        <div className="md:col-span-2 space-y-4">
+                            <div>
+                                <h3 className="text-lg font-headline font-semibold mb-2">Paso 2: Contenido de la Transmisión</h3>
+                                <div className="p-4 rounded-lg border bg-background/50">
+                                    {/* This will eventually become a block editor */}
+                                     <Textarea
+                                        placeholder="Escribe tu mensaje aquí usando bloques de contenido..."
+                                        className="min-h-[250px] text-base bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+                                        value={content}
+                                        onChange={(e) => setContent(e.target.value)}
+                                    />
                                 </div>
-                            </DialogContent>
-                        </Dialog>
+                            </div>
+                            {attachedItem && (
+                                <div className="relative group">
+                                     <CardTitle className="text-sm font-semibold mb-2">Contenido Adjunto</CardTitle>
+                                     <div className="rounded-lg overflow-hidden relative aspect-video max-h-64 border border-primary/20">
+                                        <Image src={attachedItem.thumbnail} alt={attachedItem.title} layout="fill" objectFit="cover" />
+                                     </div>
+                                     <Button 
+                                        variant="destructive" 
+                                        size="icon" 
+                                        className="absolute top-8 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => setAttachedItem(null)}
+                                    >
+                                        <X className="h-4 w-4" />
+                                     </Button>
+                                </div>
+                            )}
+                        </div>
+                        <div className="space-y-4 md:col-span-1">
+                             <h3 className="text-lg font-headline font-semibold mb-2">Herramientas</h3>
+                             <Dialog open={isLibraryOpen} onOpenChange={setIsLibraryOpen}>
+                                <DialogTrigger asChild>
+                                     <Button variant="outline" disabled={!!attachedItem} className="w-full justify-start">
+                                        <Paperclip className="mr-2 h-4 w-4" />
+                                        Adjuntar de Biblioteca
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="glass-card max-w-4xl h-[80vh] flex flex-col">
+                                    <DialogHeader>
+                                        <DialogTitle>Selecciona un Archivo de tu Biblioteca</DialogTitle>
+                                        <DialogDescription>
+                                            Elige un elemento generado por IA para adjuntarlo a tu publicación.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="flex-grow overflow-auto -mx-6 px-6">
+                                         <LibraryGrid items={libraryItems} selectionMode onItemSelected={handleItemSelected} />
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
 
+                             {isLegislative && <LegislativeSettings />}
+                        </div>
+                    </div>
+                    
+                    <div className="flex justify-end">
                         <Button size="lg" className="w-full sm:w-auto shadow-lg shadow-primary/30" onClick={handlePublish}>
                             <SendHorizonal className="mr-2 h-5 w-5" />
                             Transmitir al Nexo
