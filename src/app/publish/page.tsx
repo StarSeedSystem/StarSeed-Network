@@ -39,7 +39,6 @@ const libraryItems: LibraryItem[] = [
 export default function PublishPage() {
     const [content, setContent] = useState("");
     const [selectedDestinations, setSelectedDestinations] = useState<string[]>(["profile"]);
-    const [isFederationSelected, setIsFederationSelected] = useState(false);
     const [isCreatingVote, setIsCreatingVote] = useState(false);
     const [isNews, setIsNews] = useState(false);
     const [attachedItem, setAttachedItem] = useState<LibraryItem | null>(null);
@@ -82,16 +81,11 @@ export default function PublishPage() {
         setIsLibraryOpen(false);
     };
 
-    const handleDestinationChange = (selectedIds: string[], isFedSelected: boolean) => {
+    const handleDestinationChange = (selectedIds: string[]) => {
         setSelectedDestinations(selectedIds);
-        setIsFederationSelected(isFedSelected);
-        // If no federation is selected anymore, disable the vote creation
-        if (!isFedSelected) {
-            setIsCreatingVote(false);
-        }
     };
 
-    const isLegislative = isFederationSelected && isCreatingVote;
+    const isLegislative = isCreatingVote;
 
     return (
         <div className="container mx-auto max-w-5xl py-8">
@@ -109,7 +103,7 @@ export default function PublishPage() {
                     <div>
                         <h3 className="text-lg font-headline font-semibold mb-2">Paso 1: Intención y Ámbito</h3>
                         <p className="text-sm text-muted-foreground mb-4">
-                            Selecciona dónde resonará tu mensaje. Publicar en una Entidad Federativa te dará la opción de crear una propuesta legislativa.
+                            Selecciona dónde resonará tu mensaje.
                         </p>
                         <AudienceSelector 
                             selectedDestinations={selectedDestinations} 
@@ -170,15 +164,13 @@ export default function PublishPage() {
                                 </DialogContent>
                             </Dialog>
                              
-                             {isFederationSelected && (
-                                <div className="flex items-center space-x-2 rounded-lg border p-3 bg-secondary/40 border-secondary/60">
-                                    <Checkbox id="add-vote" checked={isCreatingVote} onCheckedChange={(checked) => setIsCreatingVote(!!checked)} />
-                                    <Label htmlFor="add-vote" className="flex items-center gap-2 font-semibold">
-                                        <Gavel className="h-4 w-4" />
-                                        Añadir Votación
-                                    </Label>
-                                </div>
-                             )}
+                            <div className="flex items-center space-x-2 rounded-lg border p-3 bg-secondary/40 border-secondary/60">
+                                <Checkbox id="add-vote" checked={isCreatingVote} onCheckedChange={(checked) => setIsCreatingVote(!!checked)} />
+                                <Label htmlFor="add-vote" className="flex items-center gap-2 font-semibold">
+                                    <Gavel className="h-4 w-4" />
+                                    Añadir Votación
+                                </Label>
+                            </div>
 
                              {isLegislative && <LegislativeSettings />}
                              {!isLegislative && <NewsSettings isNews={isNews} onIsNewsChange={setIsNews} />}
