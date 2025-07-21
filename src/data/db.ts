@@ -1,5 +1,5 @@
 
-import { User, NatalChartData } from '@/types/content-types';
+import { User, NatalChartData, Community } from '@/types/content-types';
 
 // Let's create a mock database for our users.
 // In a real application, this would be a database like Firestore, PostgreSQL, etc.
@@ -36,6 +36,30 @@ const users: Record<string, User> = {
   // We can add more users here
 };
 
+const communities: Record<string, Community> = {
+    'innovacion-sostenible': {
+        name: "Innovación Sostenible",
+        slug: "innovacion-sostenible",
+        description: "Comunidad dedicada a encontrar e implementar soluciones ecológicas en la red.",
+        longDescription: "Somos un colectivo de ingenieros, diseñadores, biólogos y entusiastas de la tecnología que trabajamos juntos para construir un futuro más sostenible. Nuestros proyectos se centran en energías renovables, economía circular y biomimética aplicada a la arquitectura digital. ¡Únete a nosotros para co-crear un nexo más verde!",
+        members: 125,
+        avatar: "https://placehold.co/100x100.png",
+        avatarHint: "green leaf",
+        banner: "https://placehold.co/1200x400.png",
+        bannerHint: "sustainable city"
+    },
+    'arte-ciberdelico': {
+        name: "Arte Ciberdélico",
+        slug: "arte-ciberdelico",
+        members: 342,
+        avatar: "https://placehold.co/100x100.png",
+        avatarHint: "abstract art",
+        description: "Explorando la intersección del arte, la tecnología y la consciencia.",
+        banner: "https://placehold.co/1200x400.png",
+        bannerHint: "psychedelic art"
+    },
+};
+
 export const db = {
   users: {
     findUnique: async (userId: string): Promise<User | null> => {
@@ -60,4 +84,19 @@ export const db = {
         return users[userId];
     }
   },
+  communities: {
+      find: async (): Promise<Community[]> => {
+          return Object.values(communities);
+      },
+      findUnique: async (slug: string): Promise<Community | null> => {
+          return communities[slug] || null;
+      },
+      create: async (data: Community): Promise<Community> => {
+          if (communities[data.slug]) {
+              throw new Error("Community with this slug already exists.");
+          }
+          communities[data.slug] = data;
+          return data;
+      }
+  }
 };

@@ -1,8 +1,11 @@
 
 
+"use client";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star, Activity, Gavel, PlaySquare } from "lucide-react";
+import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star, Activity, Gavel, PlaySquare, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -10,23 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Image from "next/image";
 import { Progress } from "@/components/ui/progress";
-
-const myCommunities = [
-    {
-        name: "Innovación Sostenible",
-        slug: "innovacion-sostenible",
-        members: 125,
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "green leaf",
-    },
-    {
-        name: "Arte Ciberdélico",
-        slug: "arte-ciberdelico",
-        members: 342,
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "abstract art",
-    },
-];
+import type { Community } from "@/types/content-types";
 
 const myFederations = [
      {
@@ -124,7 +111,7 @@ const activeParticipations = {
 };
 
 
-const ConnectionCard = ({ item }: { item: (typeof myCommunities)[0] }) => (
+const ConnectionCard = ({ item }: { item: Community }) => (
     <Card className="glass-card flex items-center p-4 gap-4">
         <Avatar className="h-16 w-16 border-2 border-primary/30">
             <AvatarImage src={item.avatar} alt={item.name} data-ai-hint={item.avatarHint} />
@@ -144,6 +131,30 @@ const ConnectionCard = ({ item }: { item: (typeof myCommunities)[0] }) => (
 );
 
 export default function ConnectionsHubPage() {
+    const [myCommunities, setMyCommunities] = useState<Community[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchCommunities = async () => {
+            setIsLoading(true);
+            try {
+                const response = await fetch('/api/communities');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch communities');
+                }
+                const data: Community[] = await response.json();
+                setMyCommunities(data);
+            } catch (error) {
+                console.error(error);
+                // Optionally show a toast message here
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchCommunities();
+    }, []);
+
   return (
     <div className="space-y-8">
       <Card className="glass-card p-4">
@@ -287,11 +298,15 @@ export default function ConnectionsHubPage() {
         </TabsList>
 
         <TabsContent value="communities" className="mt-6">
-            <div className="space-y-4">
-                {myCommunities.map((item, index) => (
+            {isLoading ? (
+                 <div className="flex justify-center items-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
+            ) : (
+                <div className="space-y-4">
+                    {myCommunities.map((item, index) => (
                         <ConnectionCard key={index} item={item} />
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
         </TabsContent>
          <TabsContent value="federations" className="mt-6">
             <div className="space-y-4">

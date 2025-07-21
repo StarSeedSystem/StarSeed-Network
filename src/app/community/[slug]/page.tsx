@@ -1,30 +1,19 @@
 
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Check, Edit, PenSquare, Users, Info, PlusCircle, ArrowLeft } from "lucide-react";
+import { Bell, Check, Edit, PenSquare, Users, Info, PlusCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileFeed } from "@/components/profile/ProfileFeed";
 import type { FeedPostType } from "@/components/dashboard/FeedPost";
 import { useRouter, useParams } from "next/navigation";
+import type { Community } from "@/types/content-types";
 
-// Mock data, in a real app this would be fetched based on the slug
-const communityData = {
-    'innovacion-sostenible': {
-        name: "Innovación Sostenible",
-        description: "Comunidad dedicada a encontrar e implementar soluciones ecológicas en la red.",
-        longDescription: "Somos un colectivo de ingenieros, diseñadores, biólogos y entusiastas de la tecnología que trabajamos juntos para construir un futuro más sostenible. Nuestros proyectos se centran en energías renovables, economía circular y biomimética aplicada a la arquitectura digital. ¡Únete a nosotros para co-crear un nexo más verde!",
-        members: 125,
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "green leaf",
-        banner: "https://placehold.co/1200x400.png",
-        bannerHint: "sustainable city"
-    }
-};
 
 const communityPosts: FeedPostType[] = [
     {
@@ -50,16 +39,45 @@ export default function CommunityProfilePage() {
     const router = useRouter();
     const params = useParams();
     const slug = params.slug as string;
-    const data = communityData[slug as keyof typeof communityData] || {
-        name: "Comunidad no encontrada",
-        description: "Esta comunidad no existe o ha sido movida.",
-        longDescription: "",
-        members: 0,
-        avatar: "",
-        avatarHint: "",
-        banner: "https://placehold.co/1200x400.png",
-        bannerHint: "error"
-    };
+    
+    const [data, setData] = useState<Community | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (slug) {
+            const fetchCommunity = async () => {
+                setIsLoading(true);
+                 try {
+                    const response = await fetch(`/api/communities/${slug}`);
+                    if (!response.ok) {
+                        throw new Error('Community not found');
+                    }
+                    const communityData = await response.json();
+                    setData(communityData);
+                } catch (error) {
+                    console.error("Failed to fetch community", error);
+                    setData(null);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            fetchCommunity();
+        }
+    }, [slug]);
+
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-full"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
+    }
+    
+    if (!data) {
+        return (
+             <div className="text-center py-10">
+                <h1 className="text-2xl font-bold">Comunidad no encontrada</h1>
+                <p className="text-muted-foreground">Esta comunidad no existe o ha sido movida.</p>
+                <Button onClick={() => router.push('/participations')} className="mt-4">Volver al Hub de Conexiones</Button>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">

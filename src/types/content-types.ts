@@ -1,4 +1,5 @@
 
+
 export interface Author {
     name: string;
     avatar: string;
@@ -31,6 +32,18 @@ export interface NatalChartData {
     // We can add more planets and aspects here later
 }
 
+export interface Community {
+    name: string;
+    slug: string;
+    description: string;
+    longDescription?: string;
+    members: number;
+    avatar: string;
+    avatarHint: string;
+    banner: string;
+    bannerHint: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -44,6 +57,7 @@ export interface User {
     location: string; // "City, Country"
   };
   badges: {
+    [key: string]: boolean;
     verified: boolean;
     pioneer: boolean;
     aiSymbiote: boolean;

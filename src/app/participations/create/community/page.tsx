@@ -9,25 +9,65 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Check, Image as ImageIcon, Users, Wand2 } from "lucide-react";
+import { ArrowLeft, Check, Image as ImageIcon, Users, Wand2, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { slugify } from "@/lib/utils";
 
 export default function CreateCommunityPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const [step, setStep] = useState(1);
+    const [isLoading, setIsLoading] = useState(false);
     const [communityName, setCommunityName] = useState("");
     const [communityDescription, setCommunityDescription] = useState("");
+    const [communityLongDescription, setCommunityLongDescription] = useState("");
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        toast({
-            title: "¡Comunidad Creada!",
-            description: `Tu comunidad "${communityName}" ha sido creada y ya está activa.`,
-        });
-        router.push("/participations");
+        setIsLoading(true);
+
+        const communityData = {
+            name: communityName,
+            slug: slugify(communityName),
+            description: communityDescription,
+            longDescription: communityLongDescription,
+            members: 1, // The creator is the first member
+            avatar: "https://placehold.co/100x100.png", // Placeholder
+            avatarHint: "logo placeholder",
+            banner: "https://placehold.co/1200x400.png", // Placeholder
+            bannerHint: "banner placeholder"
+        };
+        
+        try {
+            const response = await fetch('/api/communities', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(communityData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create community');
+            }
+
+            const newCommunity = await response.json();
+
+            toast({
+                title: "¡Comunidad Creada!",
+                description: `Tu comunidad "${newCommunity.name}" ha sido creada y ya está activa.`,
+            });
+            router.push(`/community/${newCommunity.slug}`);
+
+        } catch (error) {
+             const errorMessage = error instanceof Error ? error.message : "Ocurrió un error desconocido.";
+             toast({
+                title: "Error al crear la comunidad",
+                description: errorMessage,
+                variant: "destructive"
+             });
+             setIsLoading(false);
+        }
     };
 
     return (
@@ -61,11 +101,12 @@ export default function CreateCommunityPage() {
                                         required 
                                         value={communityName}
                                         onChange={(e) => setCommunityName(e.target.value)}
+                                        disabled={isLoading}
                                     />
                                 </div>
                                  <div className="space-y-2">
                                     <Label htmlFor="community-slug">Identificador Único (URL)</Label>
-                                    <Input id="community-slug" placeholder="innovacion-sostenible" disabled value={communityName.toLowerCase().replace(/\s+/g, '-')} />
+                                    <Input id="community-slug" placeholder="innovacion-sostenible" disabled value={slugify(communityName)} />
                                 </div>
                             </div>
                             <div className="space-y-2">
@@ -76,6 +117,7 @@ export default function CreateCommunityPage() {
                                     required
                                     value={communityDescription}
                                     onChange={(e) => setCommunityDescription(e.target.value)}
+                                    disabled={isLoading}
                                 />
                             </div>
                         </div>
@@ -94,8 +136,8 @@ export default function CreateCommunityPage() {
                                             <AvatarFallback>C</AvatarFallback>
                                         </Avatar>
                                         <div className="space-y-2">
-                                            <Button type="button" variant="outline"><ImageIcon className="mr-2 h-4 w-4" /> Subir Imagen</Button>
-                                            <Button type="button" variant="outline"><Wand2 className="mr-2 h-4 w-4" /> Generar con IA</Button>
+                                            <Button type="button" variant="outline" disabled><ImageIcon className="mr-2 h-4 w-4" /> Subir Imagen</Button>
+                                            <Button type="button" variant="outline" disabled><Wand2 className="mr-2 h-4 w-4" /> Generar con IA</Button>
                                         </div>
                                     </div>
                                 </div>
@@ -105,8 +147,8 @@ export default function CreateCommunityPage() {
                                          <Image src="https://placehold.co/1200x400.png" layout="fill" objectFit="cover" alt="Banner Placeholder" data-ai-hint="banner placeholder" />
                                      </div>
                                       <div className="flex gap-2">
-                                        <Button type="button" variant="outline" className="w-full"><ImageIcon className="mr-2 h-4 w-4" /> Subir Banner</Button>
-                                        <Button type="button" variant="outline" className="w-full"><Wand2 className="mr-2 h-4 w-4" /> Generar con IA</Button>
+                                        <Button type="button" variant="outline" className="w-full" disabled><ImageIcon className="mr-2 h-4 w-4" /> Subir Banner</Button>
+                                        <Button type="button" variant="outline" className="w-full" disabled><Wand2 className="mr-2 h-4 w-4" /> Generar con IA</Button>
                                     </div>
                                 </div>
                             </div>
@@ -119,17 +161,28 @@ export default function CreateCommunityPage() {
                              <h3 className="font-headline text-xl font-semibold border-b border-primary/20 pb-2">Paso 3: Contenido Detallado</h3>
                              <div className="space-y-2">
                                 <Label htmlFor="about-section">Sección "Acerca de"</Label>
-                                <Textarea id="about-section" placeholder="Describe la misión, visión y objetivos de tu comunidad en detalle." className="min-h-[150px]" />
+                                <Textarea 
+                                    id="about-section"
+                                    placeholder="Describe la misión, visión y objetivos de tu comunidad en detalle."
+                                    className="min-h-[150px]"
+                                    value={communityLongDescription}
+                                    onChange={(e) => setCommunityLongDescription(e.target.value)}
+                                    disabled={isLoading}
+                                />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="rules-section">Reglas y Principios</Label>
-                                <Textarea id="rules-section" placeholder="1. Fomentar la colaboración abierta...&#10;2. Respetar la diversidad de opiniones..." className="min-h-[100px]" />
+                                <Textarea id="rules-section" placeholder="1. Fomentar la colaboración abierta...&#10;2. Respetar la diversidad de opiniones..." className="min-h-[100px]" disabled={isLoading} />
                             </div>
                         </div>
 
                         <div className="flex justify-end pt-4">
-                            <Button size="lg" type="submit" className="shadow-lg shadow-primary/30">
-                                <Check className="mr-2 h-5 w-5" />
+                            <Button size="lg" type="submit" className="shadow-lg shadow-primary/30" disabled={isLoading}>
+                                {isLoading ? (
+                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                ) : (
+                                    <Check className="mr-2 h-5 w-5" />
+                                )}
                                 Crear Comunidad
                             </Button>
                         </div>
