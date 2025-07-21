@@ -1,10 +1,12 @@
 
 "use client";
 
-import { useState } from "react";
 import { FeedWidget, FeedPostType } from "@/components/dashboard/FeedWidget";
 import { AchievementsWidget } from "@/components/dashboard/AchievementsWidget";
 import { TutorialsWidget } from "@/components/dashboard/TutorialsWidget";
+import { PoliticalSummaryWidget } from "@/components/dashboard/PoliticalSummaryWidget";
+import { ProjectsWidget } from "@/components/dashboard/ProjectsWidget";
+import { LearningPathWidget } from "@/components/dashboard/LearningPathWidget";
 
 const initialFeed: FeedPostType[] = [
   {
@@ -26,18 +28,30 @@ const initialFeed: FeedPostType[] = [
     comments: 8,
     reposts: 2,
     likes: 33,
+    destinations: ["Innovación Sostenible"]
   },
 ];
 
 export default function DashboardPage() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="lg:col-span-2 md:col-span-2 row-span-2">
         <FeedWidget initialFeed={initialFeed} />
       </div>
-      <div className="space-y-6">
-        <AchievementsWidget />
+      <div className="lg:col-span-2 md:col-span-2">
+         <PoliticalSummaryWidget />
+      </div>
+      <div className="lg:col-span-2 md:col-span-2">
+        <ProjectsWidget />
+      </div>
+       <div>
+         <AchievementsWidget />
+      </div>
+       <div>
         <TutorialsWidget />
+      </div>
+      <div className="lg:col-span-2 md:col-span-2">
+         <LearningPathWidget />
       </div>
     </div>
   );

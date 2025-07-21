@@ -1,0 +1,55 @@
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { GraduationCap } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+
+const learningItems = [
+    {
+        title: "Introducción a las Redes Descentralizadas",
+        type: "Curso",
+        image: "https://placehold.co/600x400.png",
+        imageHint: "network nodes",
+    },
+    {
+        title: "Biomimética y Diseño Sostenible",
+        type: "Artículo",
+        image: "https://placehold.co/600x400.png",
+        imageHint: "leaf structure",
+    }
+];
+
+export function LearningPathWidget() {
+  return (
+    <Card className="glass-card rounded-2xl h-full">
+      <CardHeader>
+        <CardTitle className="font-headline flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                <GraduationCap className="text-primary" />
+                Ruta de Aprendizaje
+            </div>
+             <Button variant="ghost" size="sm" asChild>
+                <Link href="/education">Ver todo</Link>
+            </Button>
+        </CardTitle>
+        <CardDescription>Continúa tu viaje de conocimiento.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+            {learningItems.map((item, index) => (
+                <div key={index} className="flex items-center gap-4 group p-2 rounded-lg hover:bg-primary/10">
+                    <div className="w-20 h-16 rounded-lg overflow-hidden relative">
+                         <Image src={item.image} alt={item.title} layout="fill" objectFit="cover" className="group-hover:scale-110 transition-transform" data-ai-hint={item.imageHint}/>
+                    </div>
+                    <div className="flex-grow">
+                        <p className="text-xs text-muted-foreground">{item.type}</p>
+                        <p className="font-semibold leading-tight">{item.title}</p>
+                    </div>
+                </div>
+            ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
