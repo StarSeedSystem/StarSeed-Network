@@ -154,9 +154,9 @@ export default function ConnectionsHubPage() {
             if (user) {
                 const userPages = allPagesData.filter(page => {
                     if (page.type === 'event') {
-                        return (page as Event).attendees?.includes(user.uid);
+                        return Array.isArray(page.attendees) && page.attendees?.includes(user.uid);
                     } else {
-                        return (page as AnyEntity).members?.includes(user.uid);
+                        return Array.isArray(page.members) && page.members?.includes(user.uid);
                     }
                 });
                 setMyPages(userPages);

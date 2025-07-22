@@ -11,6 +11,7 @@
         "imageHint": "algorithmic music festival",
         "date": "Próximo Fin de Semana",
         "location": "Anfiteatro Virtual 'El Eco'",
+        "attendees": [],
         "organizer": {
             "name": "Art-AI Collective",
             "avatar": "",
@@ -28,6 +29,7 @@
         "imageHint": "sustainability conference",
         "date": "El próximo mes",
         "location": "Pabellón de Innovación",
+        "attendees": [],
         "organizer": {
             "name": "Innovación Sostenible",
             "avatar": "",

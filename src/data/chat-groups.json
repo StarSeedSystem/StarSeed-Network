@@ -10,7 +10,7 @@
         "avatarHint": "rocket ship",
         "banner": "https://placehold.co/1200x400/1E90FF/ffffff.png?text=Sci-Fi+Fans",
         "bannerHint": "starship flying through space",
-        "members": 481,
+        "members": [],
         "type": "chat_group",
         "creatorId": "system"
     },
@@ -24,7 +24,7 @@
         "avatarHint": "game controller",
         "banner": "https://placehold.co/1200x400/9400D3/ffffff.png?text=Gaming+Lounge",
         "bannerHint": "neon gaming setup",
-        "members": 1852,
+        "members": [],
         "type": "chat_group",
         "creatorId": "system"
     }

@@ -10,7 +10,7 @@
         "avatarHint": "balanced scale",
         "banner": "https://placehold.co/1200x400/6a0dad/ffffff.png?text=Consejo+de+%C3%89tica",
         "bannerHint": "abstract judicial background",
-        "members": 42,
+        "members": [],
         "type": "federation",
         "scope": "Global",
         "creatorId": "system"

@@ -10,7 +10,7 @@
         "avatarHint": "green leaf",
         "banner": "https://placehold.co/1200x400/228B22/ffffff.png?text=Innovaci%C3%B3n+Sostenible",
         "bannerHint": "lush forest canopy",
-        "members": 1257,
+        "members": [],
         "type": "community",
         "creatorId": "system"
     },
@@ -24,7 +24,7 @@
         "avatarHint": "abstract art",
         "banner": "https://placehold.co/1200x400/8A2BE2/ffffff.png?text=Art-AI+Collective",
         "bannerHint": "abstract digital art",
-        "members": 843,
+        "members": [],
         "type": "community",
         "creatorId": "system"
     }
