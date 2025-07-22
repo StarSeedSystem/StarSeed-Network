@@ -48,9 +48,11 @@ export function AudienceSelector({ availablePages, selectedArea, selectedDestina
     const [typeFilter, setTypeFilter] = useState<PageType | 'all'>('all');
     
     const handleCheckedChange = (checked: boolean, page: UserPage) => {
+        // For 'politics', only allow a single selection.
         if (selectedArea === 'politics') {
             onSelectionChange(checked ? [page] : []);
         } else {
+            // For other areas, allow multiple selections.
             const newSelection = checked 
                 ? [...selectedDestinations, page] 
                 : selectedDestinations.filter(p => p.id !== page.id);
@@ -112,11 +114,12 @@ export function AudienceSelector({ availablePages, selectedArea, selectedDestina
                     <div className="space-y-2">
                         {filteredPages.map((page) => {
                             const Icon = typeIcons[page.type];
+                            const isChecked = selectedDestinations.some(p => p.id === page.id);
                             return (
                                 <div key={page.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-primary/10 transition-colors border border-transparent has-[:checked]:bg-primary/10 has-[:checked]:border-primary/20">
                                     <Checkbox 
                                         id={`dest-${page.id}`} 
-                                        checked={selectedDestinations.some(p => p.id === page.id)}
+                                        checked={isChecked}
                                         onCheckedChange={(checked) => handleCheckedChange(!!checked, page)}
                                         className="mt-1"
                                     />

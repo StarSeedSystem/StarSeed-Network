@@ -3,6 +3,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "@/data/firebase";
+
+// --- UI Imports ---
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PenSquare, Gavel, GraduationCap, Palette, Send, ArrowRight, Loader2, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 
 // --- Sub-components for a cleaner structure ---
@@ -20,7 +24,6 @@ import { NewsSettings } from "@/components/publish/NewsSettings";
 import { FederatedEntitySettings } from "@/components/publish/FederatedEntitySettings";
 
 // Mock data simulating pages the user is a member of.
-// In a real app, this would be fetched based on the logged-in user.
 import communities from '@/data/communities.json';
 import federations from '@/data/federations.json';
 import studyGroups from '@/data/study-groups.json';
@@ -41,6 +44,7 @@ type Step = "area" | "details" | "canvas";
 export default function PublishPage() {
     const router = useRouter();
     const { toast } = useToast();
+    const { user: authUser, profile } = useUser();
     
     // --- State Management ---
     const [step, setStep] = useState<Step>("area");
@@ -63,11 +67,15 @@ export default function PublishPage() {
         setStep("details");
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         
-        // --- Validation ---
+        if (!authUser || !profile) {
+            toast({ title: "Error de autenticación", description: "Debes estar conectado para publicar.", variant: "destructive" });
+            setIsSubmitting(false);
+            return;
+        }
         if (!title.trim() || !content.trim()) {
             toast({ title: "Faltan datos", description: "El título y el contenido son obligatorios.", variant: "destructive" });
             setIsSubmitting(false);
@@ -84,35 +92,48 @@ export default function PublishPage() {
             return;
         }
 
-        // --- Logic to determine creation path ---
-        // For now, this is simplified. We navigate to the corresponding creation page.
-        // A more complex system would handle this with a single server action.
-        let targetPath = "/";
-        let message = "Publicación creada con éxito.";
-        
-        if (isLegislative) {
-            targetPath = "/politics"; // Redirect to political center
-            message = "Propuesta legislativa enviada para su debate y votación.";
-        } else if (selectedArea === 'culture') {
-            targetPath = "/culture";
-            message = "Tu obra ha sido publicada en la Galería Cultural.";
-        } else if (selectedArea === 'education') {
-            targetPath = "/education";
-             message = "Tu aporte ha sido publicado en la sección de Educación.";
-        }
-        
-        console.log("Submitting with data:", { title, content, selectedDestinations: selectedDestinations.map(d => d.id), federationArea, isLegislative, isNews });
-        
-        // --- Simulate Submission & Redirect ---
-        setTimeout(() => {
-            toast({
-                title: "Publicación Enviada",
-                description: message,
-            });
-            router.push(targetPath);
-            setIsSubmitting(false);
-        }, 1500);
+        try {
+            if (isLegislative) {
+                // Handle legislative proposals separately by redirecting
+                const destination = selectedDestinations[0];
+                router.push(`/participations/create/proposal?publishedInId=${destination.id}&publishedInType=${destination.type}&publishedInName=${destination.name}`);
+                return;
+            }
 
+            // Unified post creation for Culture and Education
+            const postData = {
+                authorId: authUser.uid,
+                authorName: profile.name,
+                handle: profile.handle,
+                avatarUrl: profile.avatarUrl,
+                title,
+                content,
+                area: selectedArea,
+                isNews,
+                destinations: selectedDestinations.map(d => ({ id: d.id, type: d.type })), // <-- Multi-destination
+                comments: 0,
+                likes: 0,
+                reposts: 0,
+                createdAt: serverTimestamp(),
+            };
+
+            await addDoc(collection(db, "posts"), postData);
+            
+            toast({
+                title: "Publicación Creada",
+                description: "Tu contenido ha sido publicado en los destinos seleccionados.",
+            });
+            
+            // Redirect to a relevant page after posting
+            const targetPath = selectedArea === 'culture' ? '/culture' : '/education';
+            router.push(targetPath);
+
+        } catch (error) {
+            console.error("Error creating post:", error);
+            toast({ title: "Error al publicar", description: "Hubo un problema al crear tu publicación.", variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const resetFlow = () => {

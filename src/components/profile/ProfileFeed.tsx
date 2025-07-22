@@ -40,12 +40,14 @@ function PostCreator({ profile }: { profile: DocumentData }) {
                 authorName: profile.name,
                 handle: profile.handle,
                 avatarUrl: profile.avatarUrl,
+                title: "Publicación de perfil",
                 content: content,
-                createdAt: serverTimestamp(),
+                area: 'profile',
+                destinations: [{ id: profile.id, type: 'profile' }], // Post to own profile
                 comments: 0,
                 reposts: 0,
                 likes: 0,
-                destinations: ["Profile"] // Default destination
+                createdAt: serverTimestamp(),
             });
             setContent("");
             toast({ title: "Success", description: "Your message has been broadcasted." });
@@ -85,24 +87,27 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
   useEffect(() => {
     if (!profile?.id) return;
 
-    // Modified query: Order by date, then filter client-side.
-    // This avoids the composite index requirement.
+    // This query fetches posts where the 'destinations' array contains the user's profile ID and type.
     const postsCollection = collection(db, "posts");
-    const q = query(postsCollection, orderBy("createdAt", "desc"));
+    const q = query(
+        postsCollection, 
+        where("destinations", "array-contains", { id: profile.id, type: 'profile' }), 
+        orderBy("createdAt", "desc")
+    );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const postsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setPosts(postsData);
         setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching profile feed (likely permissions/missing index):", error);
+        // On error, clear posts and stop loading
+        setPosts([]);
+        setIsLoading(false);
     });
 
     return () => unsubscribe();
   }, [profile]);
-
-  // Client-side filtering
-  const currentFeed = useMemo(() => {
-    return posts.filter(post => post.authorId === profile.id);
-  }, [posts, profile.id]);
 
   if (isLoading) {
       return (
@@ -117,8 +122,8 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
         <PostCreator profile={profile} />
 
         <div className="space-y-4">
-            {currentFeed.length > 0 ? (
-                currentFeed.map((post) => (
+            {posts.length > 0 ? (
+                posts.map((post) => (
                     // Adapt the post data from Firestore to what FeedPost expects
                     <FeedPost key={post.id} post={{
                         author: post.authorName,
@@ -129,7 +134,7 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
                         comments: post.comments,
                         reposts: post.reposts,
                         likes: post.likes,
-                        destinations: post.destinations,
+                        destinations: post.destinations.map((d: any) => d.id), // Simplify for display
                     }} />
                 ))
             ) : (
