@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import { addDoc, collection, serverTimestamp, getDocs } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, getDocs, query } from "firebase/firestore";
 import { db } from "@/data/firebase";
 
 // --- UI Imports ---
