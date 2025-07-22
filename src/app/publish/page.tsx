@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, getDocs } from "firebase/firestore";
 import { db } from "@/data/firebase";
 
 // --- UI Imports ---
@@ -22,20 +22,7 @@ import { AudienceSelector, UserPage } from "@/components/publish/AudienceSelecto
 import { LegislativeSettings } from "@/components/publish/LegislativeSettings";
 import { NewsSettings } from "@/components/publish/NewsSettings";
 import { FederatedEntitySettings } from "@/components/publish/FederatedEntitySettings";
-
-// Mock data simulating pages the user is a member of.
-import communities from '@/data/communities.json';
-import federations from '@/data/federations.json';
-import studyGroups from '@/data/study-groups.json';
-import politicalParties from '@/data/political-parties.json';
-
-
-const allPages: UserPage[] = [
-    ...Object.values(communities).map(c => ({ id: c.slug, name: c.name, type: 'community' as const, areas: ['culture', 'education', 'politics'] })),
-    ...Object.values(studyGroups).map(g => ({ id: g.slug, name: g.name, type: 'study_group' as const, areas: ['education'] })),
-    ...Object.values(federations).map(f => ({ id: f.slug, name: f.name, type: 'federation' as const, areas: ['politics'] })),
-    ...Object.values(politicalParties).map(p => ({ id: p.slug, name: p.name, type: 'political_party' as const, areas: ['politics'] })),
-];
+import type { AnyRecommendedPage } from "@/types/content-types";
 
 
 type Area = "politics" | "culture" | "education";
@@ -51,6 +38,8 @@ export default function PublishPage() {
     const [selectedArea, setSelectedArea] = useState<Area | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [myPages, setMyPages] = useState<UserPage[]>([]);
+    const [isLoadingPages, setIsLoadingPages] = useState(true);
+
 
     // -- Form Data State ---
     const [title, setTitle] = useState("");
@@ -63,17 +52,36 @@ export default function PublishPage() {
     const [isNews, setIsNews] = useState(false);
     
     useEffect(() => {
-        if (!profile) return;
-        
-        const joinedPagesIds = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-        
-        const userAffiliatedPages = allPages.filter(page => 
-            joinedPagesIds[page.id] || (authUser && (page as any).creatorId === authUser.uid)
-        );
-        
-        const profilePage: UserPage = { id: profile.id, name: "Mi Perfil Personal", type: 'profile', areas: ['culture', 'education'] };
+        if (!authUser || !profile) return;
 
-        setMyPages([profilePage, ...userAffiliatedPages]);
+        const fetchUserPages = async () => {
+            setIsLoadingPages(true);
+            const collectionsToFetch = [
+                { name: "communities", type: 'community', areas: ['culture', 'education'] },
+                { name: "federated_entities", type: 'federation', areas: ['politics'] },
+                { name: "political_parties", type: 'political_party', areas: ['politics'] },
+                { name: "study_groups", type: 'study_group', areas: ['education'] },
+            ] as const;
+
+            const userAffiliatedPages: UserPage[] = [];
+
+            for (const c of collectionsToFetch) {
+                const q = query(collection(db, c.name));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.creatorId === authUser.uid || (Array.isArray(data.members) && data.members.includes(authUser.uid))) {
+                       userAffiliatedPages.push({ id: doc.id, name: data.name, type: c.type, areas: c.areas });
+                    }
+                });
+            }
+            
+            const profilePage: UserPage = { id: authUser.uid, name: "Mi Perfil Personal", type: 'profile', areas: ['culture', 'education'] };
+            setMyPages([profilePage, ...userAffiliatedPages]);
+            setIsLoadingPages(false);
+        };
+        
+        fetchUserPages();
 
     }, [profile, authUser]);
 
@@ -111,13 +119,11 @@ export default function PublishPage() {
 
         try {
             if (isLegislative && isFederationSelected) {
-                // Handle legislative proposals separately by redirecting
                 const destination = selectedDestinations[0];
                 router.push(`/participations/create/proposal?publishedInId=${destination.id}&publishedInType=${destination.type}&publishedInName=${encodeURIComponent(destination.name)}`);
                 return;
             }
 
-            // Unified post creation for Culture and Education
             const postData = {
                 authorId: authUser.uid,
                 authorName: profile.name,
@@ -127,7 +133,7 @@ export default function PublishPage() {
                 content,
                 area: selectedArea,
                 isNews,
-                destinations: selectedDestinations.map(d => ({ id: d.id, type: d.type, name: d.name })), // <-- Multi-destination
+                destinations: selectedDestinations.map(d => ({ id: d.id, type: d.type, name: d.name })),
                 comments: 0,
                 likes: 0,
                 reposts: 0,
@@ -141,8 +147,7 @@ export default function PublishPage() {
                 description: "Tu contenido ha sido publicado en los destinos seleccionados.",
             });
             
-            // Redirect to a relevant page after posting
-            const targetPath = selectedArea === 'culture' ? '/culture' : '/education';
+            const targetPath = selectedArea === 'culture' ? '/culture' : selectedArea === 'education' ? '/education' : '/';
             router.push(targetPath);
 
         } catch (error) {
@@ -164,7 +169,6 @@ export default function PublishPage() {
         setIsNews(false);
     }
     
-    // Check if any federated entity is selected
     const isFederationSelected = selectedDestinations.some(d => d.type === 'federation');
 
     return (
@@ -197,12 +201,14 @@ export default function PublishPage() {
                         <div className="space-y-6 animate-in fade-in-50">
                             <div>
                                 <h3 className="font-headline text-xl font-semibold mb-2">Paso 2: Elige el Destino</h3>
+                                {isLoadingPages ? <Loader2 className="animate-spin" /> :
                                 <AudienceSelector 
                                     availablePages={myPages}
                                     selectedArea={selectedArea}
                                     selectedDestinations={selectedDestinations}
                                     onSelectionChange={setSelectedDestinations}
                                 />
+                                }
                             </div>
                            
                             {isFederationSelected && (
@@ -243,7 +249,6 @@ export default function PublishPage() {
                                          <NewsSettings isNews={isNews} onIsNewsChange={setIsNews} />
                                      )}
 
-                                    {/* Show voting options only if a federation is selected and the federation area is legislative */}
                                      {isFederationSelected && federationArea === 'legislative' && (
                                         <div className="flex items-center space-x-2 p-3 rounded-lg border border-primary/20 bg-primary/10">
                                             <Info className="h-5 w-5 text-primary"/>

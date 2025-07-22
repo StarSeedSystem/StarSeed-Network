@@ -53,7 +53,7 @@ export function PartyPage({ slug }: PartyPageProps) {
             const data = { id: doc.id, ...doc.data() };
             setParty(data);
             if (authUser) {
-                setIsMember(data.members?.includes(authUser.uid));
+                setIsMember(Array.isArray(data.members) && data.members.includes(authUser.uid));
             }
         } else {
             setParty(null);

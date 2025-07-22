@@ -62,7 +62,7 @@ export function PartyFeed({ partyId }: PartyFeedProps) {
                 ))
             ) : (
                 <Card className="glass-card rounded-2xl p-8 text-center">
-                    <p className="text-muted-foreground">No hay propuestas publicadas en este partido todavía.</p>
+                    <p className="text-muted-foreground">Este partido aún no ha publicado propuestas.</p>
                 </Card>
             )}
         </div>

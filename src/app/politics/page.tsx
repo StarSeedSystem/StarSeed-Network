@@ -9,12 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProposalCard } from "@/components/politics/ProposalCard";
-import { Gavel, PlusCircle, Loader2, Flag, Landmark } from "lucide-react"; // Import new icons
+import { Gavel, PlusCircle, Loader2, Flag, Landmark } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Reusable card for Political Parties and Federations
 function PoliticalEntityCard({ entity, type }: { entity: DocumentData, type: 'party' | 'federation' }) {
-    const linkPath = type === 'party' ? `/politics/party/${entity.slug}` : `/federated-entity/${entity.slug}`;
+    const linkPath = type === 'party' ? `/party/${entity.slug}` : `/federated-entity/${entity.slug}`;
+    const memberCount = Array.isArray(entity.members) ? entity.members.length : 0;
     return (
         <Link href={linkPath} passHref>
             <Card className="glass-card hover:bg-primary/10 transition-colors h-full flex flex-col">
@@ -25,7 +26,7 @@ function PoliticalEntityCard({ entity, type }: { entity: DocumentData, type: 'pa
                     </Avatar>
                     <div>
                         <CardTitle className="font-headline text-lg">{entity.name}</CardTitle>
-                        <CardDescription>{entity.members?.length || 0} Members</CardDescription>
+                        <CardDescription>{memberCount} Members</CardDescription>
                     </div>
                 </CardHeader>
                 <CardContent className="flex-grow">
@@ -51,7 +52,7 @@ export default function PoliticsPage() {
     });
 
     // Listener for political parties
-    const partiesQuery = query(collection(db, "parties"));
+    const partiesQuery = query(collection(db, "political_parties"));
     const unsubscribeParties = onSnapshot(partiesQuery, (snapshot) => {
         setParties(snapshot.docs.map(doc => doc.data()));
     });
@@ -90,6 +91,7 @@ export default function PoliticsPage() {
                     {proposals.map(proposal => (
                         <ProposalCard key={proposal.id} id={proposal.id} title={proposal.title}
                           proposer={{ name: proposal.authorName, avatar: "", avatarHint: "user avatar" }}
+                          entity={proposal.publishedInProfileName || "Red General"}
                           summary={proposal.summary} status={proposal.status}
                           stats={{ support: proposal.votes.for, reject: proposal.votes.against, abstain: proposal.votes.abstain }}
                           timeLeft="N/A" isSaved={false} onSaveToggle={() => {}} />

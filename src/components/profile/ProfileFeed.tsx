@@ -40,17 +40,17 @@ function PostCreator({ profile }: { profile: DocumentData }) {
                 title: "Publicación de perfil",
                 content: content,
                 area: 'profile',
-                destinations: [{ id: profile.id, type: 'profile', name: profile.name }],
+                destinations: [{ id: profile.id, name: profile.name, type: 'profile' }],
                 comments: 0,
                 reposts: 0,
                 likes: 0,
                 createdAt: serverTimestamp(),
             });
             setContent("");
-            toast({ title: "Success", description: "Your message has been broadcasted." });
+            toast({ title: "Éxito", description: "Tu mensaje ha sido difundido." });
         } catch (error) {
             console.error("Error creating post:", error);
-            toast({ title: "Error", description: "Could not create post.", variant: "destructive" });
+            toast({ title: "Error", description: "No se pudo crear la publicación.", variant: "destructive" });
         } finally {
             setIsPosting(false);
         }
@@ -60,7 +60,7 @@ function PostCreator({ profile }: { profile: DocumentData }) {
         <Card className="glass-card rounded-2xl p-4 mb-6">
             <form onSubmit={handlePostSubmit}>
                 <Textarea
-                    placeholder="What's happening in your slice of the Nexus?"
+                    placeholder="¿Qué está pasando en tu rincón del Nexo?"
                     className="bg-transparent border-0 focus-visible:ring-0 ring-offset-0 text-base"
                     rows={3}
                     value={content}
@@ -69,7 +69,7 @@ function PostCreator({ profile }: { profile: DocumentData }) {
                 <div className="flex justify-end mt-2">
                     <Button type="submit" disabled={isPosting || !content.trim()}>
                         {isPosting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Post
+                        Publicar
                     </Button>
                 </div>
             </form>
@@ -87,16 +87,12 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
     const postsCollection = collection(db, "posts");
     const q = query(
         postsCollection, 
-        where("destinations", "array-contains", { id: profile.id, name: profile.name, type: 'profile' })
+        where("destinations", "array-contains", { id: profile.id, name: profile.name, type: 'profile' }),
+        orderBy("createdAt", "desc")
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const postsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        postsData.sort((a, b) => {
-            const dateA = a.createdAt?.toDate() || 0;
-            const dateB = b.createdAt?.toDate() || 0;
-            return dateB - dateA;
-        });
         setPosts(postsData);
         setIsLoading(false);
     }, (error) => {
@@ -136,7 +132,7 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
                 ))
             ) : (
                 <Card className="glass-card rounded-2xl p-8 text-center">
-                    <p className="text-muted-foreground">No publications yet.</p>
+                    <p className="text-muted-foreground">Aún no hay publicaciones.</p>
                 </Card>
             )}
         </div>
