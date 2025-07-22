@@ -53,6 +53,9 @@ export default function PublishPage() {
     const [isLegislative, setIsLegislative] = useState(false);
     const [isNews, setIsNews] = useState(false);
     
+    // Moved this declaration up to be before its usage in useEffect
+    const isFederationSelected = selectedDestinations.some(d => d.type === 'federation');
+    
     useEffect(() => {
         if (!authUser || !profile) return;
 
@@ -92,7 +95,7 @@ export default function PublishPage() {
         if (isFederationSelected && federationArea === 'legislative' && isLegislative) {
              const hasPollBlock = blocks.some(b => b.type === 'poll');
              if (!hasPollBlock) {
-                 handleAddPoll();
+                 handleAddPoll(true);
              }
         } else {
             // Clean up legislative poll block if conditions are no longer met
@@ -218,7 +221,6 @@ export default function PublishPage() {
         setBlocks([]);
     }
     
-    const isFederationSelected = selectedDestinations.some(d => d.type === 'federation');
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
