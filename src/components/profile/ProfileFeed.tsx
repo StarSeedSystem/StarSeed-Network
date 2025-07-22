@@ -81,13 +81,14 @@ function PostCreator({ profile }: { profile: DocumentData }) {
 export function ProfileFeed({ profile }: ProfileFeedProps) {
   const [posts, setPosts] = useState<DocumentData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'profile' | 'communities'>('all');
   
   useEffect(() => {
     if (!profile?.id) return;
 
+    // Modified query: Order by date, then filter client-side.
+    // This avoids the composite index requirement.
     const postsCollection = collection(db, "posts");
-    const q = query(postsCollection, where("authorId", "==", profile.id), orderBy("createdAt", "desc"));
+    const q = query(postsCollection, orderBy("createdAt", "desc"));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const postsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -98,10 +99,10 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
     return () => unsubscribe();
   }, [profile]);
 
+  // Client-side filtering
   const currentFeed = useMemo(() => {
-    // This filtering logic can be expanded later
-    return posts;
-  }, [posts]);
+    return posts.filter(post => post.authorId === profile.id);
+  }, [posts, profile.id]);
 
   if (isLoading) {
       return (
