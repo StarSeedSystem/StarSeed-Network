@@ -54,8 +54,8 @@ export function CommunityPage({ slug }: CommunityPageProps) {
       if (doc.exists()) {
         const data = { id: doc.id, ...doc.data() };
         setCommunity(data);
-        if (authUser) {
-            setIsMember(data.members?.includes(authUser.uid));
+        if (authUser && Array.isArray(data.members)) {
+            setIsMember(data.members.includes(authUser.uid));
         }
       } else {
         setCommunity(null);
@@ -103,7 +103,7 @@ export function CommunityPage({ slug }: CommunityPageProps) {
     notFound();
   }
 
-  const memberCount = community?.members?.length || 0;
+  const memberCount = Array.isArray(community?.members) ? community.members.length : 0;
 
   return (
     <div className="space-y-6">
