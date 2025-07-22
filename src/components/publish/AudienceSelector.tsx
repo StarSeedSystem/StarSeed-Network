@@ -6,14 +6,16 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { User, Globe, Users, Landmark, Shield, BookOpen } from "lucide-react";
 
-const allDestinations = [
+// Mock data simulating pages the user is a member of.
+// In a real app, this would be fetched based on the logged-in user.
+const userPages = [
     { id: "profile", label: "Mi Perfil Personal", icon: User, areas: ['culture', 'education'] },
-    { id: "community_innovation", label: "Comunidad: Innovación Sostenible", icon: Globe, areas: ['culture', 'education'] },
-    { id: "community_art", label: "Comunidad: Arte Ciberdélico", icon: Users, areas: ['culture'] },
-    { id: "group_philosophy", label: "Grupo Estudio: Filosofía", icon: BookOpen, areas: ['education'] },
+    { id: "community_innovation", label: "Comunidad: Innovación Sostenible", icon: Globe, areas: ['culture', 'education', 'politics'] },
+    { id: "community_art", label: "Comunidad: Art-AI Collective", icon: Users, areas: ['culture'] },
+    { id: "group_philosophy", label: "Grupo Estudio: Exploradores Cuánticos", icon: BookOpen, areas: ['education'] },
     { id: "federation_local", label: "E.F. Localidad Central", icon: Landmark, areas: ['politics'] },
     { id: "federation_global", label: "E.F. Global", icon: Landmark, areas: ['politics'] },
-    { id: "party_transhumanist", label: "Partido: Futuro Transhumanista", icon: Shield, areas: ['politics'] },
+    { id: "party_transhumanist", label: "Partido: Conciencia Digital", icon: Shield, areas: ['politics'] },
 ];
 
 interface AudienceSelectorProps {
@@ -25,14 +27,18 @@ interface AudienceSelectorProps {
 export function AudienceSelector({ selectedArea, selectedDestinations, onSelectionChange }: AudienceSelectorProps) {
     
     const handleCheckedChange = (checked: boolean, id: string) => {
-        const newSelection = checked 
-            ? [...selectedDestinations, id] 
-            : selectedDestinations.filter(destId => destId !== id);
-        
-        onSelectionChange(newSelection);
+        // For politics, only allow single selection. For others, allow multiple.
+        if (selectedArea === 'politics') {
+            onSelectionChange(checked ? [id] : []);
+        } else {
+            const newSelection = checked 
+                ? [...selectedDestinations, id] 
+                : selectedDestinations.filter(destId => destId !== id);
+            onSelectionChange(newSelection);
+        }
     };
 
-    const availableDestinations = allDestinations.filter(dest => {
+    const availableDestinations = userPages.filter(dest => {
         return dest.areas && dest.areas.includes(selectedArea);
     });
 
@@ -40,7 +46,7 @@ export function AudienceSelector({ selectedArea, selectedDestinations, onSelecti
         <Card className="bg-background/50">
             <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {availableDestinations.map((dest) => (
-                    <div key={dest.id} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-primary/10 transition-colors">
+                    <div key={dest.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-primary/10 transition-colors border border-transparent has-[:checked]:bg-primary/10 has-[:checked]:border-primary/20">
                         <Checkbox 
                             id={`dest-${dest.id}`} 
                             checked={selectedDestinations.includes(dest.id)}
@@ -57,7 +63,3 @@ export function AudienceSelector({ selectedArea, selectedDestinations, onSelecti
         </Card>
     );
 }
-
-    
-
-    
