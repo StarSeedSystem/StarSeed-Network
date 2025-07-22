@@ -6,7 +6,7 @@ import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
-// This is a hardcoded, known-good configuration for a read-only project.
+// This is a hardcoded, known-good configuration for a project that allows user creation.
 const firebaseConfig = {
   apiKey: "AIzaSyCVnF_y5s-hAqI40nB4m24P5Bv49S_GEeM",
   authDomain: "dev-prototyping-355415.firebaseapp.com",

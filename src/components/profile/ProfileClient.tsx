@@ -4,18 +4,16 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { doc, setDoc, onSnapshot, updateDoc, DocumentData } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, DocumentData } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { useUser } from "@/context/UserContext";
 
 // --- UI Imports ---
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, UserPlus, Edit, ImageIcon, Award, Library, PenSquare } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2, Edit, ImageIcon, Award, Library, PenSquare } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -44,12 +42,6 @@ export function ProfileClient() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // --- Profile Creation State ---
-  const [handle, setHandle] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [bio, setBio] = useState("");
-  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
-
   // --- Real-time Profile Subscription ---
   useEffect(() => {
     if (authLoading) return;
@@ -63,38 +55,17 @@ export function ProfileClient() {
       if (doc.exists()) {
         setProfile({ id: doc.id, ...doc.data() });
       } else {
-        setProfile(null);
+        // If profile doesn't exist, redirect to creation page
+        router.push('/profile/create');
       }
       setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching profile:", error);
+        setIsLoading(false);
     });
 
     return () => unsubscribe();
   }, [authUser, authLoading, router]);
-
-  // --- Profile Creation Handler ---
-  const handleCreateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!authUser) return;
-    setIsCreatingProfile(true);
-    try {
-      const newProfile = {
-        name: displayName,
-        handle: handle.startsWith('@') ? handle : `@${handle}`,
-        bio: bio,
-        avatarUrl: `https://avatar.vercel.sh/${handle}.png`,
-        bannerUrl: "https://placehold.co/1200x400.png",
-        badges: { nexusPioneer: true },
-        createdAt: new Date(),
-      };
-      await setDoc(doc(db, "users", authUser.uid), newProfile);
-      toast({ title: "Profile Created!", description: "Welcome to the Nexus, Pioneer." });
-    } catch (error) {
-      console.error("Error creating profile:", error);
-      toast({ title: "Error", description: "Could not create your profile.", variant: "destructive" });
-    } finally {
-      setIsCreatingProfile(false);
-    }
-  };
 
   // --- Profile Update Handlers ---
   const handleSaveChanges = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -156,14 +127,13 @@ export function ProfileClient() {
     </div>;
   }
 
-  if (authUser && !profile) {
-    return (
-      <div className="flex items-center justify-center py-12"><Card className="mx-auto max-w-lg w-full glass-card"><CardHeader className="text-center"><CardTitle className="text-2xl font-headline flex items-center justify-center gap-2"><UserPlus/> Create Your Nexus Profile</CardTitle><CardDescription>Forge your identity in the network. This will be your public presence.</CardDescription></CardHeader><CardContent><form onSubmit={handleCreateProfile} className="grid gap-4"><div className="grid gap-2"><Label htmlFor="displayName">Display Name</Label><Input id="displayName" placeholder="Starlight" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required /></div><div className="grid gap-2"><Label htmlFor="handle">Unique Handle</Label><Input id="handle" placeholder="@starlight.eth" value={handle} onChange={(e) => setHandle(e.target.value)} required /></div><div className="grid gap-2"><Label htmlFor="bio">Short Bio</Label><Textarea id="bio" placeholder="Digital nomad..." value={bio} onChange={(e) => setBio(e.target.value)} required /></div><Button type="submit" className="w-full mt-2" size="lg" disabled={isCreatingProfile}>{isCreatingProfile ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Profile"}</Button></form></CardContent></Card></div>
-    );
+  if (!profile) {
+    // This case is handled by the redirect in useEffect, but as a fallback:
+    return <div className="text-center p-10">
+        <p>Redirigiendo a la creación de perfil...</p>
+    </div>
   }
   
-  if (!profile) return null;
-
   return (
     <>
       <div className="relative h-48 w-full rounded-2xl overflow-hidden group">

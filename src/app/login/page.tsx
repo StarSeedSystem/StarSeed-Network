@@ -8,8 +8,8 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithRedirect, // Import signInWithRedirect
-  getRedirectResult   // Import getRedirectResult
+  signInWithRedirect,
+  getRedirectResult   
 } from "firebase/auth";
 import { auth } from "@/data/firebase";
 import { Button } from "@/components/ui/button";
@@ -17,24 +17,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Chrome, BotMessageSquare, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false); // For general loading
-  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true); // Specifically for the redirect check
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
 
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // This effect runs when the page loads or reloads.
-    // It checks if the user has just been redirected back from Google.
     const checkRedirect = async () => {
       try {
         const result = await getRedirectResult(auth);
         if (result) {
-          // User has successfully signed in via redirect.
           toast({ title: "Login Successful", description: `Welcome, ${result.user.displayName}!` });
           router.push("/");
         }
@@ -42,20 +41,20 @@ export default function LoginPage() {
         console.error("Error getting redirect result:", err);
         setError("Failed to complete Google sign-in.");
       } finally {
-        // Stop the redirect-specific loading indicator
         setIsCheckingRedirect(false);
       }
     };
     
     checkRedirect();
-  }, [router]);
+  }, [router, toast]);
 
   const handleSignUp = async () => {
     setIsLoading(true);
     setError(null);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      router.push("/"); 
+      // Redirect to profile creation after successful sign-up
+      router.push("/profile/create"); 
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -79,8 +78,6 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     setError(null);
-    // This will navigate the user away from the app to Google's sign-in page.
-    // There's no need to handle the result here, the useEffect will do it on redirect.
     await signInWithRedirect(auth, provider);
   };
   
