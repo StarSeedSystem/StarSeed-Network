@@ -83,14 +83,14 @@ export function CommunityClient({ slug }: CommunityClientProps) {
           if (isMember) {
               setCommunity((prev: any) => ({
                   ...prev,
-                  members: prev.members.filter((uid: string) => uid !== authUser.uid)
+                  members: Array.isArray(prev.members) ? prev.members.filter((uid: string) => uid !== authUser.uid) : (typeof prev.members === 'number' ? prev.members - 1 : 0)
               }));
               setIsMember(false);
               toast({ title: "Left Community", description: `You have left ${community.name}.` });
           } else {
               setCommunity((prev: any) => ({
                   ...prev,
-                  members: [...(prev.members || []), authUser.uid]
+                  members: Array.isArray(prev.members) ? [...prev.members, authUser.uid] : (typeof prev.members === 'number' ? prev.members + 1 : 1)
               }));
               setIsMember(true);
               toast({ title: "Joined Community", description: `Welcome to ${community.name}!` });
@@ -153,7 +153,7 @@ export function CommunityClient({ slug }: CommunityClientProps) {
             <Tabs defaultValue="publications" className="w-full">
                 <TabsList className="grid w-full grid-cols-4 bg-card/60 rounded-xl h-auto">
                 <TabsTrigger value="publications" className="rounded-lg py-2 text-base"><PenSquare className="mr-2 h-4 w-4"/>Publicaciones</TabsTrigger>
-                <TabsTrigger value="members" className="rounded-lg py-2 text-base"><Users className="mr-2 h-4 w-4"/>Miembros ({Array.isArray(community?.members) ? community.members.length : 0})</TabsTrigger>
+                <TabsTrigger value="members" className="rounded-lg py-2 text-base"><Users className="mr-2 h-4 w-4"/>Miembros ({Array.isArray(community?.members) ? community.members.length : community?.members || 0})</TabsTrigger>
                 <TabsTrigger value="goals" className="rounded-lg py-2 text-base">Objetivos</TabsTrigger>
                 <TabsTrigger value="settings" className="rounded-lg py-2 text-base" disabled>Configuración</TabsTrigger>
                 </TabsList>

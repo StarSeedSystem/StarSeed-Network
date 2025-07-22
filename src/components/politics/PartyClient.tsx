@@ -48,7 +48,7 @@ export function PartyClient({ slug }: PartyClientProps) {
 
   useEffect(() => {
     if (party && authUser) {
-        setIsMember(party.members?.includes(authUser.uid));
+        setIsMember(Array.isArray(party.members) && party.members.includes(authUser.uid));
     }
   }, [party, authUser]);
 
@@ -82,11 +82,17 @@ export function PartyClient({ slug }: PartyClientProps) {
       // Simulate the action locally
       setTimeout(() => {
         if (isMember) {
-            setParty((prev: any) => ({ ...prev, members: prev.members.filter((uid: string) => uid !== authUser.uid) }));
+            setParty((prev: any) => ({ 
+                ...prev, 
+                members: Array.isArray(prev.members) ? prev.members.filter((uid: string) => uid !== authUser.uid) : (typeof prev.members === 'number' ? prev.members - 1 : 0)
+            }));
             setIsMember(false);
             toast({ title: "Left Party", description: `You have left ${party.name}.` });
         } else {
-            setParty((prev: any) => ({ ...prev, members: [...prev.members, authUser.uid] }));
+            setParty((prev: any) => ({ 
+                ...prev, 
+                members: Array.isArray(prev.members) ? [...prev.members, authUser.uid] : (typeof prev.members === 'number' ? prev.members + 1 : 1)
+            }));
             setIsMember(true);
             toast({ title: "Joined Party", description: `You have joined ${party.name}.` });
         }
@@ -147,7 +153,7 @@ export function PartyClient({ slug }: PartyClientProps) {
                 <TabsList className="grid w-full grid-cols-4 bg-card/60 rounded-xl">
                     <TabsTrigger value="proposals" className="rounded-lg py-2 text-base"><Vote className="mr-2 h-4 w-4"/>Propuestas</TabsTrigger>
                     <TabsTrigger value="publications" className="rounded-lg py-2 text-base"><PenSquare className="mr-2 h-4 w-4"/>Publicaciones</TabsTrigger>
-                    <TabsTrigger value="members" className="rounded-lg py-2 text-base"><Users className="mr-2 h-4 w-4"/>Miembros ({party?.members ? party.members.length : 0})</TabsTrigger>
+                    <TabsTrigger value="members" className="rounded-lg py-2 text-base"><Users className="mr-2 h-4 w-4"/>Miembros ({Array.isArray(party?.members) ? party.members.length : party?.members || 0})</TabsTrigger>
                     <TabsTrigger value="settings" className="rounded-lg py-2 text-base" disabled>Configuración</TabsTrigger>
                 </TabsList>
                 <TabsContent value="proposals" className="mt-6">

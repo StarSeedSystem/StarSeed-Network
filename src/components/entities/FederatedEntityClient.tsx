@@ -44,7 +44,7 @@ export function FederatedEntityClient({ slug }: FederatedEntityClientProps) {
 
   useEffect(() => {
     if(entity && authUser) {
-        setIsMember(entity.members?.includes(authUser.uid));
+        setIsMember(Array.isArray(entity.members) && entity.members.includes(authUser.uid));
     }
   }, [entity, authUser]);
 
@@ -78,11 +78,17 @@ export function FederatedEntityClient({ slug }: FederatedEntityClientProps) {
       // Simulate the action locally
       setTimeout(() => {
           if (isMember) {
-              setEntity((prev: any) => ({ ...prev, members: prev.members.filter((uid: string) => uid !== authUser.uid) }));
+              setEntity((prev: any) => ({ 
+                ...prev, 
+                members: Array.isArray(prev.members) ? prev.members.filter((uid: string) => uid !== authUser.uid) : (typeof prev.members === 'number' ? prev.members - 1 : 0)
+              }));
               setIsMember(false);
               toast({ title: "Left Entity", description: `You have left ${entity.name}.` });
           } else {
-              setEntity((prev: any) => ({ ...prev, members: [...prev.members, authUser.uid] }));
+              setEntity((prev: any) => ({ 
+                ...prev, 
+                members: Array.isArray(prev.members) ? [...prev.members, authUser.uid] : (typeof prev.members === 'number' ? prev.members + 1 : 1)
+              }));
               setIsMember(true);
               toast({ title: "Joined Entity", description: `You have joined ${entity.name}.` });
           }
@@ -105,13 +111,13 @@ export function FederatedEntityClient({ slug }: FederatedEntityClientProps) {
   return (
     <div>
         <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
-            <Image src={entity.bannerUrl} alt={`${entity.name} Banner`} layout="fill" objectFit="cover" />
+            <Image src={entity.bannerUrl || `https://placehold.co/1200x400.png?text=${entity.name}`} alt={`${entity.name} Banner`} layout="fill" objectFit="cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </div>
         <div className="relative px-4 sm:px-8 pb-8 -mt-24">
             <div className="flex flex-col sm:flex-row items-start gap-6">
                 <Avatar className="w-32 h-32 border-4 border-background ring-4 ring-primary">
-                    <AvatarImage src={entity.avatarUrl} alt={`${entity.name} Avatar`} />
+                    <AvatarImage src={entity.avatarUrl || `https://avatar.vercel.sh/${entity.slug}.png`} alt={`${entity.name} Avatar`} />
                     <AvatarFallback>{entity.name.substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div className="pt-16 flex-grow">
@@ -143,7 +149,7 @@ export function FederatedEntityClient({ slug }: FederatedEntityClientProps) {
                 <TabsList className="grid w-full grid-cols-4 bg-card/60 rounded-xl">
                     <TabsTrigger value="directives" className="rounded-lg py-2 text-base"><Gavel className="mr-2 h-4 w-4"/>Directives</TabsTrigger>
                     <TabsTrigger value="publications" className="rounded-lg py-2 text-base"><PenSquare className="mr-2 h-4 w-4"/>Publications</TabsTrigger>
-                    <TabsTrigger value="members" className="rounded-lg py-2 text-base"><Users className="mr-2 h-4 w-4"/>Members ({entity?.members ? entity.members.length : 0})</TabsTrigger>
+                    <TabsTrigger value="members" className="rounded-lg py-2 text-base"><Users className="mr-2 h-4 w-4"/>Members ({Array.isArray(entity?.members) ? entity.members.length : entity?.members || 0})</TabsTrigger>
                     <TabsTrigger value="settings" className="rounded-lg py-2 text-base" disabled>Settings</TabsTrigger>
                 </TabsList>
                 <TabsContent value="directives" className="mt-6">

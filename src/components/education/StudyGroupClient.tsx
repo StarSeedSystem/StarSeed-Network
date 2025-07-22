@@ -48,7 +48,7 @@ export function StudyGroupClient({ slug }: StudyGroupClientProps) {
 
   useEffect(() => {
     if (group && authUser) {
-        setIsMember(group.members?.includes(authUser.uid));
+        setIsMember(Array.isArray(group.members) && group.members.includes(authUser.uid));
     }
   }, [group, authUser]);
 
@@ -82,11 +82,17 @@ export function StudyGroupClient({ slug }: StudyGroupClientProps) {
       // Simulate the action locally
       setTimeout(() => {
         if (isMember) {
-            setGroup((prev: any) => ({ ...prev, members: prev.members.filter((uid: string) => uid !== authUser.uid) }));
+            setGroup((prev: any) => ({ 
+                ...prev, 
+                members: Array.isArray(prev.members) ? prev.members.filter((uid: string) => uid !== authUser.uid) : (typeof prev.members === 'number' ? prev.members - 1 : 0)
+            }));
             setIsMember(false);
             toast({ title: "Left Group", description: `You have left ${group.name}.` });
         } else {
-            setGroup((prev: any) => ({ ...prev, members: [...prev.members, authUser.uid] }));
+            setGroup((prev: any) => ({ 
+                ...prev, 
+                members: Array.isArray(prev.members) ? [...prev.members, authUser.uid] : (typeof prev.members === 'number' ? prev.members + 1 : 1)
+            }));
             setIsMember(true);
             toast({ title: "Joined Group", description: `You have joined ${group.name}.` });
         }
@@ -109,13 +115,13 @@ export function StudyGroupClient({ slug }: StudyGroupClientProps) {
   return (
     <div>
         <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
-            <Image src={group.bannerUrl} alt={`${group.name} Banner`} layout="fill" objectFit="cover" />
+            <Image src={group.bannerUrl || `https://placehold.co/1200x400.png?text=${group.name}`} alt={`${group.name} Banner`} layout="fill" objectFit="cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </div>
         <div className="relative px-4 sm:px-8 pb-8 -mt-24">
             <div className="flex flex-col sm:flex-row items-start gap-6">
                 <Avatar className="w-32 h-32 border-4 border-background ring-4 ring-primary">
-                    <AvatarImage src={group.avatarUrl} alt={`${group.name} Avatar`} />
+                    <AvatarImage src={group.avatarUrl || `https://avatar.vercel.sh/${group.slug}.png`} alt={`${group.name} Avatar`} />
                     <AvatarFallback>{group.name.substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div className="pt-16 flex-grow">
@@ -149,7 +155,7 @@ export function StudyGroupClient({ slug }: StudyGroupClientProps) {
                 <TabsList className="grid w-full grid-cols-4 bg-card/60 rounded-xl">
                     <TabsTrigger value="discussions" className="rounded-lg py-2 text-base"><BookOpen className="mr-2 h-4 w-4"/>Discussions</TabsTrigger>
                      <TabsTrigger value="publications" className="rounded-lg py-2 text-base"><PenSquare className="mr-2 h-4 w-4"/>Resources</TabsTrigger>
-                    <TabsTrigger value="members" className="rounded-lg py-2 text-base"><Users className="mr-2 h-4 w-4"/>Miembros ({group?.members ? group.members.length : 0})</TabsTrigger>
+                    <TabsTrigger value="members" className="rounded-lg py-2 text-base"><Users className="mr-2 h-4 w-4"/>Miembros ({Array.isArray(group?.members) ? group.members.length : group?.members || 0})</TabsTrigger>
                     <TabsTrigger value="settings" className="rounded-lg py-2 text-base" disabled>Settings</TabsTrigger>
                 </TabsList>
                 <TabsContent value="publications" className="mt-6">
