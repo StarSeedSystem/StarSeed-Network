@@ -287,7 +287,8 @@ function AppHeader() {
     const { headerInfo } = useHeader();
     const pathname = usePathname();
 
-    const isSpecialPage = pathname.startsWith('/community/') || pathname.startsWith('/politics/proposal/') || viewModePages.includes(pathname);
+    const isSpecialPage = viewModePages.includes(pathname) || /^\/(community|politics\/proposal|event|party|study-group|federated-entity|chat-group)\//.test(pathname);
+
     
     // A mapping from path prefixes to their header info
     const pageHeaders: { [key: string]: { icon: React.ReactNode, title: string, subtitle: string } } = {
@@ -342,7 +343,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
     const { headerInfo } = useHeader();
     const pathname = usePathname();
 
-    const isSpecialPage = pathname.startsWith('/community/') || pathname.startsWith('/politics/proposal/') || viewModePages.includes(pathname);
+    const isSpecialPage = viewModePages.includes(pathname) || /^\/(community|politics\/proposal|event|party|study-group|federated-entity|chat-group)\//.test(pathname);
     const pageInfo = pageHeaders[pathname];
 
     return (
@@ -387,7 +388,7 @@ const pageHeaders: { [key: string]: { icon: React.ReactNode, title: string, subt
     '/politics': { icon: <Gavel className="h-8 w-8 text-primary"/>, title: "Red de Política", subtitle: "El parlamento digital de la red. Aquí se proponen, debaten y gestionan las decisiones que nos afectan a todos." },
     '/education': { icon: <GraduationCap className="h-8 w-8 text-primary"/>, title: "Educación", subtitle: "La base de conocimiento libre y universal de la Red. Aprende, crea y comparte." },
     '/culture': { icon: <Sparkles className="h-8 w-8 text-primary"/>, title: "Cultura", subtitle: "El espacio para la expresión social, artística y la creación de nuevos mundos." },
-    '/publish': { icon: <PenSquare className="h-8 w-8 text-primary"/>, title: "Crear Publicación", subtitle: "Forja tu mensaje en el Lienzo de Creación y difúndelo a través del Nexo." },
+    '/publish': { icon: <PenSquare className="h-8 w-8 text-primary"/>, title: "El Lienzo de Creación", subtitle: "Forja tu mensaje y difúndelo a través del Nexo." },
     '/library': { icon: <Library className="h-8 w-8 text-primary"/>, title: "Biblioteca del Nexo", subtitle: "Tu ecosistema extensible de apps, archivos, avatares y plantillas." },
     '/library/my-library': { icon: <Folder className="h-8 w-8 text-primary"/>, title: "Mi Biblioteca", subtitle: "Tu ecosistema personal de apps, archivos y creaciones de IA." },
     '/library/templates': { icon: <Store className="h-8 w-8 text-primary"/>, title: "Tienda Virtual", subtitle: "Descubre, instala y comparte activos creados por la comunidad del Nexo." },
@@ -419,3 +420,5 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
+
+    
