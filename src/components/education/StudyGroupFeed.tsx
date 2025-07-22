@@ -10,7 +10,7 @@ import { ContentCard } from "@/components/content/ContentCard";
 import type { EducationalContent } from "@/types/content-types";
 
 interface StudyGroupFeedProps {
-    groupId: string; // The ID of the study group whose feed we are displaying
+    groupId: string;
 }
 
 export function StudyGroupFeed({ groupId }: StudyGroupFeedProps) {
@@ -21,17 +21,14 @@ export function StudyGroupFeed({ groupId }: StudyGroupFeedProps) {
         if (!groupId) return;
 
         const tutorialsCollection = collection(db, "tutorials");
-        // Query for tutorials specifically published in this study group
-        const q = query(tutorialsCollection, orderBy("createdAt", "desc"));
+        const q = query(
+            tutorialsCollection, 
+            where("publishedInProfileId", "==", groupId),
+            orderBy("createdAt", "desc")
+        );
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const tutorialsData = querySnapshot.docs
-                .map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }))
-                .filter(doc => doc.publishedInProfileId === groupId); // Filter client-side
-
+            const tutorialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setTutorials(tutorialsData);
             setIsLoading(false);
         }, (error) => {
@@ -51,14 +48,13 @@ export function StudyGroupFeed({ groupId }: StudyGroupFeedProps) {
             {tutorials.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {tutorials.map((item) => {
-                         // Adapt the data from Firestore to the format expected by ContentCard
                         const content: EducationalContent = {
                             id: item.id,
                             title: item.title,
                             category: item.category,
-                            type: "Tutorial", // Or dynamic type from Firestore if available
-                            level: "Principiante", // Or dynamic level
-                            image: `https://placehold.co/600x400/5a5a5a/ffffff?text=${encodeURIComponent(item.category || 'Tutorial')}`, // Placeholder image
+                            type: "Tutorial",
+                            level: "Principiante",
+                            image: `https://placehold.co/600x400/5a5a5a/ffffff?text=${encodeURIComponent(item.category || 'Tutorial')}`,
                             imageHint: item.category,
                             description: item.summary,
                             author: { name: item.authorName, avatar: "", avatarHint: "user avatar" }

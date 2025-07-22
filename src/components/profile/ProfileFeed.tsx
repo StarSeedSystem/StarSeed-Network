@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, DocumentData } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { Card } from "@/components/ui/card";
@@ -13,8 +13,6 @@ import { Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 
 interface ProfileFeedProps {
-  // We pass the entire profile object of the user whose feed we are viewing.
-  // This is needed to know who the author is when creating a new post.
   profile: DocumentData;
 }
 
@@ -24,7 +22,6 @@ function PostCreator({ profile }: { profile: DocumentData }) {
     const { toast } = useToast();
     const { user: authUser } = useUser();
 
-    // Only show post creator if the authenticated user is viewing their own profile
     if (authUser?.uid !== profile.id) {
         return null;
     }
@@ -43,7 +40,7 @@ function PostCreator({ profile }: { profile: DocumentData }) {
                 title: "Publicación de perfil",
                 content: content,
                 area: 'profile',
-                destinations: [{ id: profile.id, type: 'profile', name: profile.name }], // Post to own profile
+                destinations: [{ id: profile.id, type: 'profile', name: profile.name }],
                 comments: 0,
                 reposts: 0,
                 likes: 0,
@@ -87,16 +84,14 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
   useEffect(() => {
     if (!profile?.id) return;
 
-    // This query fetches posts where the 'destinations' array contains the user's profile ID and type.
     const postsCollection = collection(db, "posts");
     const q = query(
         postsCollection, 
-        where("authorId", "==", profile.id)
+        where("destinations", "array-contains", { id: profile.id, name: profile.name, type: 'profile' })
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const postsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // Sort posts by date on the client side
         postsData.sort((a, b) => {
             const dateA = a.createdAt?.toDate() || 0;
             const dateB = b.createdAt?.toDate() || 0;
@@ -105,8 +100,7 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
         setPosts(postsData);
         setIsLoading(false);
     }, (error) => {
-        console.error("Error fetching profile feed (likely permissions/missing index):", error);
-        // On error, clear posts and stop loading
+        console.error("Error fetching profile feed:", error);
         setPosts([]);
         setIsLoading(false);
     });
@@ -125,11 +119,9 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
   return (
     <div>
         <PostCreator profile={profile} />
-
         <div className="space-y-4">
             {posts.length > 0 ? (
                 posts.map((post) => (
-                    // Adapt the post data from Firestore to what FeedPost expects
                     <FeedPost key={post.id} post={{
                         author: post.authorName,
                         handle: post.handle,
@@ -139,7 +131,7 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
                         comments: post.comments,
                         reposts: post.reposts,
                         likes: post.likes,
-                        destinations: post.destinations.map((d: any) => d.name), // Simplify for display
+                        destinations: post.destinations.map((d: any) => d.name),
                     }} />
                 ))
             ) : (

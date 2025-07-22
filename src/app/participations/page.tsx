@@ -28,23 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast";
 
-
-import communities from '@/data/communities.json';
-import federations from '@/data/federations.json';
-import studyGroups from '@/data/study-groups.json';
-import politicalParties from '@/data/political-parties.json';
-import eventsData from '@/data/events.json';
-import chatGroups from '@/data/chat-groups.json';
-
-const recommendations: AnyRecommendedPage[] = [
-    ...(Object.values(communities) as AnyEntity[]),
-    ...(Object.values(federations) as AnyEntity[]),
-    ...(Object.values(studyGroups) as AnyEntity[]),
-    ...(Object.values(politicalParties) as AnyEntity[]),
-    ...(Object.values(chatGroups) as AnyEntity[]),
-    ...(Object.values(eventsData) as Event[]),
-];
-
+// Fetching will now happen inside the component
 const activeParticipations = {
     votes: [{
         id: "prop-001",
@@ -104,7 +88,7 @@ const entityCreationLinks = [
 const ConnectionCard = ({ item }: { item: AnyRecommendedPage }) => {
     const href = getEntityPath(item.type, item.slug);
     const isEvent = item.type === 'event';
-    const memberCount = !isEvent ? (item as AnyEntity).members : 0;
+    const memberCount = !isEvent ? (Array.isArray((item as AnyEntity).members) ? (item as AnyEntity).members.length : (item as AnyEntity).members) : 0;
     const itemImage = 'avatar' in item ? item.avatar : item.image;
     const itemImageHint = 'avatarHint' in item ? item.avatarHint : item.imageHint;
 
@@ -139,59 +123,53 @@ const ConnectionCard = ({ item }: { item: AnyRecommendedPage }) => {
 export default function ConnectionsHubPage() {
     const { user } = useUser();
     const { toast } = useToast();
+    const [allPages, setAllPages] = useState<AnyEntity[]>([]);
     const [myPages, setMyPages] = useState<AnyEntity[]>([]);
-    const [myEvents, setMyEvents] = useState<Event[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [recommendationFilter, setRecommendationFilter] = useState('all');
     const [personalizedFilter, setPersonalizedFilter] = useState('activity');
 
 
     useEffect(() => {
-        setIsLoading(true);
-        // Load joined pages from local storage
-        const joinedPagesIds = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-        const joinedPages = recommendations.filter(rec => rec.type !== 'event' && joinedPagesIds[rec.id]) as AnyEntity[];
+        const fetchAllData = async () => {
+            setIsLoading(true);
+            const collections: { key: string; type: AnyEntity['type'] }[] = [
+                { key: 'communities', type: 'community' },
+                { key: 'federated_entities', type: 'federation' },
+                { key: 'study_groups', type: 'study_group' },
+                { key: 'political_parties', type: 'political_party' },
+                { key: 'chat_groups', type: 'chat_group' },
+            ];
 
-        // Load attended events from local storage
-        const attendedEventsIds = JSON.parse(localStorage.getItem('attended_events') || '{}');
-        const attendedEvents = recommendations.filter(rec => rec.type === 'event' && attendedEventsIds[rec.id]) as Event[];
-        setMyEvents(attendedEvents);
+            try {
+                const promises = collections.map(async ({ key, type }) => {
+                    const q = query(collection(db, key));
+                    const querySnapshot = await getDocs(q);
+                    return querySnapshot.docs.map(doc => ({ type, id: doc.id, ...doc.data() } as AnyEntity));
+                });
 
-        if (user) {
-            const fetchCreatedPages = async () => {
-                const collections: { key: string; type: AnyEntity['type'] }[] = [
-                    { key: 'communities', type: 'community' },
-                    { key: 'federated_entities', type: 'federation' },
-                    { key: 'study_groups', type: 'study_group' },
-                    { key: 'political_parties', type: 'political_party' },
-                    { key: 'chat_groups', type: 'chat_group' },
-                ];
-                
-                try {
-                    const promises = collections.map(async ({ key, type }) => {
-                        const q = query(collection(db, key), where("creatorId", "==", user.uid));
-                        const querySnapshot = await getDocs(q);
-                        return querySnapshot.docs.map(doc => ({ type, id: doc.id, ...doc.data() } as AnyEntity));
-                    });
+                const allDataNested = await Promise.all(promises);
+                const allDataFlat = allDataNested.flat();
+                setAllPages(allDataFlat);
 
-                    const allCreatedPagesNested = await Promise.all(promises);
-                    const allCreatedPages = allCreatedPagesNested.flat();
-                    
-                    const combinedPages = [...allCreatedPages, ...joinedPages];
-                    const uniquePages = Array.from(new Map(combinedPages.map(item => [item.id, item])).values());
-                    
-                    setMyPages(uniquePages);
-                } catch (error) {
-                    console.error("Error fetching created pages:", error);
-                    setMyPages(joinedPages);
+                if (user) {
+                    const userPages = allDataFlat.filter(page => 
+                        (page.creatorId === user.uid) || 
+                        (Array.isArray(page.members) && page.members.includes(user.uid))
+                    );
+                    setMyPages(userPages);
                 }
-            };
-            fetchCreatedPages();
-        } else {
-             setMyPages(joinedPages);
-        }
-        setIsLoading(false);
-    }, [user]);
+
+            } catch (error) {
+                console.error("Error fetching Firestore data:", error);
+                toast({ title: "Error al cargar datos", description: "No se pudo conectar con el servidor.", variant: "destructive" });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchAllData();
+    }, [user, toast]);
     
     const handleReloadRecommendations = () => {
         // Here you would typically call an AI service to get new recommendations.
@@ -205,18 +183,19 @@ export default function ConnectionsHubPage() {
 
     const filteredRecommendations = useMemo(() => {
         if (recommendationFilter === 'all') {
-            return recommendations;
+            return allPages;
         }
         if (recommendationFilter === 'groups') {
-            return recommendations.filter(r => r.type === 'study_group' || r.type === 'chat_group');
+            return allPages.filter(r => r.type === 'study_group' || r.type === 'chat_group');
         }
-        return recommendations.filter(r => r.type === recommendationFilter);
-    }, [recommendationFilter]);
+        return allPages.filter(r => r.type === recommendationFilter);
+    }, [recommendationFilter, allPages]);
 
     const myCommunities = myPages.filter(p => p.type === 'community');
     const myFederations = myPages.filter(p => p.type === 'federation');
     const myGroups = myPages.filter(p => p.type === 'study_group' || p.type === 'chat_group');
     const myPoliticalParties = myPages.filter(p => p.type === 'political_party');
+    const myEvents: Event[] = []; // This should be fetched from user data if stored there
 
     const renderList = (items: AnyRecommendedPage[]) => {
         if (isLoading) {
@@ -276,7 +255,7 @@ export default function ConnectionsHubPage() {
                             <TabsTrigger value="federation">Entidades</TabsTrigger>
                             <TabsTrigger value="groups">Grupos</TabsTrigger>
                             <TabsTrigger value="political_party">Partidos</TabsTrigger>
-                            <TabsTrigger value="event">Eventos</TabsTrigger>
+                            <TabsTrigger value="event" disabled>Eventos</TabsTrigger>
                         </TabsList>
                     </Tabs>
                     <div className="flex gap-2">
@@ -411,7 +390,7 @@ export default function ConnectionsHubPage() {
                     <Shield className="mr-2 h-5 w-5" />
                     Partidos ({myPoliticalParties.length})
                 </TabsTrigger>
-                <TabsTrigger value="events" className="rounded-lg py-2 text-base">
+                <TabsTrigger value="events" className="rounded-lg py-2 text-base" disabled>
                     <Calendar className="mr-2 h-5 w-5" />
                     Eventos ({myEvents.length})
                 </TabsTrigger>
@@ -426,5 +405,3 @@ export default function ConnectionsHubPage() {
        </div>
     </div>
   );
-
-    

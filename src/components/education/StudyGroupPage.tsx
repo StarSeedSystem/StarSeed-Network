@@ -2,6 +2,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { db } from "@/data/firebase";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -15,10 +17,6 @@ import { StudyGroupFeed } from "./StudyGroupFeed";
 import { BackButton } from "../utils/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { StudyGroup } from "@/types/content-types";
-
-// --- Import local data ---
-import studyGroupData from "@/data/study-groups.json";
-
 
 interface StudyGroupPageProps {
   slug: string;
@@ -42,57 +40,62 @@ function StudyGroupSkeleton() {
 
 export function StudyGroupPage({ slug }: StudyGroupPageProps) {
   const { user: authUser, loading: authLoading } = useUser();
-  const [group, setGroup] = useState<StudyGroup | null>(null);
+  const [group, setGroup] = useState<DocumentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
   const [isMember, setIsMember] = useState(false);
-  const [memberCount, setMemberCount] = useState(0);
   const { toast } = useToast();
 
   const isCreator = authUser && group?.creatorId === authUser.uid;
 
   useEffect(() => {
-    const localData = (studyGroupData.groups as any)[slug];
-    if (localData) {
-        setGroup(localData);
-        setMemberCount(localData.members || 0);
-        if(authUser) {
-            const joinedPages = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-            if (joinedPages[localData.id]) {
-                setIsMember(true);
-            }
-        }
+    if (group && authUser) {
+        setIsMember(Array.isArray(group.members) && group.members.includes(authUser.uid));
     }
-    setIsLoading(false);
-  }, [slug, authUser]);
+  }, [group, authUser]);
 
-  const handleJoinLeave = () => {
-      if (!authUser || !group) {
+  useEffect(() => {
+    if (!slug) return;
+
+    const docRef = doc(db, "study_groups", slug);
+    const unsubscribe = onSnapshot(docRef, (doc) => {
+      if (doc.exists()) {
+        setGroup({ id: doc.id, ...doc.data() });
+      } else {
+        setGroup(null);
+      }
+      setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching group:", error);
+        setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [slug]);
+
+  const handleJoinLeave = async () => {
+      if (!authUser || !group?.id) {
           toast({ title: "Authentication Required", variant: "destructive" });
           return;
       }
 
       setIsJoiningLeaving(true);
+      const groupRef = doc(db, "study_groups", group.id);
       
-      // Simulate the action locally using localStorage
-      setTimeout(() => {
-        const joinedPages = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-        const newIsMember = !isMember;
-
-        if (newIsMember) {
-            joinedPages[group.id] = true;
-            setMemberCount(prev => prev + 1);
-            toast({ title: "Joined Group", description: `You have joined ${group.name}.` });
-        } else {
-            delete joinedPages[group.id];
-            setMemberCount(prev => prev - 1);
+      try {
+        if (isMember) {
+            await updateDoc(groupRef, { members: arrayRemove(authUser.uid) });
             toast({ title: "Left Group", description: `You have left ${group.name}.` });
+        } else {
+            await updateDoc(groupRef, { members: arrayUnion(authUser.uid) });
+            toast({ title: "Joined Group", description: `You have joined ${group.name}.` });
         }
-        
-        localStorage.setItem('joined_pages', JSON.stringify(joinedPages));
-        setIsMember(newIsMember);
+      } catch(error) {
+        console.error("Error updating membership:", error);
+        toast({ title: "Error", description: "Could not update membership.", variant: "destructive"});
+      } finally {
         setIsJoiningLeaving(false);
-      }, 300);
+      }
   }
 
   if (isLoading || authLoading) {
@@ -102,6 +105,8 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
   if (!group) {
     notFound();
   }
+  
+  const memberCount = Array.isArray(group.members) ? group.members.length : 0;
 
   return (
     <div className="space-y-6">

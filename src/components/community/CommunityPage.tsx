@@ -2,6 +2,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { db } from "@/data/firebase";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -13,10 +15,6 @@ import { useToast } from "@/hooks/use-toast";
 import { BackButton } from "../utils/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Community } from "@/types/content-types";
-
-// --- Import local data ---
-import communityData from "@/data/communities.json";
-
 
 interface CommunityPageProps {
   slug: string;
@@ -42,56 +40,66 @@ function CommunitySkeleton() {
 
 export function CommunityPage({ slug }: CommunityPageProps) {
   const { user: authUser, loading: authLoading } = useUser();
-  const [community, setCommunity] = useState<Community | null>(null);
+  const [community, setCommunity] = useState<DocumentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
   const [isMember, setIsMember] = useState(false);
-  const [memberCount, setMemberCount] = useState(0);
   
   const { toast } = useToast();
 
   useEffect(() => {
-    const localData = (communityData as any)[slug];
-    if (localData) {
-        setCommunity(localData);
-        setMemberCount(localData.members || 0);
-        if(authUser) {
-            const joinedPages = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-            if (joinedPages[localData.id]) {
-                setIsMember(true);
-            }
-        }
+    if (community && authUser) {
+        setIsMember(Array.isArray(community.members) && community.members.includes(authUser.uid));
     }
-    setIsLoading(false);
-  }, [slug, authUser]);
+  }, [community, authUser]);
 
+  useEffect(() => {
+    if (!slug) return;
 
-  const handleJoinLeave = () => {
-      if (!authUser || !community) {
+    const docRef = doc(db, "communities", slug);
+    const unsubscribe = onSnapshot(docRef, (doc) => {
+      if (doc.exists()) {
+        setCommunity({ id: doc.id, ...doc.data() });
+      } else {
+        setCommunity(null);
+      }
+      setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching community:", error);
+        setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [slug]);
+
+  const handleJoinLeave = async () => {
+      if (!authUser || !community?.id) {
           toast({ title: "Authentication Required", description: "You must be logged in to join or leave.", variant: "destructive" });
           return;
       }
-      setIsJoiningLeaving(true);
-      
-      // Simulate the action locally using localStorage
-      setTimeout(() => {
-          const joinedPages = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-          const newIsMember = !isMember;
 
-          if (newIsMember) {
-              joinedPages[community.id] = true;
-              setMemberCount(prev => prev + 1);
-              toast({ title: "Joined Community", description: `Welcome to ${community.name}!` });
-          } else {
-              delete joinedPages[community.id];
-              setMemberCount(prev => prev - 1);
-              toast({ title: "Left Community", description: `You have left ${community.name}.` });
-          }
-          
-          localStorage.setItem('joined_pages', JSON.stringify(joinedPages));
-          setIsMember(newIsMember);
-          setIsJoiningLeaving(false);
-      }, 300); // Simulate network delay
+      setIsJoiningLeaving(true);
+      const communityRef = doc(db, "communities", community.id);
+      
+      try {
+        if (isMember) {
+          await updateDoc(communityRef, {
+            members: arrayRemove(authUser.uid)
+          });
+          toast({ title: "Left Community", description: `You have left ${community.name}.` });
+        } else {
+          await updateDoc(communityRef, {
+            members: arrayUnion(authUser.uid)
+          });
+          toast({ title: "Joined Community", description: `Welcome to ${community.name}!` });
+        }
+        // The onSnapshot listener will automatically update the UI
+      } catch (error) {
+        console.error("Error updating membership:", error);
+        toast({ title: "Error", description: "Could not update membership.", variant: "destructive"});
+      } finally {
+        setIsJoiningLeaving(false);
+      }
   }
 
   if (isLoading || authLoading) {
@@ -101,6 +109,8 @@ export function CommunityPage({ slug }: CommunityPageProps) {
   if (!community) {
     notFound();
   }
+
+  const memberCount = Array.isArray(community.members) ? community.members.length : 0;
 
   return (
     <div className="space-y-6">
@@ -132,7 +142,7 @@ export function CommunityPage({ slug }: CommunityPageProps) {
                             )}
                         </Button>
                     )}
-                    {!authUser && !authLoading && (
+                    {!authUser && (
                         <span className="text-sm text-muted-foreground">Log in to join</span>
                     )}
                 </div>
