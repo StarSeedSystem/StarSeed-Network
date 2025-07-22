@@ -34,8 +34,8 @@ export default function LoginPage() {
       try {
         const result = await getRedirectResult(auth);
         if (result) {
-          toast({ title: "Login Successful", description: `Welcome, ${result.user.displayName}!` });
-          router.push("/");
+          toast({ title: "Login Successful", description: `Welcome back!` });
+          router.push("/profile");
         }
       } catch (err: any) {
         console.error("Error getting redirect result:", err);
@@ -49,20 +49,38 @@ export default function LoginPage() {
   }, [router, toast]);
 
   const handleSignUp = async () => {
+    if (!email || !password) {
+        setError("Please enter both email and password to sign up.");
+        return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      // Redirect to profile creation after successful sign-up
+      toast({
+          title: "Account Created!",
+          description: "Let's set up your profile.",
+      });
+      // Redirect to the profile creation page after successful sign up
       router.push("/profile/create"); 
     } catch (err: any) {
-      setError(err.message);
+      if (err.code === 'auth/email-already-in-use') {
+        setError("This email is already in use. Please try logging in.");
+      } else {
+        setError(err.message);
+      }
     } finally {
       setIsLoading(false);
     }
   };
   
   const handleLogin = async () => {
+    if (!email || !password) {
+        setError("Please enter both email and password to log in.");
+        return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
@@ -90,6 +108,8 @@ export default function LoginPage() {
       )
   }
 
+  const isFormValid = email.trim() !== '' && password.trim() !== '';
+
   return (
     <Card className="mx-auto max-w-sm w-full glass-card">
       <CardHeader>
@@ -111,13 +131,13 @@ export default function LoginPage() {
             <Label htmlFor="password">Password</Label>
             <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} />
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <Button type="button" className="w-full" size="lg" onClick={handleLogin} disabled={isLoading}>
+          {error && <p className="text-red-500 text-sm px-1">{error}</p>}
+          <Button type="button" className="w-full" size="lg" onClick={handleLogin} disabled={isLoading || !isFormValid}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : 'Login'}
           </Button>
           <div className="mt-2 text-center text-sm">
             Don&apos;t have an account?{" "}
-            <Button variant="link" className="p-0" onClick={handleSignUp} disabled={isLoading}>Sign up</Button>
+            <Button variant="link" className="p-0" onClick={handleSignUp} disabled={isLoading || !isFormValid}>Sign up</Button>
           </div>
           <div className="relative mt-2">
             <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>

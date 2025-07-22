@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation"; // Import useSearchParams
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { useUser } from "@/context/UserContext";
@@ -13,10 +13,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Check, Gavel, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { slugify } from "@/lib/utils";
 
 export default function CreateProposalPage() {
     const router = useRouter();
+    const searchParams = useSearchParams(); // Get URL search parameters
     const { toast } = useToast();
     const { user: authUser, loading: authLoading } = useUser();
 
@@ -24,6 +24,11 @@ export default function CreateProposalPage() {
     const [title, setTitle] = useState("");
     const [summary, setSummary] = useState("");
     const [fullText, setFullText] = useState("");
+
+    // Check if we are creating this proposal on behalf of a public profile
+    const publishedInProfileId = searchParams.get('publishedInId');
+    const publishedInProfileType = searchParams.get('publishedInType');
+    const publishedInProfileName = searchParams.get('publishedInName');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,7 +39,7 @@ export default function CreateProposalPage() {
         setIsLoading(true);
 
         try {
-            const docRef = await addDoc(collection(db, "proposals"), {
+            const proposalData: any = {
                 title: title,
                 summary: summary,
                 fullText: fullText,
@@ -43,14 +48,27 @@ export default function CreateProposalPage() {
                 status: "propuesta",
                 votes: { for: 0, against: 0, abstain: 0 },
                 createdAt: serverTimestamp(),
-            });
+            };
+
+            // Add public profile association if present in URL params
+            if (publishedInProfileId && publishedInProfileType && publishedInProfileName) {
+                proposalData.publishedInProfileId = publishedInProfileId;
+                proposalData.publishedInProfileType = publishedInProfileType;
+                proposalData.publishedInProfileName = publishedInProfileName;
+                // We might also want to add the profile's avatar/handle here for display
+            }
+
+            await addDoc(collection(db, "proposals"), proposalData);
 
             toast({
                 title: "¡Propuesta Creada!",
-                description: "Tu propuesta legislativa ha sido registrada y está abierta a debate.",
+                description: publishedInProfileName 
+                    ? `Tu propuesta ha sido registrada en ${publishedInProfileName}.` 
+                    : "Tu propuesta legislativa ha sido registrada.",
             });
             
-            router.push(`/politics/proposal/${docRef.id}`);
+            // Redirect logic might need refinement based on whether it was published in a profile or not
+            router.push(`/politics`); // Redirect to the main politics page for now
 
         } catch (error) {
              console.error("Error creating proposal:", error);
@@ -79,7 +97,7 @@ export default function CreateProposalPage() {
                 <CardHeader>
                     <CardTitle className="font-headline text-3xl flex items-center gap-3">
                         <Gavel className="h-8 w-8 text-primary glowing-icon" />
-                        Crear Propuesta Legislativa
+                        {publishedInProfileName ? `Crear Propuesta en ${publishedInProfileName}` : "Crear Propuesta Legislativa"}
                     </CardTitle>
                     <CardDescription>
                         Presenta una nueva ley o directiva para el debate y la votación de la comunidad.
@@ -87,6 +105,11 @@ export default function CreateProposalPage() {
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-6">
+                         {publishedInProfileName && (
+                             <div className="text-sm text-muted-foreground mb-4">
+                                Publicando como: <span className="font-semibold text-primary">{publishedInProfileName} ({publishedInProfileType})</span>
+                             </div>
+                         )}
                         <div className="space-y-2">
                             <Label htmlFor="title">Título de la Propuesta</Label>
                             <Input id="title" placeholder="Ej: Ley de Soberanía de Datos Personales" required value={title} onChange={(e) => setTitle(e.target.value)} disabled={isLoading}/>

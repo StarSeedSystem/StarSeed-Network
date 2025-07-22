@@ -4,7 +4,6 @@
 import { useState, useTransition } from "react";
 import { generateAvatar } from "@/ai/flows/generate-avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Wand2 } from "lucide-react";
@@ -111,7 +110,7 @@ export function AIAvatarGenerator({
                         </Avatar>
                     </div>
                 )}
-                 {isPending && (
+                 {isPending && !generatedAvatar && (
                      <div className="text-center">
                         <Label className="text-sm text-muted-foreground">Generando...</Label>
                         <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-dashed border-primary/50 bg-primary/10 mt-1">

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/data/firebase";
@@ -13,9 +13,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { slugify } from "@/lib/utils";
 
 export function CreateProfileForm() {
-    const { user: authUser, loading: authLoading } = useUser();
+    const { user: authUser } = useUser();
     const router = useRouter();
     const { toast } = useToast();
 
@@ -24,18 +25,15 @@ export function CreateProfileForm() {
     const [bio, setBio] = useState("");
     const [isCreatingProfile, setIsCreatingProfile] = useState(false);
 
-    useEffect(() => {
-        if (!authLoading && !authUser) {
-            router.push('/login');
-        }
-    }, [authUser, authLoading, router]);
-
     const handleCreateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!authUser) return;
+        if (!authUser) {
+            toast({ title: "Error", description: "You are not logged in.", variant: "destructive" });
+            return;
+        }
         setIsCreatingProfile(true);
 
-        const finalHandle = handle.startsWith('@') ? handle : `@${handle}`;
+        const finalHandle = slugify(handle);
 
         try {
             const newProfile = {
@@ -43,13 +41,13 @@ export function CreateProfileForm() {
                 handle: finalHandle,
                 bio: bio,
                 avatarUrl: `https://avatar.vercel.sh/${finalHandle}.png`,
-                bannerUrl: "https://placehold.co/1200x400.png",
+                bannerUrl: "https://placehold.co/1200x400/0a0a0b/9ca3af.png?text=Bienvenido+al+Nexo",
                 badges: { nexusPioneer: true },
                 createdAt: new Date(),
             };
-            await setDoc(doc(db, "users", authUser.uid), newProfile);
+            await setDoc(doc(db, "users", authUser.uid), newProfile, { merge: true });
             toast({ title: "¡Perfil Creado!", description: "Bienvenido al Nexo, Pionero." });
-            router.push('/profile'); // Redirect to their new profile
+            router.push('/profile');
         } catch (error) {
             console.error("Error creando perfil:", error);
             toast({ title: "Error", description: "No se pudo crear tu perfil.", variant: "destructive" });
@@ -57,14 +55,6 @@ export function CreateProfileForm() {
             setIsCreatingProfile(false);
         }
     };
-
-    if (authLoading) {
-        return (
-            <div className="flex justify-center items-center h-full">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        );
-    }
     
     return (
         <Card className="mx-auto max-w-lg w-full glass-card">
@@ -83,8 +73,8 @@ export function CreateProfileForm() {
                         <Input id="displayName" placeholder="Starlight" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="handle">Handle Único</Label>
-                        <Input id="handle" placeholder="@starlight.eth" value={handle} onChange={(e) => setHandle(e.target.value)} required />
+                        <Label htmlFor="handle">Handle Único (sin @)</Label>
+                        <Input id="handle" placeholder="starlight" value={handle} onChange={(e) => setHandle(e.target.value)} required />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="bio">Biografía Corta</Label>

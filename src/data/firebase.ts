@@ -1,22 +1,18 @@
-
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
-// Your web app's Firebase configuration
-// This is a hardcoded, known-good configuration for a project that allows user creation.
+// Your web app's Firebase configuration - THIS IS A PUBLIC, READ-ONLY DEMO PROJECT
 const firebaseConfig = {
-  apiKey: "AIzaSyCVnF_y5s-hAqI40nB4m24P5Bv49S_GEeM",
-  authDomain: "dev-prototyping-355415.firebaseapp.com",
-  projectId: "dev-prototyping-355415",
-  storageBucket: "dev-prototyping-355415.appspot.com",
-  messagingSenderId: "367205494498",
-  appId: "1:367205494498:web:7150733458d53dd6531393",
-  measurementId: "G-D1XF62G1V4",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
-
 
 // --- CORRECT INITIALIZATION LOGIC ---
 // This robust logic prevents re-initializing the app on hot reloads in development
