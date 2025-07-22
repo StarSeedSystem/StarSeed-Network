@@ -91,7 +91,7 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
     const postsCollection = collection(db, "posts");
     const q = query(
         postsCollection, 
-        where("destinations", "array-contains", { id: profile.id, name: profile.name, type: 'profile'})
+        where("authorId", "==", profile.id)
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
