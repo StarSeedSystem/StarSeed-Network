@@ -85,14 +85,23 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
     if (!profile?.id) return;
 
     const postsCollection = collection(db, "posts");
+    // Remove the orderBy clause to prevent the composite index error.
+    // We will sort the results on the client side.
     const q = query(
         postsCollection, 
-        where("destinations", "array-contains", { id: profile.id, name: profile.name, type: 'profile' }),
-        orderBy("createdAt", "desc")
+        where("destinations", "array-contains", { id: profile.id, name: profile.name, type: 'profile' })
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const postsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        // Sort the posts by date on the client side
+        postsData.sort((a, b) => {
+            const dateA = a.createdAt?.toDate() || 0;
+            const dateB = b.createdAt?.toDate() || 0;
+            return dateB - dateA;
+        });
+
         setPosts(postsData);
         setIsLoading(false);
     }, (error) => {
