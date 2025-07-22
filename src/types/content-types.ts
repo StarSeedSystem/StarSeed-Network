@@ -43,6 +43,7 @@ interface BaseEntity {
     banner: string;
     bannerHint: string;
     members: number;
+    type: 'community' | 'federation' | 'study_group' | 'political_party';
 }
 
 export interface Community extends BaseEntity {
@@ -66,10 +67,12 @@ export interface PoliticalParty extends BaseEntity {
 }
 
 export interface Event {
+    id: string;
     type: 'event';
     slug: string;
     name: string;
     description: string;
+    longDescription?: string;
     image: string;
     imageHint: string;
     date: string;
@@ -78,6 +81,8 @@ export interface Event {
 }
 
 export type AnyEntity = Community | FederatedEntity | StudyGroup | PoliticalParty;
+
+export type AnyRecommendedPage = AnyEntity | Event;
 
 export interface User {
   id: string;

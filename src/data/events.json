@@ -1,0 +1,37 @@
+
+{
+    "festival-musica-algoritmica": {
+        "id": "festival-musica-algoritmica",
+        "slug": "festival-musica-algoritmica",
+        "type": "event",
+        "name": "Festival de Música Algorítmica",
+        "description": "Un encuentro para explorar la música generada por código y IA.",
+        "longDescription": "El Festival de Música Algorítmica es un evento de tres días que celebra la intersección de la música, el arte y la tecnología. Contaremos con actuaciones en vivo de algorave, talleres de live coding con Sonic Pi y TidalCycles, e instalaciones de arte sonoro interactivas. Es una oportunidad para músicos, programadores y entusiastas de conectar y explorar el futuro de la creación musical.",
+        "image": "https://placehold.co/600x400/FF1493/ffffff.png?text=Algorithmic+Music",
+        "imageHint": "algorithmic music festival",
+        "date": "Próximo Fin de Semana",
+        "location": "Anfiteatro Virtual 'El Eco'",
+        "organizer": {
+            "name": "Art-AI Collective",
+            "avatar": "",
+            "avatarHint": ""
+        }
+    },
+    "conferencia-sostenibilidad": {
+        "id": "conferencia-sostenibilidad",
+        "slug": "conferencia-sostenibilidad",
+        "type": "event",
+        "name": "Conferencia de Sostenibilidad",
+        "description": "Charlas y mesas redondas sobre un futuro regenerativo.",
+        "longDescription": "Únete a la Conferencia Anual de Sostenibilidad para un día de ponencias inspiradoras y debates sobre soluciones prácticas para los desafíos ecológicos de nuestro tiempo. Líderes de opinión, científicos e innovadores compartirán sus últimos hallazgos y proyectos en áreas como energía limpia, economía circular y agricultura regenerativa.",
+        "image": "https://placehold.co/600x400/2E8B57/ffffff.png?text=Sustainability+Conf",
+        "imageHint": "sustainability conference",
+        "date": "El próximo mes",
+        "location": "Pabellón de Innovación",
+        "organizer": {
+            "name": "Innovación Sostenible",
+            "avatar": "",
+            "avatarHint": ""
+        }
+    }
+}

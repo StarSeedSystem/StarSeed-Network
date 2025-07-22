@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -7,26 +8,28 @@ import { db } from "@/data/firebase";
 import { useUser } from "@/context/UserContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star, Activity, Gavel, PlaySquare, Loader2, View } from "lucide-react";
+import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star, Activity, Gavel, PlaySquare, Loader2, View, Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Progress } from "@/components/ui/progress";
-import type { AnyEntity } from "@/types/content-types";
+import type { AnyEntity, AnyRecommendedPage, Event } from "@/types/content-types";
 import { cn } from "@/lib/utils";
 
 import communities from '@/data/communities.json';
 import federations from '@/data/federations.json';
 import studyGroups from '@/data/study-groups.json';
 import politicalParties from '@/data/political-parties.json';
+import events from '@/data/events.json';
 
-const recommendations: AnyEntity[] = [
+const recommendations: AnyRecommendedPage[] = [
     ...(Object.values(communities) as AnyEntity[]),
     ...(Object.values(federations) as AnyEntity[]),
     ...(Object.values(studyGroups) as AnyEntity[]),
     ...(Object.values(politicalParties) as AnyEntity[]),
+    ...(Object.values(events) as Event[]),
 ];
 
 const activeParticipations = {
@@ -51,22 +54,24 @@ const activeParticipations = {
     }]
 };
 
-const getEntityPath = (type: AnyEntity['type'], slug: string) => {
+const getEntityPath = (type: AnyRecommendedPage['type'], slug: string) => {
     switch (type) {
         case 'community': return `/community/${slug}`;
         case 'federation': return `/federated-entity/${slug}`;
         case 'study_group': return `/study-group/${slug}`;
         case 'political_party': return `/party/${slug}`;
+        case 'event': return `/event/${slug}`;
         default: return '#';
     }
 }
 
-const getEntityTypeLabel = (type: AnyEntity['type']) => {
+const getEntityTypeLabel = (type: AnyRecommendedPage['type']) => {
     switch (type) {
         case 'community': return 'Comunidad';
         case 'federation': return 'E. Federada';
         case 'study_group': return 'G. de Estudio';
         case 'political_party': return 'Partido';
+        case 'event': return 'Evento';
         default: return 'Página';
     }
 }
@@ -77,7 +82,7 @@ const entityCreationLinks = [
     { href: "/participations/create/study-group", icon: BookOpen, label: "Grupo Estudio", description: "Para el aprendizaje colaborativo." },
     { href: "/participations/create/party", icon: Shield, label: "Partido Político", description: "Una fuerza ideológica organizada." },
     { href: "/participations/create/proposal", icon: Gavel, label: "Propuesta", description: "Presenta una nueva ley o directiva." },
-    { href: "#", icon: Calendar, label: "Evento", description: "Organiza encuentros y actividades.", disabled: true },
+    { href: "/participations/create/event", icon: Calendar, label: "Evento", description: "Organiza encuentros y actividades.", disabled: false },
 ];
 
 const ConnectionCard = ({ item }: { item: AnyEntity }) => {
@@ -108,7 +113,7 @@ export default function ConnectionsHubPage() {
     const { user } = useUser();
     const [myPages, setMyPages] = useState<AnyEntity[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [recommendationFilter, setRecommendationFilter] = useState('all');
+    const [recommendationFilter, setRecommendationFilter] = useState('for-you');
 
     useEffect(() => {
         setIsLoading(true);
@@ -132,7 +137,7 @@ export default function ConnectionsHubPage() {
                     const allCreatedPages = allCreatedPagesNested.flat();
                     
                     const joinedPagesIds = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-                    const joinedPages = recommendations.filter(rec => joinedPagesIds[rec.id]);
+                    const joinedPages = recommendations.filter(rec => rec.type !== 'event' && joinedPagesIds[rec.id]) as AnyEntity[];
                     
                     const combinedPages = [...allCreatedPages, ...joinedPages];
                     const uniquePages = Array.from(new Map(combinedPages.map(item => [item.id, item])).values());
@@ -140,16 +145,15 @@ export default function ConnectionsHubPage() {
                     setMyPages(uniquePages);
                 } catch (error) {
                     console.error("Error fetching created pages:", error);
-                    // On permission error, we still show joined pages
                     const joinedPagesIds = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-                    const joinedPages = recommendations.filter(rec => joinedPagesIds[rec.id]);
+                    const joinedPages = recommendations.filter(rec => rec.type !== 'event' && joinedPagesIds[rec.id]) as AnyEntity[];
                     setMyPages(joinedPages);
                 }
             };
             fetchCreatedPages();
         } else {
              const joinedPagesIds = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-             const joinedPages = recommendations.filter(rec => joinedPagesIds[rec.id]);
+             const joinedPages = recommendations.filter(rec => rec.type !== 'event' && joinedPagesIds[rec.id]) as AnyEntity[];
              setMyPages(joinedPages);
         }
         setIsLoading(false);
@@ -158,6 +162,10 @@ export default function ConnectionsHubPage() {
     const filteredRecommendations = useMemo(() => {
         if (recommendationFilter === 'all') {
             return recommendations;
+        }
+        if (recommendationFilter === 'for-you') {
+            // Placeholder for AI logic, for now show a curated list
+            return recommendations.slice(0, 5);
         }
         return recommendations.filter(r => r.type === recommendationFilter);
     }, [recommendationFilter]);
@@ -218,11 +226,12 @@ export default function ConnectionsHubPage() {
             </CardHeader>
             <CardContent>
                  <Tabs value={recommendationFilter} onValueChange={setRecommendationFilter} className="w-full mb-4">
-                    <TabsList className="grid w-full grid-cols-4 bg-card/80">
+                    <TabsList className="grid w-full grid-cols-5 bg-card/80">
+                        <TabsTrigger value="for-you" className="flex items-center gap-1.5"><Sparkles className="h-4 w-4 text-primary" /> Para ti</TabsTrigger>
                         <TabsTrigger value="all">Todos</TabsTrigger>
                         <TabsTrigger value="community">Comunidades</TabsTrigger>
+                        <TabsTrigger value="event">Eventos</TabsTrigger>
                         <TabsTrigger value="political_party">Partidos</TabsTrigger>
-                        <TabsTrigger value="study_group">Grupos</TabsTrigger>
                     </TabsList>
                 </Tabs>
                 <Carousel opts={{ align: "start", loop: false }} className="w-full">
@@ -233,7 +242,7 @@ export default function ConnectionsHubPage() {
                                 <CardContent className="flex flex-col p-4 gap-3 flex-grow">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="h-12 w-12">
-                                            <AvatarImage src={item.avatar} alt={item.name} data-ai-hint={item.avatarHint} />
+                                            <AvatarImage src={'avatar' in item ? item.avatar : item.image} alt={item.name} data-ai-hint={'avatarHint' in item ? item.avatarHint : item.imageHint} />
                                             <AvatarFallback>{item.name.substring(0,2)}</AvatarFallback>
                                         </Avatar>
                                         <div className="flex-1 overflow-hidden">
