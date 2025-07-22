@@ -7,7 +7,7 @@ import { db } from "@/data/firebase";
 import { useUser } from "@/context/UserContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star, Activity, Gavel, PlaySquare, Loader2, View, Sparkles, SlidersHorizontal, RefreshCw } from "lucide-react";
+import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star, Activity, Gavel, PlaySquare, Loader2, View, Sparkles, SlidersHorizontal, RefreshCw, MessageSquare } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -34,12 +34,14 @@ import federations from '@/data/federations.json';
 import studyGroups from '@/data/study-groups.json';
 import politicalParties from '@/data/political-parties.json';
 import events from '@/data/events.json';
+import chatGroups from '@/data/chat-groups.json';
 
 const recommendations: AnyRecommendedPage[] = [
     ...(Object.values(communities) as AnyEntity[]),
     ...(Object.values(federations) as AnyEntity[]),
     ...(Object.values(studyGroups) as AnyEntity[]),
     ...(Object.values(politicalParties) as AnyEntity[]),
+    ...(Object.values(chatGroups) as AnyEntity[]),
     ...(Object.values(events) as Event[]),
 ];
 
@@ -70,6 +72,7 @@ const getEntityPath = (type: AnyRecommendedPage['type'], slug: string) => {
         case 'community': return `/community/${slug}`;
         case 'federation': return `/federated-entity/${slug}`;
         case 'study_group': return `/study-group/${slug}`;
+        case 'chat_group': return `/chat-group/${slug}`;
         case 'political_party': return `/party/${slug}`;
         case 'event': return `/event/${slug}`;
         default: return '#';
@@ -81,6 +84,7 @@ const getEntityTypeLabel = (type: AnyRecommendedPage['type']) => {
         case 'community': return 'Comunidad';
         case 'federation': return 'E. Federada';
         case 'study_group': return 'G. de Estudio';
+        case 'chat_group': return 'G. de Chat';
         case 'political_party': return 'Partido';
         case 'event': return 'Evento';
         default: return 'Página';
@@ -91,6 +95,7 @@ const entityCreationLinks = [
     { href: "/participations/create/community", icon: Globe, label: "Comunidad", description: "Un espacio para la colaboración." },
     { href: "/participations/create/federated-entity", icon: Landmark, label: "E. Federada", description: "Una entidad formal en la red." },
     { href: "/participations/create/study-group", icon: BookOpen, label: "Grupo Estudio", description: "Para el aprendizaje colaborativo." },
+    { href: "/participations/create/chat-group", icon: MessageSquare, label: "Grupo Chat", description: "Un espacio público de conversación." },
     { href: "/participations/create/party", icon: Shield, label: "Partido Político", description: "Una fuerza ideológica organizada." },
     { href: "/participations/create/proposal", icon: Gavel, label: "Propuesta", description: "Presenta una nueva ley o directiva." },
     { href: "/participations/create/event", icon: Calendar, label: "Evento", description: "Organiza encuentros y actividades.", disabled: false },
@@ -138,6 +143,7 @@ export default function ConnectionsHubPage() {
                     { key: 'federated_entities', type: 'federation' },
                     { key: 'study_groups', type: 'study_group' },
                     { key: 'political_parties', type: 'political_party' },
+                    { key: 'chat_groups', type: 'chat_group' },
                 ];
                 
                 try {
@@ -187,16 +193,15 @@ export default function ConnectionsHubPage() {
         if (recommendationFilter === 'all') {
             return recommendations;
         }
-        if (recommendationFilter === 'for-you') {
-            // This is where more complex AI logic would go based on `personalizedFilter`
-            return recommendations.slice(0, 5).sort(() => Math.random() - 0.5); // shuffle for simulation
+        if (recommendationFilter === 'group') {
+            return recommendations.filter(r => r.type === 'study_group' || r.type === 'chat_group');
         }
         return recommendations.filter(r => r.type === recommendationFilter);
-    }, [recommendationFilter, personalizedFilter]);
+    }, [recommendationFilter]);
 
     const myCommunities = myPages.filter(p => p.type === 'community');
     const myFederations = myPages.filter(p => p.type === 'federation');
-    const myStudyGroups = myPages.filter(p => p.type === 'study_group');
+    const myGroups = myPages.filter(p => p.type === 'study_group' || p.type === 'chat_group');
     const myPoliticalParties = myPages.filter(p => p.type === 'political_party');
 
     const renderList = (items: AnyEntity[]) => {
@@ -229,7 +234,7 @@ export default function ConnectionsHubPage() {
                 <CardTitle className="font-headline text-2xl">Crear y Proponer Páginas Públicas</CardTitle>
                 <CardDescription>Inicia nuevos espacios de colaboración y organización en la red.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {entityCreationLinks.map(link => (
                     <Button asChild variant="outline" className="h-auto flex-col p-3 gap-2 text-center" key={link.href} disabled={link.disabled}>
                         <Link href={link.href}>
@@ -255,8 +260,8 @@ export default function ConnectionsHubPage() {
                             <TabsTrigger value="all">Todos</TabsTrigger>
                             <TabsTrigger value="community">Comunidades</TabsTrigger>
                             <TabsTrigger value="federation">Entidades</TabsTrigger>
+                            <TabsTrigger value="group">Grupos</TabsTrigger>
                             <TabsTrigger value="event">Eventos</TabsTrigger>
-                            <TabsTrigger value="political_party">Partidos</TabsTrigger>
                         </TabsList>
                     </Tabs>
                     <DropdownMenu>
@@ -381,29 +386,27 @@ export default function ConnectionsHubPage() {
                     <Landmark className="mr-2 h-5 w-5" />
                     Entidades ({myFederations.length})
                 </TabsTrigger>
-                <TabsTrigger value="events" className="rounded-lg py-2 text-base" disabled>
-                    <Calendar className="mr-2 h-5 w-5" />
-                    Eventos (0)
-                </TabsTrigger>
-                <TabsTrigger value="study_groups" className="rounded-lg py-2 text-base">
-                    <BookOpen className="mr-2 h-5 w-5" />
-                    Grupos ({myStudyGroups.length})
+                <TabsTrigger value="groups" className="rounded-lg py-2 text-base">
+                    <MessageSquare className="mr-2 h-5 w-5" />
+                    Grupos ({myGroups.length})
                 </TabsTrigger>
                 <TabsTrigger value="political_parties" className="rounded-lg py-2 text-base">
                     <Shield className="mr-2 h-5 w-5" />
                     Partidos ({myPoliticalParties.length})
                 </TabsTrigger>
+                <TabsTrigger value="events" className="rounded-lg py-2 text-base" disabled>
+                    <Calendar className="mr-2 h-5 w-5" />
+                    Eventos (0)
+                </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="communities" className="mt-6">{renderList(myCommunities)}</TabsContent>
                 <TabsContent value="federations" className="mt-6">{renderList(myFederations)}</TabsContent>
-                <TabsContent value="events" className="mt-6">{renderList([])}</TabsContent>
-                <TabsContent value="study_groups" className="mt-6">{renderList(myStudyGroups)}</TabsContent>
+                <TabsContent value="groups" className="mt-6">{renderList(myGroups)}</TabsContent>
                 <TabsContent value="political_parties" className="mt-6">{renderList(myPoliticalParties)}</TabsContent>
+                <TabsContent value="events" className="mt-6">{renderList([])}</TabsContent>
             </Tabs>
        </div>
     </div>
   );
 }
-
-    

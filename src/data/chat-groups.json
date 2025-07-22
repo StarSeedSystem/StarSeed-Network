@@ -1,0 +1,31 @@
+
+{
+    "ciencia-ficcion-fans": {
+        "id": "ciencia-ficcion-fans",
+        "slug": "ciencia-ficcion-fans",
+        "name": "Aficionados a la Ciencia Ficción",
+        "description": "Un lugar para hablar de libros, películas y series de sci-fi.",
+        "longDescription": "Este grupo es para todos los amantes de la ciencia ficción en todas sus formas. Desde los clásicos de Asimov y Clarke hasta el cyberpunk más moderno y el solarpunk más esperanzador. Comparte tus lecturas, descubre nuevas películas y debate sobre los futuros que imaginamos.",
+        "avatar": "https://avatar.vercel.sh/ciencia-ficcion-fans.png",
+        "avatarHint": "rocket ship",
+        "banner": "https://placehold.co/1200x400/1E90FF/ffffff.png?text=Sci-Fi+Fans",
+        "bannerHint": "starship flying through space",
+        "members": 481,
+        "type": "chat_group",
+        "creatorId": "system"
+    },
+    "gaming-lounge": {
+        "id": "gaming-lounge",
+        "slug": "gaming-lounge",
+        "name": "Gaming Lounge",
+        "description": "Busca compañeros de equipo, comparte tus mejores jugadas y habla de los últimos lanzamientos.",
+        "longDescription": "El Gaming Lounge es el punto de encuentro para todos los gamers de la red. No importa si prefieres los RPG inmersivos, los shooters competitivos o los juegos indie más relajados, aquí encontrarás a gente con quien compartir tu pasión. Organizamos torneos, compartimos guías y nos mantenemos al día de todas las novedades del mundo del videojuego.",
+        "avatar": "https://avatar.vercel.sh/gaming-lounge.png",
+        "avatarHint": "game controller",
+        "banner": "https://placehold.co/1200x400/9400D3/ffffff.png?text=Gaming+Lounge",
+        "bannerHint": "neon gaming setup",
+        "members": 1852,
+        "type": "chat_group",
+        "creatorId": "system"
+    }
+}

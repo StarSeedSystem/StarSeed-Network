@@ -1,5 +1,6 @@
 
 
+
 export interface Author {
     name: string;
     avatar: string;
@@ -43,7 +44,7 @@ interface BaseEntity {
     banner: string;
     bannerHint: string;
     members: number;
-    type: 'community' | 'federation' | 'study_group' | 'political_party';
+    type: 'community' | 'federation' | 'study_group' | 'political_party' | 'chat_group';
 }
 
 export interface Community extends BaseEntity {
@@ -59,6 +60,10 @@ export interface FederatedEntity extends BaseEntity {
 export interface StudyGroup extends BaseEntity {
     type: 'study_group';
     topic: string;
+}
+
+export interface ChatGroup extends BaseEntity {
+    type: 'chat_group';
 }
 
 export interface PoliticalParty extends BaseEntity {
@@ -80,7 +85,7 @@ export interface Event {
     organizer: Author;
 }
 
-export type AnyEntity = Community | FederatedEntity | StudyGroup | PoliticalParty;
+export type AnyEntity = Community | FederatedEntity | StudyGroup | PoliticalParty | ChatGroup;
 
 export type AnyRecommendedPage = AnyEntity | Event;
 
@@ -110,3 +115,4 @@ export interface User {
     showLibrary: 'public' | 'private' | 'friends';
   };
 }
+
