@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { useUser } from "@/context/UserContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star, Activity, Gavel, PlaySquare, Loader2 } from "lucide-react";
+import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star, Activity, Gavel, PlaySquare, Loader2, View } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -18,45 +18,45 @@ import type { AnyEntity } from "@/types/content-types";
 
 const recommendations = [
     {
-        name: "Helios",
-        slug: "helios",
-        description: "Ingeniero de redes energéticas.",
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "sun god",
-        type: "profile"
-    },
-    {
-        name: "Debate Filosófico",
-        slug: "debate-filosofico",
-        description: "Comunidad para la discusión profunda.",
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "glowing brain",
+        name: "Innovación Sostenible",
+        slug: "innovacion-sostenible",
+        description: "Colectivo para construir un futuro más verde.",
+        avatar: "https://avatar.vercel.sh/innovacion-sostenible.png",
+        avatarHint: "green leaf",
         type: "community"
     },
     {
-        name: "Festival de Música Algorítmica",
-        slug: "festival-musica",
-        description: "Evento cultural este fin de semana.",
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "sound waves",
-        type: "event"
+        name: "Partido de la Conciencia Digital",
+        slug: "partido-conciencia-digital",
+        description: "Promoviendo la soberanía de datos y la IA ética.",
+        avatar: "https://avatar.vercel.sh/partido-conciencia-digital.png",
+        avatarHint: "digital brain",
+        type: "political_party"
     },
-    {
-        name: "Grupo de Estudio: IA Generativa",
-        slug: "ia-generativa-estudio",
-        description: "Explora los últimos modelos y técnicas.",
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "ai code",
+     {
+        name: "Exploradores de Computación Cuántica",
+        slug: "exploradores-cuanticos",
+        description: "Grupo para investigar los límites de la computación.",
+        avatar: "https://avatar.vercel.sh/exploradores-cuanticos.png",
+        avatarHint: "quantum atom",
         type: "study_group"
     },
     {
-        name: "Partido: Futuro Sostenible",
-        slug: "futuro-sostenible",
-        description: "Promoviendo políticas ecológicas.",
-        avatar: "https://placehold.co/100x100.png",
-        avatarHint: "green future",
-        type: "political_party"
-    }
+        name: "Art-AI Collective",
+        slug: "art-ai-collective",
+        description: "Comunidad para la exploración de la creatividad emergente.",
+        avatar: "https://avatar.vercel.sh/art-ai-collective.png",
+        avatarHint: "abstract art",
+        type: "community"
+    },
+    {
+        name: "Consejo de Ética Digital",
+        slug: "consejo-etica-digital",
+        description: "Entidad que supervisa el desarrollo ético de la IA.",
+        avatar: "https://avatar.vercel.sh/consejo-etica-digital.png",
+        avatarHint: "balanced scale",
+        type: "federation"
+    },
 ];
 
 const activeParticipations = {
@@ -85,15 +85,18 @@ type ConnectionCardProps = {
     item: AnyEntity;
 }
 
-const ConnectionCard = ({ item }: ConnectionCardProps) => {
-    let href = "";
-    switch (item.type) {
-        case 'community': href = `/community/${item.slug}`; break;
-        case 'federation': href = `/federated-entity/${item.slug}`; break;
-        case 'study_group': href = `/study-group/${item.slug}`; break;
-        case 'political_party': href = `/party/${item.slug}`; break;
-        default: href = '#';
+const getEntityPath = (type: AnyEntity['type'], slug: string) => {
+    switch (type) {
+        case 'community': return `/community/${slug}`;
+        case 'federation': return `/federated-entity/${slug}`;
+        case 'study_group': return `/study-group/${slug}`;
+        case 'political_party': return `/party/${slug}`;
+        default: return '#';
     }
+}
+
+const ConnectionCard = ({ item }: ConnectionCardProps) => {
+    const href = getEntityPath(item.type, item.slug);
 
     return (
         <Card className="glass-card flex items-center p-4 gap-4">
@@ -105,7 +108,7 @@ const ConnectionCard = ({ item }: ConnectionCardProps) => {
                 <h3 className="font-headline text-lg font-semibold">{item.name}</h3>
                 <p className="text-sm font-semibold flex items-center mt-1">
                     <Users className="h-4 w-4 mr-2 text-primary" /> 
-                    {item.members.toLocaleString()} Miembros
+                    {Array.isArray(item.members) ? item.members.length : item.members.toLocaleString()} Miembros
                 </p>
             </div>
             <Button asChild variant="outline">
@@ -122,6 +125,7 @@ export default function ConnectionsHubPage() {
     const [myStudyGroups, setMyStudyGroups] = useState<AnyEntity[]>([]);
     const [myPoliticalParties, setMyPoliticalParties] = useState<AnyEntity[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [recommendationFilter, setRecommendationFilter] = useState('all');
 
     useEffect(() => {
         if (!user) {
@@ -140,8 +144,6 @@ export default function ConnectionsHubPage() {
                 ];
 
                 const promises = collections.map(async ({ key, setter, type }) => {
-                    // This is a simplified query. In a real app, you'd check a 'members' subcollection.
-                    // For now, we fetch entities created by the current user as a proxy for membership.
                     const q = query(collection(db, key), where("creatorId", "==", user.uid));
                     const querySnapshot = await getDocs(q);
                     const data = querySnapshot.docs.map(doc => ({ type, id: doc.id, ...doc.data() } as AnyEntity));
@@ -159,6 +161,13 @@ export default function ConnectionsHubPage() {
 
         fetchAllData();
     }, [user]);
+    
+    const filteredRecommendations = useMemo(() => {
+        if (recommendationFilter === 'all') {
+            return recommendations;
+        }
+        return recommendations.filter(r => r.type === recommendationFilter);
+    }, [recommendationFilter]);
 
     const renderList = (items: AnyEntity[]) => {
         if (isLoading) {
@@ -185,7 +194,7 @@ export default function ConnectionsHubPage() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="glass-card">
             <CardHeader>
                 <CardTitle className="font-headline text-2xl">Crear y Proponer</CardTitle>
@@ -206,25 +215,31 @@ export default function ConnectionsHubPage() {
                 <CardDescription>Descubre nuevas conexiones basadas en tus intereses y actividad.</CardDescription>
             </CardHeader>
             <CardContent>
-                <Carousel
-                    opts={{ align: "start", loop: true, }}
-                    className="w-full"
-                >
-                    <CarouselContent>
-                        {recommendations.map((item, index) => (
-                        <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                 <Tabs value={recommendationFilter} onValueChange={setRecommendationFilter} className="w-full mb-4">
+                    <TabsList className="grid w-full grid-cols-4 bg-card/80">
+                        <TabsTrigger value="all">Todos</TabsTrigger>
+                        <TabsTrigger value="community">Comunidades</TabsTrigger>
+                        <TabsTrigger value="political_party">Partidos</TabsTrigger>
+                        <TabsTrigger value="study_group">Grupos</TabsTrigger>
+                    </TabsList>
+                </Tabs>
+                <Carousel opts={{ align: "start", loop: false }} className="w-full">
+                    <CarouselContent className="-ml-2">
+                        {filteredRecommendations.map((item, index) => (
+                        <CarouselItem key={index} className="pl-2 basis-full sm:basis-1/2 md:basis-1/3">
                             <div className="p-1">
-                            <Card className="bg-primary/5">
-                                <CardContent className="flex flex-col items-center text-center p-4 gap-3">
+                            <Card className="bg-primary/5 h-full flex flex-col">
+                                <CardContent className="flex flex-col items-center text-center p-4 gap-3 flex-grow">
                                     <Avatar className="h-16 w-16">
                                         <AvatarImage src={item.avatar} alt={item.name} data-ai-hint={item.avatarHint} />
                                         <AvatarFallback>{item.name.substring(0,2)}</AvatarFallback>
                                     </Avatar>
                                     <span className="font-semibold">{item.name}</span>
-                                    <p className="text-xs text-muted-foreground h-8">{item.description}</p>
-                                    <Button size="sm" variant="secondary" className="w-full">
-                                        <PlusCircle className="mr-2 h-4 w-4"/>
-                                        {item.type === 'profile' ? 'Seguir' : 'Unirse'}
+                                    <p className="text-xs text-muted-foreground h-10">{item.description}</p>
+                                    <Button size="sm" variant="secondary" className="w-full mt-auto" asChild>
+                                        <Link href={getEntityPath(item.type as AnyEntity['type'], item.slug)}>
+                                            <View className="mr-2 h-4 w-4"/> Ver Perfil
+                                        </Link>
                                     </Button>
                                 </CardContent>
                             </Card>
