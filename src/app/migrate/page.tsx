@@ -14,14 +14,17 @@ import communitiesData from "@/data/communities.json";
 import federationsData from "@/data/federations.json";
 import partiesData from "@/data/political-parties.json";
 import studyGroupsData from "@/data/study-groups.json";
+import chatGroupsData from "@/data/chat-groups.json";
+import eventsData from "@/data/events.json";
 
-// The data is structured as { "communities": { "slug-1": { ... }, "slug-2": { ... } } }
+// The data is structured as { "slug-1": { ... }, "slug-2": { ... } }
 // We need to convert the inner object to an array.
-
-const communitiesArray = Object.values(communitiesData.communities);
-const federationsArray = Object.values(federationsData.federations);
-const partiesArray = Object.values(partiesData.parties);
-const studyGroupsArray = Object.values(studyGroupsData.groups);
+const communitiesArray = Object.values(communitiesData);
+const federationsArray = Object.values(federationsData);
+const partiesArray = Object.values(partiesData);
+const studyGroupsArray = Object.values(studyGroupsData);
+const chatGroupsArray = Object.values(chatGroupsData);
+const eventsArray = Object.values(eventsData);
 
 
 // Helper function to perform the migration for a specific collection
@@ -62,11 +65,17 @@ export default function MigratePage() {
             const federationsResult = await migrateCollection('federated_entities', federationsArray, 'slug');
             toast({ title: "Federated Entities", description: federationsResult.message });
 
-            const partiesResult = await migrateCollection('parties', partiesArray, 'slug');
+            const partiesResult = await migrateCollection('political_parties', partiesArray, 'slug');
             toast({ title: "Political Parties", description: partiesResult.message });
             
             const studyGroupsResult = await migrateCollection('study_groups', studyGroupsArray, 'slug');
             toast({ title: "Study Groups", description: studyGroupsResult.message });
+            
+            const chatGroupsResult = await migrateCollection('chat_groups', chatGroupsArray, 'slug');
+            toast({ title: "Chat Groups", description: chatGroupsResult.message });
+
+            const eventsResult = await migrateCollection('events', eventsArray, 'slug');
+            toast({ title: "Events", description: eventsResult.message });
 
             toast({ title: "Migration Complete!", description: "All example data is now live on Firestore.", variant: "default" });
 
@@ -74,7 +83,7 @@ export default function MigratePage() {
             console.error("Migration failed:", error);
             toast({
                 title: "Migration Failed",
-                description: error.message || "An unknown error occurred.",
+                description: error.message || "An unknown error occurred. Make sure your Firestore security rules are correctly set up.",
                 variant: "destructive",
             });
         } finally {
@@ -83,15 +92,15 @@ export default function MigratePage() {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center py-12">
             <Card className="glass-card max-w-lg">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 font-headline text-2xl">
                         <Database className="text-primary"/>
-                        Firestore Data Migration Tool (v2)
+                        Firestore Data Migration Tool
                     </CardTitle>
                     <CardDescription>
-                        This tool will upload the initial example data from local JSON files into your live Firestore database, making it the single source of truth.
+                        This tool will upload the initial example data from local JSON files into your live Firestore database. This makes the app fully functional with server-side data.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -99,7 +108,7 @@ export default function MigratePage() {
                         <AlertTriangle className="h-5 w-5 mt-1"/>
                         <div>
                             <h4 className="font-bold">Important</h4>
-                            <p className="text-sm">This is a one-time operation. Running it again will overwrite any changes you've made to the example documents in Firestore.</p>
+                            <p className="text-sm">Run this operation once to populate your database. Running it again will overwrite any changes you've made to the example documents in Firestore.</p>
                         </div>
                     </div>
                     <Button onClick={handleMigrateAll} disabled={isLoading} className="w-full" size="lg">

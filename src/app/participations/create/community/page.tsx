@@ -13,6 +13,8 @@ import { ArrowLeft, Check, Loader2, Users } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { slugify } from "@/lib/utils";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/data/firebase";
 
 export default function CreateCommunityPage() {
     const router = useRouter();
@@ -39,23 +41,34 @@ export default function CreateCommunityPage() {
             return;
         }
 
-        // Simulate creation locally due to Firestore permission issues
-        // In a real app, this would save to Firestore.
-        console.log("Simulating community creation:", {
-            name: communityName,
-            slug: communitySlug,
-            description: communityDescription,
-        });
+        try {
+            const communityRef = doc(db, "communities", communitySlug);
+            await setDoc(communityRef, {
+                id: communitySlug,
+                slug: communitySlug,
+                name: communityName,
+                description: communityDescription,
+                longDescription: communityLongDescription,
+                avatar: `https://avatar.vercel.sh/${communitySlug}.png`,
+                avatarHint: "community logo",
+                banner: `https://placehold.co/1200x400/1a1a1b/ffffff.png?text=${encodeURIComponent(communityName)}`,
+                bannerHint: "community banner",
+                members: [authUser.uid], // Creator is the first member
+                creatorId: authUser.uid,
+                createdAt: serverTimestamp(),
+            });
 
-        setTimeout(() => {
             toast({
                 title: "¡Comunidad Creada!",
                 description: `Tu comunidad "${communityName}" ha sido creada y ya está activa.`,
             });
-            // We can't redirect to a non-existent page, so we go back to the hub
-            router.push(`/participations`); 
+            router.push(`/community/${communitySlug}`);
+        } catch (error: any) {
+            console.error("Error creating community:", error);
+            toast({ title: "Error", description: error.message, variant: "destructive"});
+        } finally {
             setIsLoading(false);
-        }, 1000);
+        }
     };
 
     return (

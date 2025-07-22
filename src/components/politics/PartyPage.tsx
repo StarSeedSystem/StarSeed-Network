@@ -14,8 +14,8 @@ import Link from "next/link";
 import { PartyFeed } from "./PartyFeed";
 import { BackButton } from "../utils/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { PoliticalParty } from "@/types/content-types";
-import partyData from "@/data/political-parties.json";
+import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { db } from "@/data/firebase";
 
 interface PartyPageProps {
   slug: string;
@@ -39,53 +39,54 @@ function PartySkeleton() {
 
 export function PartyPage({ slug }: PartyPageProps) {
   const { user: authUser, loading: authLoading } = useUser();
-  const [party, setParty] = useState<PoliticalParty | null>(null);
+  const [party, setParty] = useState<DocumentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
   const [isMember, setIsMember] = useState(false);
-  const [memberCount, setMemberCount] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
-    const localData = (partyData as any)[slug];
-    if (localData) {
-        setParty(localData);
-        setMemberCount(localData.members || 0);
-    }
-    setIsLoading(false);
-  }, [slug]);
+    if (!slug) return;
+    const docRef = doc(db, "political_parties", slug);
+    const unsubscribe = onSnapshot(docRef, (doc) => {
+        if (doc.exists()) {
+            const data = { id: doc.id, ...doc.data() };
+            setParty(data);
+            if (authUser) {
+                setIsMember(data.members?.includes(authUser.uid));
+            }
+        } else {
+            setParty(null);
+        }
+        setIsLoading(false);
+    });
 
-  useEffect(() => {
-    if (party && authUser) {
-        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-        setIsMember(!!localMembers[party.id]);
-    }
-  }, [party, authUser]);
+    return () => unsubscribe();
+  }, [slug, authUser]);
 
-  const handleJoinLeave = () => {
+  const handleJoinLeave = async () => {
       if (!authUser || !party?.id) {
           toast({ title: "Authentication Required", variant: "destructive" });
           return;
       }
       setIsJoiningLeaving(true);
-      setTimeout(() => {
-        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-        const newIsMember = !isMember;
+      const docRef = doc(db, "political_parties", party.id);
 
-        if (newIsMember) {
-            localMembers[party.id] = true;
-            setMemberCount(prev => prev + 1);
-            toast({ title: "Joined Party", description: `You have joined ${party.name}.` });
-        } else {
-            delete localMembers[party.id];
-            setMemberCount(prev => prev - 1);
+      try {
+        if (isMember) {
+            await updateDoc(docRef, { members: arrayRemove(authUser.uid) });
             toast({ title: "Left Party", description: `You have left ${party.name}.` });
+        } else {
+            await updateDoc(docRef, { members: arrayUnion(authUser.uid) });
+            toast({ title: "Joined Party", description: `You are now a member of ${party.name}.` });
         }
-        
-        localStorage.setItem('joined_pages', JSON.stringify(localMembers));
-        setIsMember(newIsMember);
+        setIsMember(!isMember);
+      } catch (error: any) {
+        console.error("Error joining/leaving party:", error);
+        toast({ title: "Error", description: error.message, variant: "destructive"});
+      } finally {
         setIsJoiningLeaving(false);
-      }, 300);
+      }
   }
 
   if (isLoading || authLoading) {
@@ -95,6 +96,8 @@ export function PartyPage({ slug }: PartyPageProps) {
   if (!party) {
     notFound();
   }
+
+  const memberCount = party?.members?.length || 0;
 
   return (
     <div className="space-y-6">

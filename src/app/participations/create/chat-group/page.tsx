@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Check, MessageSquare, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { slugify } from "@/lib/utils";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/data/firebase";
 
 export default function CreateChatGroupPage() {
     const router = useRouter();
@@ -21,6 +23,7 @@ export default function CreateChatGroupPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [groupName, setGroupName] = useState("");
     const [groupDescription, setGroupDescription] = useState("");
+    const [groupLongDescription, setGroupLongDescription] = useState("");
     
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,22 +40,34 @@ export default function CreateChatGroupPage() {
             return;
         }
 
-        // In a real app, this would save to Firestore
-        console.log({
-            name: groupName,
-            slug: groupSlug,
-            description: groupDescription,
-            creatorId: authUser.uid,
-        });
+        try {
+            const groupRef = doc(db, "chat_groups", groupSlug);
+            await setDoc(groupRef, {
+                id: groupSlug,
+                slug: groupSlug,
+                name: groupName,
+                description: groupDescription,
+                longDescription: groupLongDescription,
+                avatar: `https://avatar.vercel.sh/${groupSlug}.png`,
+                avatarHint: "group logo",
+                banner: `https://placehold.co/1200x400/2a2a2b/ffffff.png?text=${encodeURIComponent(groupName)}`,
+                bannerHint: "group banner",
+                members: [authUser.uid],
+                creatorId: authUser.uid,
+                createdAt: serverTimestamp(),
+            });
 
-        setTimeout(() => {
              toast({
                 title: "¡Grupo de Chat Creado!",
                 description: `Tu grupo "${groupName}" ha sido creado.`,
             });
             router.push(`/chat-group/${groupSlug}`);
+        } catch (error: any) {
+            console.error("Error creating chat group:", error);
+            toast({ title: "Error", description: error.message, variant: "destructive"});
+        } finally {
             setIsLoading(false);
-        }, 1000);
+        }
     };
 
     return (
@@ -80,7 +95,11 @@ export default function CreateChatGroupPage() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="group-description">Descripción Corta del Grupo</Label>
-                            <Textarea id="group-description" placeholder="Un lugar para hablar de libros, películas y series de ciencia ficción." required value={groupDescription} onChange={(e) => setGroupDescription(e.target.value)} disabled={isLoading} />
+                            <Input id="group-description" placeholder="Un lugar para hablar de libros, películas y series de ciencia ficción." required value={groupDescription} onChange={(e) => setGroupDescription(e.target.value)} disabled={isLoading} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="group-long-description">Descripción Larga (Opcional)</Label>
+                            <Textarea id="group-long-description" placeholder="Describe con más detalle la misión y las reglas del grupo." value={groupLongDescription} onChange={(e) => setGroupLongDescription(e.target.value)} disabled={isLoading} />
                         </div>
                         <div className="flex justify-end pt-4">
                             <Button size="lg" type="submit" disabled={isLoading || !groupName || !groupDescription}>

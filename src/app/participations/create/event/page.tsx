@@ -12,21 +12,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Check, Calendar, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { slugify } from "@/lib/utils";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/data/firebase";
 
 export default function CreateEventPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const { user: authUser } = useUser();
+    const { user: authUser, profile } = useUser();
 
     const [isLoading, setIsLoading] = useState(false);
     const [eventName, setEventName] = useState("");
     const [eventDescription, setEventDescription] = useState("");
+    const [eventLongDescription, setEventLongDescription] = useState("");
     const [eventDate, setEventDate] = useState("");
     const [eventLocation, setEventLocation] = useState("");
     
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!authUser) {
+        if (!authUser || !profile) {
             toast({ title: "Error", description: "You must be logged in to create an event.", variant: "destructive" });
             return;
         }
@@ -39,24 +42,39 @@ export default function CreateEventPage() {
             return;
         }
 
-        // In a real app, this would save to Firestore
-        console.log({
-            name: eventName,
-            slug: eventSlug,
-            description: eventDescription,
-            date: eventDate,
-            location: eventLocation,
-            creatorId: authUser.uid,
-        });
-
-        setTimeout(() => {
+        try {
+            const eventRef = doc(db, "events", eventSlug);
+            await setDoc(eventRef, {
+                id: eventSlug,
+                slug: eventSlug,
+                name: eventName,
+                description: eventDescription,
+                longDescription: eventLongDescription,
+                date: eventDate,
+                location: eventLocation,
+                image: `https://placehold.co/1200x400/3a3a3b/ffffff.png?text=${encodeURIComponent(eventName)}`,
+                imageHint: "event banner",
+                organizer: {
+                    name: profile.name,
+                    avatar: profile.avatarUrl,
+                    avatarHint: "user avatar"
+                },
+                attendees: [authUser.uid],
+                creatorId: authUser.uid,
+                createdAt: serverTimestamp(),
+            });
+            
              toast({
                 title: "¡Evento Creado!",
                 description: `Tu evento "${eventName}" ha sido publicado.`,
             });
             router.push(`/event/${eventSlug}`);
+        } catch (error: any) {
+            console.error("Error creating event:", error);
+            toast({ title: "Error", description: error.message, variant: "destructive"});
+        } finally {
             setIsLoading(false);
-        }, 1000);
+        }
     };
 
     return (
@@ -93,8 +111,12 @@ export default function CreateEventPage() {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="event-description">Descripción del Evento</Label>
-                            <Textarea id="event-description" placeholder="Describe de qué trata el evento, quiénes pueden participar, qué se necesita, etc." required value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} disabled={isLoading} />
+                            <Label htmlFor="event-description">Descripción Corta</Label>
+                             <Input id="event-description" placeholder="Una breve descripción para la tarjeta del evento." required value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} disabled={isLoading} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="event-long-description">Descripción Larga del Evento</Label>
+                            <Textarea id="event-long-description" placeholder="Describe de qué trata el evento, quiénes pueden participar, qué se necesita, etc." required value={eventLongDescription} onChange={(e) => setEventLongDescription(e.target.value)} disabled={isLoading} />
                         </div>
                         <div className="flex justify-end pt-4">
                             <Button size="lg" type="submit" disabled={isLoading}>

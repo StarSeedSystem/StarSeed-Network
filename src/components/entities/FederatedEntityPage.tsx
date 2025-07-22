@@ -13,7 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import { BackButton } from "../utils/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { FederatedEntity } from "@/types/content-types";
-import federationsData from "@/data/federations.json";
+import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { db } from "@/data/firebase";
+
 
 interface FederatedEntityPageProps {
   slug: string;
@@ -37,28 +39,30 @@ function EntitySkeleton() {
 
 export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
   const { user: authUser, loading: authLoading } = useUser();
-  const [entity, setEntity] = useState<FederatedEntity | null>(null);
+  const [entity, setEntity] = useState<DocumentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
   const [isMember, setIsMember] = useState(false);
-  const [memberCount, setMemberCount] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
-    const localData = (federationsData as any)[slug];
-    if (localData) {
-        setEntity(localData);
-        setMemberCount(localData.members || 0);
-    }
-    setIsLoading(false);
-  }, [slug]);
+    if (!slug) return;
+    const docRef = doc(db, "federated_entities", slug);
+    const unsubscribe = onSnapshot(docRef, (doc) => {
+        if (doc.exists()) {
+            const data = { id: doc.id, ...doc.data() };
+            setEntity(data);
+            if (authUser) {
+                setIsMember(data.members?.includes(authUser.uid));
+            }
+        } else {
+            setEntity(null);
+        }
+        setIsLoading(false);
+    });
 
-  useEffect(() => {
-    if (entity && authUser) {
-        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-        setIsMember(!!localMembers[entity.id]);
-    }
-  }, [entity, authUser]);
+    return () => unsubscribe();
+  }, [slug, authUser]);
 
    const handleJoinLeave = async () => {
       if (!authUser || !entity?.id) {
@@ -66,24 +70,23 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
           return;
       }
       setIsJoiningLeaving(true);
-      setTimeout(() => {
-        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-        const newIsMember = !isMember;
-
-        if (newIsMember) {
-            localMembers[entity.id] = true;
-            setMemberCount(prev => prev + 1);
-            toast({ title: "Joined Entity", description: `You have joined ${entity.name}.` });
-        } else {
-            delete localMembers[entity.id];
-            setMemberCount(prev => prev - 1);
+      const docRef = doc(db, "federated_entities", entity.id);
+      
+      try {
+        if (isMember) {
+            await updateDoc(docRef, { members: arrayRemove(authUser.uid) });
             toast({ title: "Left Entity", description: `You have left ${entity.name}.` });
+        } else {
+            await updateDoc(docRef, { members: arrayUnion(authUser.uid) });
+            toast({ title: "Joined Entity", description: `You are now a member of ${entity.name}.` });
         }
-        
-        localStorage.setItem('joined_pages', JSON.stringify(localMembers));
-        setIsMember(newIsMember);
+        setIsMember(!isMember);
+      } catch (error: any) {
+        console.error("Error joining/leaving entity:", error);
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } finally {
         setIsJoiningLeaving(false);
-      }, 300);
+      }
   }
 
   if (isLoading || authLoading) {
@@ -93,6 +96,8 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
   if (!entity) {
     notFound();
   }
+  
+  const memberCount = entity?.members?.length || 0;
 
   return (
     <div className="space-y-6">

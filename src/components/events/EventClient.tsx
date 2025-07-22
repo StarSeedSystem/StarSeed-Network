@@ -7,18 +7,18 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/utils/BackButton";
 import { Calendar, MapPin, Users, Check, Loader2 } from "lucide-react";
-import type { Event } from "@/types/content-types";
-import eventData from "@/data/events.json";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/context/UserContext";
+import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { db } from "@/data/firebase";
 
 interface EventClientProps {
   slug: string;
 }
 
 export function EventClient({ slug }: EventClientProps) {
-  const [event, setEvent] = useState<Event | null>(null);
+  const [event, setEvent] = useState<DocumentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAttending, setIsAttending] = useState(false);
   const [isUpdatingAttendance, setIsUpdatingAttendance] = useState(false);
@@ -26,48 +26,53 @@ export function EventClient({ slug }: EventClientProps) {
   const { user } = useUser();
 
   useEffect(() => {
-    const localData = (eventData as any)[slug];
-    if (localData) {
-      setEvent(localData);
-      if(user) {
-        const attendedEvents = JSON.parse(localStorage.getItem('attended_events') || '{}');
-        if (attendedEvents[localData.id]) {
-            setIsAttending(true);
+    if (!slug) return;
+    const docRef = doc(db, "events", slug);
+    const unsubscribe = onSnapshot(docRef, (doc) => {
+        if (doc.exists()) {
+            const data = { id: doc.id, ...doc.data() };
+            setEvent(data);
+            if (user) {
+                setIsAttending(data.attendees?.includes(user.uid));
+            }
+        } else {
+            setEvent(null);
         }
-      }
-    }
-    setIsLoading(false);
+        setIsLoading(false);
+    });
+    return () => unsubscribe();
   }, [slug, user]);
 
-  const handleAttendClick = () => {
+  const handleAttendClick = async () => {
     if (!user || !event) {
         toast({ title: "Debes iniciar sesión para asistir.", variant: "destructive" });
         return;
     }
 
     setIsUpdatingAttendance(true);
-    setTimeout(() => {
-        const attendedEvents = JSON.parse(localStorage.getItem('attended_events') || '{}');
-        const newIsAttending = !isAttending;
+    const docRef = doc(db, "events", event.id);
 
-        if (newIsAttending) {
-            attendedEvents[event.id] = true;
-            toast({
-                title: "¡Inscripción confirmada!",
-                description: `Nos vemos en ${event?.name}.`,
-            });
-        } else {
-            delete attendedEvents[event.id];
+    try {
+        if (isAttending) {
+            await updateDoc(docRef, { attendees: arrayRemove(user.uid) });
             toast({
                 title: "Asistencia cancelada",
                 description: `Ya no asistirás a ${event?.name}.`,
             });
+        } else {
+            await updateDoc(docRef, { attendees: arrayUnion(user.uid) });
+            toast({
+                title: "¡Inscripción confirmada!",
+                description: `Nos vemos en ${event?.name}.`,
+            });
         }
-        
-        localStorage.setItem('attended_events', JSON.stringify(attendedEvents));
-        setIsAttending(newIsAttending);
+        setIsAttending(!isAttending);
+    } catch (error: any) {
+        console.error("Error updating attendance:", error);
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
         setIsUpdatingAttendance(false);
-    }, 300);
+    }
   };
 
 
@@ -79,6 +84,8 @@ export function EventClient({ slug }: EventClientProps) {
   if (!event) {
     notFound();
   }
+  
+  const attendeeCount = event?.attendees?.length || 0;
 
   return (
     <div className="space-y-6">
@@ -102,7 +109,7 @@ export function EventClient({ slug }: EventClientProps) {
             </div>
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-primary" />
-              <span>Organizado por {event.organizer.name}</span>
+              <span>{attendeeCount} Asistentes</span>
             </div>
           </div>
           <Button

@@ -10,9 +10,10 @@ import { BackButton } from "@/components/utils/BackButton";
 import { Loader2, Users, MessageSquare } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
-import chatGroupData from "@/data/chat-groups.json";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ChatGroup } from "@/types/content-types";
+import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { db } from "@/data/firebase";
 
 interface ChatGroupPageProps {
   slug: string;
@@ -36,57 +37,54 @@ function GroupSkeleton() {
 
 export function ChatGroupPage({ slug }: ChatGroupPageProps) {
   const { user: authUser, loading: authLoading } = useUser();
-  const [group, setGroup] = useState<ChatGroup | null>(null);
+  const [group, setGroup] = useState<DocumentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
   const [isMember, setIsMember] = useState(false);
-  const [memberCount, setMemberCount] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
-    const localData = (chatGroupData as any)[slug];
-    if (localData) {
-        setGroup(localData);
-        setMemberCount(localData.members || 0);
+    if (!slug) return;
+    const docRef = doc(db, "chat_groups", slug);
+    const unsubscribe = onSnapshot(docRef, (doc) => {
+        if (doc.exists()) {
+            const data = { id: doc.id, ...doc.data() };
+            setGroup(data);
+            if (authUser) {
+                setIsMember(data.members?.includes(authUser.uid));
+            }
+        } else {
+            setGroup(null);
+        }
         setIsLoading(false);
-    } else {
-        // In a real app, you would fetch from Firestore here as a fallback
-        setGroup(null);
-        setIsLoading(false);
-    }
-  }, [slug]);
+    });
 
-  useEffect(() => {
-    if (group && authUser) {
-        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-        setIsMember(!!localMembers[group.id]);
-    }
-  }, [group, authUser]);
+    return () => unsubscribe();
+  }, [slug, authUser]);
 
-  const handleJoinLeave = () => {
+  const handleJoinLeave = async () => {
       if (!authUser || !group?.id) {
           toast({ title: "Authentication Required", variant: "destructive" });
           return;
       }
       setIsJoiningLeaving(true);
-      setTimeout(() => {
-        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-        const newIsMember = !isMember;
+      const docRef = doc(db, "chat_groups", group.id);
 
-        if (newIsMember) {
-            localMembers[group.id] = true;
-            setMemberCount(prev => prev + 1);
-            toast({ title: "Joined Group", description: `Welcome to ${group.name}!` });
-        } else {
-            delete localMembers[group.id];
-            setMemberCount(prev => prev - 1);
+      try {
+        if (isMember) {
+            await updateDoc(docRef, { members: arrayRemove(authUser.uid) });
             toast({ title: "Left Group", description: `You have left ${group.name}.` });
+        } else {
+            await updateDoc(docRef, { members: arrayUnion(authUser.uid) });
+            toast({ title: "Joined Group", description: `You are now a member of ${group.name}.` });
         }
-        
-        localStorage.setItem('joined_pages', JSON.stringify(localMembers));
-        setIsMember(newIsMember);
+        setIsMember(!isMember);
+      } catch (error: any) {
+        console.error("Error joining/leaving group:", error);
+        toast({ title: "Error", description: error.message, variant: "destructive"});
+      } finally {
         setIsJoiningLeaving(false);
-      }, 300);
+      }
   }
 
   if (isLoading || authLoading) {
@@ -96,6 +94,8 @@ export function ChatGroupPage({ slug }: ChatGroupPageProps) {
   if (!group) {
     notFound();
   }
+  
+  const memberCount = group?.members?.length || 0;
 
   return (
     <div className="space-y-6">

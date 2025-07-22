@@ -1,6 +1,7 @@
 
 
 
+
 export interface Author {
     name: string;
     avatar: string;
@@ -43,7 +44,8 @@ interface BaseEntity {
     avatarHint: string;
     banner: string;
     bannerHint: string;
-    members: number;
+    members: string[]; // Now an array of user IDs
+    creatorId: string;
     type: 'community' | 'federation' | 'study_group' | 'political_party' | 'chat_group';
 }
 
@@ -83,6 +85,7 @@ export interface Event {
     date: string;
     location: string;
     organizer: Author;
+    attendees: string[]; // Array of user IDs
 }
 
 export type AnyEntity = Community | FederatedEntity | StudyGroup | PoliticalParty | ChatGroup;
@@ -115,4 +118,3 @@ export interface User {
     showLibrary: 'public' | 'private' | 'friends';
   };
 }
-

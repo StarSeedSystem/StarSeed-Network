@@ -25,15 +25,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast";
-
-// Import local data
-import communitiesData from "@/data/communities.json";
-import federationsData from "@/data/federations.json";
-import partiesData from "@/data/political-parties.json";
-import studyGroupsData from "@/data/study-groups.json";
-import chatGroupsData from "@/data/chat-groups.json";
-import eventsData from "@/data/events.json";
-
+import { collection, query, where, onSnapshot, getDocs, DocumentData } from "firebase/firestore";
+import { db } from "@/data/firebase";
 
 const activeParticipations = {
     votes: [{
@@ -63,7 +56,7 @@ const getEntityPath = (type: AnyRecommendedPage['type'], slug: string) => {
         case 'federation': return `/federated-entity/${slug}`;
         case 'study_group': return `/study-group/${slug}`;
         case 'chat_group': return `/chat-group/${slug}`;
-        case 'political_party': return `/party/${slug}`;
+        case 'political_party': return `/political-party/${slug}`;
         case 'event': return `/event/${slug}`;
         default: return '#';
     }
@@ -86,7 +79,7 @@ const entityCreationLinks = [
     { href: "/participations/create/federated-entity", icon: Landmark, label: "E. Federada", description: "Una entidad formal en la red." },
     { href: "/participations/create/study-group", icon: BookOpen, label: "Grupo Estudio", description: "Para el aprendizaje colaborativo." },
     { href: "/participations/create/chat-group", icon: MessageSquare, label: "Grupo Chat", description: "Un espacio público de conversación." },
-    { href: "/participations/create/party", icon: Shield, label: "Partido Político", description: "Una fuerza ideológica organizada." },
+    { href: "/participations/create/political-party", icon: Shield, label: "Partido Político", description: "Una fuerza ideológica organizada." },
     { href: "/participations/create/proposal", icon: Gavel, label: "Propuesta", description: "Presenta una nueva ley o directiva." },
     { href: "/participations/create/event", icon: Calendar, label: "Evento", description: "Organiza encuentros y actividades.", disabled: false },
 ];
@@ -94,7 +87,7 @@ const entityCreationLinks = [
 const ConnectionCard = ({ item }: { item: AnyRecommendedPage }) => {
     const href = getEntityPath(item.type, item.slug);
     const isEvent = item.type === 'event';
-    const memberCount = !isEvent ? (item as AnyEntity).members : 0;
+    const memberCount = !isEvent ? (item as AnyEntity).members?.length || 0 : (item as Event).attendees?.length || 0;
     const itemImage = 'avatar' in item ? item.avatar : item.image;
     const itemImageHint = 'avatarHint' in item ? item.avatarHint : item.imageHint;
 
@@ -109,8 +102,8 @@ const ConnectionCard = ({ item }: { item: AnyRecommendedPage }) => {
                 <h3 className="font-headline text-lg font-semibold">{item.name}</h3>
                  {isEvent ? (
                      <p className="text-sm font-semibold flex items-center mt-1">
-                        <Calendar className="h-4 w-4 mr-2 text-primary" /> 
-                        {(item as Event).date}
+                        <Users className="h-4 w-4 mr-2 text-primary" /> 
+                        {memberCount.toLocaleString()} Asistentes
                     </p>
                  ) : (
                     <p className="text-sm font-semibold flex items-center mt-1">
@@ -129,41 +122,50 @@ const ConnectionCard = ({ item }: { item: AnyRecommendedPage }) => {
 export default function ConnectionsHubPage() {
     const { user } = useUser();
     const { toast } = useToast();
-    const [allPages, setAllPages] = useState<AnyRecommendedPage[]>([]);
+    const [recommendedPages, setRecommendedPages] = useState<AnyRecommendedPage[]>([]);
     const [myPages, setMyPages] = useState<AnyRecommendedPage[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [recommendationFilter, setRecommendationFilter] = useState('all');
     const [personalizedFilter, setPersonalizedFilter] = useState('activity');
 
+    const collectionsToFetch = [
+        { name: "communities", type: 'community' },
+        { name: "federated_entities", type: 'federation' },
+        { name: "political_parties", type: 'political_party' },
+        { name: "study_groups", type: 'study_group' },
+        { name: "chat_groups", type: 'chat_group' },
+        { name: "events", type: 'event' },
+    ] as const;
 
     useEffect(() => {
         setIsLoading(true);
-        // Load all data from local JSON files
-        const loadedCommunities = Object.values(communitiesData).map(c => ({...c, type: 'community' as const}));
-        const loadedFederations = Object.values(federationsData).map(f => ({...f, type: 'federation' as const}));
-        const loadedParties = Object.values(partiesData).map(p => ({...p, type: 'political_party' as const}));
-        const loadedStudyGroups = Object.values(studyGroupsData).map(g => ({...g, type: 'study_group' as const}));
-        const loadedChatGroups = Object.values(chatGroupsData).map(g => ({...g, type: 'chat_group' as const}));
-        const loadedEvents = Object.values(eventsData).map(e => ({...e, type: 'event' as const}));
 
-        const allDataFlat = [
-            ...loadedCommunities,
-            ...loadedFederations,
-            ...loadedParties,
-            ...loadedStudyGroups,
-            ...loadedChatGroups,
-            ...loadedEvents
-        ];
-        
-        setAllPages(allDataFlat);
+        const fetchAllPages = async () => {
+            const allPagesData: AnyRecommendedPage[] = [];
+            for (const c of collectionsToFetch) {
+                const q = query(collection(db, c.name));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                    allPagesData.push({ ...doc.data(), type: c.type } as AnyRecommendedPage);
+                });
+            }
+            setRecommendedPages(allPagesData);
+            
+            if (user) {
+                const userPages = allPagesData.filter(page => {
+                    if (page.type === 'event') {
+                        return (page as Event).attendees?.includes(user.uid);
+                    } else {
+                        return (page as AnyEntity).members?.includes(user.uid);
+                    }
+                });
+                setMyPages(userPages);
+            }
+            setIsLoading(false);
+        };
 
-        if (user) {
-            const joinedPagesData = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-            const userPages = allDataFlat.filter(page => joinedPagesData[page.id]);
-            setMyPages(userPages);
-        }
+        fetchAllPages();
 
-        setIsLoading(false);
     }, [user]);
     
     const handleReloadRecommendations = () => {
@@ -174,10 +176,10 @@ export default function ConnectionsHubPage() {
     };
 
     const filteredRecommendations = useMemo(() => {
-        if (recommendationFilter === 'all') return allPages;
-        if (recommendationFilter === 'groups') return allPages.filter(r => r.type === 'study_group' || r.type === 'chat_group');
-        return allPages.filter(r => r.type === recommendationFilter);
-    }, [recommendationFilter, allPages]);
+        if (recommendationFilter === 'all') return recommendedPages;
+        if (recommendationFilter === 'groups') return recommendedPages.filter(r => r.type === 'study_group' || r.type === 'chat_group');
+        return recommendedPages.filter(r => r.type === recommendationFilter);
+    }, [recommendationFilter, recommendedPages]);
 
     const myCommunities = myPages.filter(p => p.type === 'community');
     const myFederations = myPages.filter(p => p.type === 'federation');
@@ -393,3 +395,4 @@ export default function ConnectionsHubPage() {
        </div>
     </div>
   );
+}

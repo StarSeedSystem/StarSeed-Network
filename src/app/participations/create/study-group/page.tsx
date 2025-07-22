@@ -11,6 +11,9 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Check, BookOpen, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { slugify } from "@/lib/utils";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/data/firebase";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function CreateStudyGroupPage() {
     const router = useRouter();
@@ -21,6 +24,7 @@ export default function CreateStudyGroupPage() {
     const [groupName, setGroupName] = useState("");
     const [groupTopic, setGroupTopic] = useState("");
     const [groupDescription, setGroupDescription] = useState("");
+    const [groupLongDescription, setGroupLongDescription] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,20 +41,35 @@ export default function CreateStudyGroupPage() {
             return;
         }
 
-        // Simulate creation locally due to Firestore permission issues
-        console.log("Simulating study group creation:", {
-            name: groupName,
-            slug: groupSlug,
-        });
+        try {
+            const groupRef = doc(db, "study_groups", groupSlug);
+            await setDoc(groupRef, {
+                id: groupSlug,
+                slug: groupSlug,
+                name: groupName,
+                description: groupDescription,
+                longDescription: groupLongDescription,
+                topic: groupTopic,
+                avatar: `https://avatar.vercel.sh/${groupSlug}.png`,
+                avatarHint: "group logo",
+                banner: `https://placehold.co/1200x400/4a4a4b/ffffff.png?text=${encodeURIComponent(groupName)}`,
+                bannerHint: "group banner",
+                members: [authUser.uid],
+                creatorId: authUser.uid,
+                createdAt: serverTimestamp(),
+            });
 
-        setTimeout(() => {
             toast({
                 title: "Study Group Created!",
                 description: `The group "${groupName}" is now active.`,
             });
-            router.push(`/participations`);
+            router.push(`/study-group/${groupSlug}`);
+        } catch (error: any) {
+            console.error("Error creating study group:", error);
+            toast({ title: "Error", description: error.message, variant: "destructive"});
+        } finally {
             setIsLoading(false);
-        }, 1000);
+        }
     };
 
     return (
@@ -81,8 +100,12 @@ export default function CreateStudyGroupPage() {
                             <Input id="group-topic" placeholder="Mecánica Cuántica, Ética de IA, etc." required value={groupTopic} onChange={(e) => setGroupTopic(e.target.value)} disabled={isLoading}/>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="group-description">Descripción</Label>
+                            <Label htmlFor="group-description">Descripción Corta</Label>
                             <Input id="group-description" placeholder="Un breve resumen de los objetivos del grupo." required value={groupDescription} onChange={(e) => setGroupDescription(e.target.value)} disabled={isLoading}/>
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="group-long-description">Descripción Larga (Opcional)</Label>
+                            <Textarea id="group-long-description" placeholder="Describe los temas a tratar, la frecuencia de las reuniones, los prerrequisitos, etc." value={groupLongDescription} onChange={(e) => setGroupLongDescription(e.target.value)} disabled={isLoading}/>
                         </div>
                         <div className="flex justify-end pt-4">
                             <Button size="lg" type="submit" disabled={isLoading}>
