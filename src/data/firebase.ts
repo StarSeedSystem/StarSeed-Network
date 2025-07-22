@@ -4,15 +4,16 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
-// Your web app's Firebase configuration will be loaded from environment variables
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+  apiKey: "AIzaSyDymU2o51_qnYPu-wug3_UnDeBYP11VY04",
+  authDomain: "starseed-nexus.firebaseapp.com",
+  projectId: "starseed-nexus",
+  storageBucket: "starseed-nexus.appspot.com",
+  messagingSenderId: "991289184832",
+  appId: "1:991289184832:web:862cd77bd0b9f60aea85a5"
 };
+
 
 // --- CORRECT INITIALIZATION LOGIC ---
 // This robust logic prevents re-initializing the app on hot reloads in development
