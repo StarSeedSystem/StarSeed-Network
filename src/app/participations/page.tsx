@@ -108,11 +108,11 @@ const ConnectionCard = ({ item }: ConnectionCardProps) => {
                 <h3 className="font-headline text-lg font-semibold">{item.name}</h3>
                 <p className="text-sm font-semibold flex items-center mt-1">
                     <Users className="h-4 w-4 mr-2 text-primary" /> 
-                    {Array.isArray(item.members) ? item.members.length : item.members.toLocaleString()} Miembros
+                    {Array.isArray(item.members) ? item.members.length : (item.members || 0).toLocaleString()} Miembros
                 </p>
             </div>
             <Button asChild variant="outline">
-                <Link href={href}>Ir al Perfil</Link>
+                <Link href={href}>Ver Página</Link>
             </Button>
         </Card>
     );
@@ -144,6 +144,8 @@ export default function ConnectionsHubPage() {
                 ];
 
                 const promises = collections.map(async ({ key, setter, type }) => {
+                    // This query might fail due to missing indexes if Firestore rules are strict.
+                    // For now, we assume direct access or will simulate data on failure.
                     const q = query(collection(db, key), where("creatorId", "==", user.uid));
                     const querySnapshot = await getDocs(q);
                     const data = querySnapshot.docs.map(doc => ({ type, id: doc.id, ...doc.data() } as AnyEntity));
@@ -154,6 +156,8 @@ export default function ConnectionsHubPage() {
 
             } catch (error) {
                 console.error("Error fetching connection data from Firestore: ", error);
+                // In a real app with strict rules, we'd handle this more gracefully.
+                // For this simulation, we'll just log the error.
             } finally {
                 setIsLoading(false);
             }
@@ -189,7 +193,7 @@ export default function ConnectionsHubPage() {
       <Card className="glass-card p-4">
         <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input placeholder="Busca perfiles, comunidades, eventos, partidos, grupos..." className="pl-12 h-14 text-lg bg-background/50" />
+            <Input placeholder="Busca perfiles, páginas, comunidades, partidos..." className="pl-12 h-14 text-lg bg-background/50" />
             <Button size="lg" className="absolute right-2 top-1/2 -translate-y-1/2">Buscar en el Nexo</Button>
         </div>
       </Card>
@@ -198,7 +202,7 @@ export default function ConnectionsHubPage() {
         <Card className="glass-card">
             <CardHeader>
                 <CardTitle className="font-headline text-2xl">Crear y Proponer</CardTitle>
-                <CardDescription>Inicia nuevas formas de colaboración y organización en la red.</CardDescription>
+                <CardDescription>Inicia nuevos espacios de colaboración y organización en la red.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/community"><Globe className="h-5 w-5 text-primary"/><span>Comunidad</span></Link></Button>
@@ -212,7 +216,7 @@ export default function ConnectionsHubPage() {
         <Card className="glass-card">
             <CardHeader>
                 <CardTitle className="font-headline text-2xl">Recomendaciones para ti</CardTitle>
-                <CardDescription>Descubre nuevas conexiones basadas en tus intereses y actividad.</CardDescription>
+                <CardDescription>Descubre nuevas páginas y comunidades basadas en tus intereses.</CardDescription>
             </CardHeader>
             <CardContent>
                  <Tabs value={recommendationFilter} onValueChange={setRecommendationFilter} className="w-full mb-4">
@@ -238,7 +242,7 @@ export default function ConnectionsHubPage() {
                                     <p className="text-xs text-muted-foreground h-10">{item.description}</p>
                                     <Button size="sm" variant="secondary" className="w-full mt-auto" asChild>
                                         <Link href={getEntityPath(item.type as AnyEntity['type'], item.slug)}>
-                                            <View className="mr-2 h-4 w-4"/> Ver Perfil
+                                            <View className="mr-2 h-4 w-4"/> Ver Página
                                         </Link>
                                     </Button>
                                 </CardContent>

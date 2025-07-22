@@ -1,3 +1,4 @@
+
 // src/app/study-group/[slug]/page.tsx
 import { StudyGroupClient } from "@/components/education/StudyGroupClient";
 
@@ -7,8 +8,8 @@ interface StudyGroupPageProps {
   };
 }
 
-// This page receives the slug from the URL and passes it to the client component.
-// The client component handles all the logic for fetching and displaying data.
+// Esta página recibe el slug de la URL y lo pasa al componente de cliente.
+// El componente de cliente maneja toda la lógica para obtener y mostrar los datos.
 export default function StudyGroupPage({ params }: StudyGroupPageProps) {
     return <StudyGroupClient slug={params.slug} />;
 }

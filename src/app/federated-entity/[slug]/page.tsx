@@ -1,3 +1,4 @@
+
 // src/app/federated-entity/[slug]/page.tsx
 import { FederatedEntityClient } from "@/components/entities/FederatedEntityClient";
 

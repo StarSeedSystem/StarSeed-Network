@@ -1,3 +1,4 @@
+
 // src/app/community/[slug]/page.tsx
 import { CommunityClient } from "@/components/community/CommunityClient";
 
@@ -7,8 +8,8 @@ interface CommunityPageProps {
   };
 }
 
-// This page receives the slug from the URL and passes it to the client component.
-// The client component handles all the logic for fetching and displaying data.
-export default function CommunityProfilePage({ params }: CommunityPageProps) {
+// Esta página recibe el slug de la URL y lo pasa al componente de cliente.
+// El componente de cliente maneja toda la lógica para obtener y mostrar los datos.
+export default function CommunityPage({ params }: CommunityPageProps) {
     return <CommunityClient slug={params.slug} />;
 }
