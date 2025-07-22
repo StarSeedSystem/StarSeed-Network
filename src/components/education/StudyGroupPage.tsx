@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { StudyGroupFeed } from "./StudyGroupFeed";
 import studyGroupData from "@/data/study-groups.json";
+import { BackButton } from "../utils/BackButton";
 
 
 interface StudyGroupPageProps {
@@ -120,7 +121,8 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
    const memberCount = Array.isArray(group?.members) ? group.members.length : (group?.members || 0);
 
   return (
-    <div>
+    <div className="space-y-6">
+        <BackButton />
         <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
             <Image src={group.banner || `https://placehold.co/1200x400.png?text=${group.name}`} alt={`${group.name} Banner`} layout="fill" objectFit="cover" data-ai-hint={group.bannerHint} />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />

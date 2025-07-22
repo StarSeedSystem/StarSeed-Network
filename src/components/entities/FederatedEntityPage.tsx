@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import federationData from "@/data/federations.json";
+import { BackButton } from "../utils/BackButton";
 
 interface FederatedEntityPageProps {
   slug: string;
@@ -118,7 +119,8 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
 
 
   return (
-    <div>
+    <div className="space-y-6">
+        <BackButton />
         <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
             <Image src={entity.banner || `https://placehold.co/1200x400.png?text=${entity.name}`} alt={`${entity.name} Banner`} layout="fill" objectFit="cover" data-ai-hint={entity.bannerHint} />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />

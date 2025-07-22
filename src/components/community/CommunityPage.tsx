@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext"; 
 import { useToast } from "@/hooks/use-toast"; 
 import communityData from "@/data/communities.json";
+import { BackButton } from "../utils/BackButton";
 
 interface CommunityPageProps {
   slug: string;
@@ -122,7 +123,8 @@ export function CommunityPage({ slug }: CommunityPageProps) {
   const memberCount = Array.isArray(community?.members) ? community.members.length : (community?.members || 0);
 
   return (
-    <div>
+    <div className="space-y-6">
+        <BackButton />
         <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
             <Image src={community?.banner || ''} alt="Community Banner" layout="fill" objectFit="cover" data-ai-hint={community?.bannerHint} />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />

@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { PartyFeed } from "./PartyFeed";
 import partyData from "@/data/political-parties.json";
+import { BackButton } from "../utils/BackButton";
 
 interface PartyPageProps {
   slug: string;
@@ -120,7 +121,8 @@ export function PartyPage({ slug }: PartyPageProps) {
   const memberCount = Array.isArray(party?.members) ? party.members.length : (party?.members || 0);
 
   return (
-    <div>
+    <div className="space-y-6">
+        <BackButton />
         <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
             <Image src={party.banner} alt={`${party.name} Banner`} layout="fill" objectFit="cover" data-ai-hint={party.bannerHint} />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />

@@ -15,47 +15,68 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Progress } from "@/components/ui/progress";
 import type { AnyEntity } from "@/types/content-types";
+import { cn } from "@/lib/utils";
 
-const recommendations = [
+const recommendations: (AnyEntity & { type: 'community' | 'political_party' | 'study_group' | 'federation' })[] = [
     {
+        id: "innovacion-sostenible",
         name: "Innovación Sostenible",
         slug: "innovacion-sostenible",
         description: "Colectivo para construir un futuro más verde.",
         avatar: "https://avatar.vercel.sh/innovacion-sostenible.png",
         avatarHint: "green leaf",
-        type: "community"
+        type: "community",
+        members: 1257,
+        banner: "",
+        bannerHint: "",
     },
     {
+        id: "partido-conciencia-digital",
         name: "Partido de la Conciencia Digital",
         slug: "partido-conciencia-digital",
         description: "Promoviendo la soberanía de datos y la IA ética.",
         avatar: "https://avatar.vercel.sh/partido-conciencia-digital.png",
         avatarHint: "digital brain",
-        type: "political_party"
+        type: "political_party",
+        members: 2341,
+        banner: "",
+        bannerHint: "",
     },
      {
+        id: "exploradores-cuanticos",
         name: "Exploradores de Computación Cuántica",
         slug: "exploradores-cuanticos",
         description: "Grupo para investigar los límites de la computación.",
         avatar: "https://avatar.vercel.sh/exploradores-cuanticos.png",
         avatarHint: "quantum atom",
-        type: "study_group"
+        type: "study_group",
+        members: 152,
+        banner: "",
+        bannerHint: "",
     },
     {
+        id: "art-ai-collective",
         name: "Art-AI Collective",
         slug: "art-ai-collective",
         description: "Comunidad para la exploración de la creatividad emergente.",
         avatar: "https://avatar.vercel.sh/art-ai-collective.png",
         avatarHint: "abstract art",
-        type: "community"
+        type: "community",
+        members: 843,
+        banner: "",
+        bannerHint: "",
     },
     {
+        id: "consejo-etica-digital",
         name: "Consejo de Ética Digital",
         slug: "consejo-etica-digital",
         description: "Entidad que supervisa el desarrollo ético de la IA.",
         avatar: "https://avatar.vercel.sh/consejo-etica-digital.png",
         avatarHint: "balanced scale",
-        type: "federation"
+        type: "federation",
+        members: 42,
+        banner: "",
+        bannerHint: "",
     },
 ];
 
@@ -94,6 +115,25 @@ const getEntityPath = (type: AnyEntity['type'], slug: string) => {
         default: return '#';
     }
 }
+
+const getEntityTypeLabel = (type: AnyEntity['type']) => {
+    switch (type) {
+        case 'community': return 'Comunidad';
+        case 'federation': return 'E. Federada';
+        case 'study_group': return 'G. de Estudio';
+        case 'political_party': return 'Partido';
+        default: return 'Página';
+    }
+}
+
+const entityCreationLinks = [
+    { href: "/participations/create/community", icon: Globe, label: "Comunidad", description: "Un espacio para la colaboración." },
+    { href: "/participations/create/federated-entity", icon: Landmark, label: "E. Federada", description: "Una entidad formal en la red." },
+    { href: "/participations/create/study-group", icon: BookOpen, label: "Grupo Estudio", description: "Para el aprendizaje colaborativo." },
+    { href: "/participations/create/party", icon: Shield, label: "Partido Político", description: "Una fuerza ideológica organizada." },
+    { href: "/participations/create/proposal", icon: Gavel, label: "Propuesta", description: "Presenta una nueva ley o directiva." },
+    { href: "#", icon: Calendar, label: "Evento", description: "Organiza encuentros y actividades.", disabled: true },
+];
 
 const ConnectionCard = ({ item }: ConnectionCardProps) => {
     const href = getEntityPath(item.type, item.slug);
@@ -144,8 +184,6 @@ export default function ConnectionsHubPage() {
                 ];
 
                 const promises = collections.map(async ({ key, setter, type }) => {
-                    // This query might fail due to missing indexes if Firestore rules are strict.
-                    // For now, we assume direct access or will simulate data on failure.
                     const q = query(collection(db, key), where("creatorId", "==", user.uid));
                     const querySnapshot = await getDocs(q);
                     const data = querySnapshot.docs.map(doc => ({ type, id: doc.id, ...doc.data() } as AnyEntity));
@@ -156,8 +194,6 @@ export default function ConnectionsHubPage() {
 
             } catch (error) {
                 console.error("Error fetching connection data from Firestore: ", error);
-                // In a real app with strict rules, we'd handle this more gracefully.
-                // For this simulation, we'll just log the error.
             } finally {
                 setIsLoading(false);
             }
@@ -178,7 +214,7 @@ export default function ConnectionsHubPage() {
             return <div className="flex justify-center items-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
         }
         if (items.length === 0) {
-            return <Card className="glass-card text-center p-8"><CardDescription>No perteneces a ninguna entidad de este tipo.</CardDescription></Card>;
+            return <Card className="glass-card text-center p-8"><CardDescription>No perteneces a ninguna página de este tipo.</CardDescription></Card>;
         }
         return (
             <div className="space-y-4">
@@ -201,16 +237,21 @@ export default function ConnectionsHubPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="glass-card">
             <CardHeader>
-                <CardTitle className="font-headline text-2xl">Crear y Proponer</CardTitle>
+                <CardTitle className="font-headline text-2xl">Crear y Proponer Páginas Públicas</CardTitle>
                 <CardDescription>Inicia nuevos espacios de colaboración y organización en la red.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/community"><Globe className="h-5 w-5 text-primary"/><span>Comunidad</span></Link></Button>
-                <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/federated-entity"><Landmark className="h-5 w-5 text-primary"/><span>E.F.</span></Link></Button>
-                <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center" disabled><Link href="#"><Calendar className="h-5 w-5 text-primary"/><span>Evento</span></Link></Button>
-                <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/study-group"><BookOpen className="h-5 w-5 text-primary"/><span>Grupo Estudio</span></Link></Button>
-                <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/party"><Shield className="h-5 w-5 text-primary"/><span>Partido Político</span></Link></Button>
-                 <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/proposal"><Gavel className="h-5 w-5 text-primary"/><span>Propuesta</span></Link></Button>
+            <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {entityCreationLinks.map(link => (
+                    <Button asChild variant="outline" className="h-auto flex-col p-3 gap-2 text-center" key={link.href} disabled={link.disabled}>
+                        <Link href={link.href}>
+                            <link.icon className="h-6 w-6 text-primary"/>
+                            <div className="flex flex-col text-center">
+                                <span className="font-semibold">{link.label}</span>
+                                <span className="text-xs font-normal text-muted-foreground hidden sm:block">{link.description}</span>
+                            </div>
+                        </Link>
+                    </Button>
+                ))}
             </CardContent>
         </Card>
         <Card className="glass-card">
@@ -230,29 +271,32 @@ export default function ConnectionsHubPage() {
                 <Carousel opts={{ align: "start", loop: false }} className="w-full">
                     <CarouselContent className="-ml-2">
                         {filteredRecommendations.map((item, index) => (
-                        <CarouselItem key={index} className="pl-2 basis-full sm:basis-1/2 md:basis-1/3">
-                            <div className="p-1">
-                            <Card className="bg-primary/5 h-full flex flex-col">
-                                <CardContent className="flex flex-col items-center text-center p-4 gap-3 flex-grow">
-                                    <Avatar className="h-16 w-16">
-                                        <AvatarImage src={item.avatar} alt={item.name} data-ai-hint={item.avatarHint} />
-                                        <AvatarFallback>{item.name.substring(0,2)}</AvatarFallback>
-                                    </Avatar>
-                                    <span className="font-semibold">{item.name}</span>
-                                    <p className="text-xs text-muted-foreground h-10">{item.description}</p>
+                        <CarouselItem key={index} className="pl-2 basis-full sm:basis-1/2 md:basis-1/2 lg:basis-1/3">
+                            <Card className="bg-primary/5 h-full flex flex-col group overflow-hidden rounded-xl">
+                                <CardContent className="flex flex-col p-4 gap-3 flex-grow">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-12 w-12">
+                                            <AvatarImage src={item.avatar} alt={item.name} data-ai-hint={item.avatarHint} />
+                                            <AvatarFallback>{item.name.substring(0,2)}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="font-semibold truncate">{item.name}</p>
+                                            <p className="text-xs text-primary font-medium">{getEntityTypeLabel(item.type)}</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground h-10 flex-grow">{item.description}</p>
                                     <Button size="sm" variant="secondary" className="w-full mt-auto" asChild>
-                                        <Link href={getEntityPath(item.type as AnyEntity['type'], item.slug)}>
+                                        <Link href={getEntityPath(item.type, item.slug)}>
                                             <View className="mr-2 h-4 w-4"/> Ver Página
                                         </Link>
                                     </Button>
                                 </CardContent>
                             </Card>
-                            </div>
                         </CarouselItem>
                         ))}
                     </CarouselContent>
-                    <CarouselPrevious className="-left-4"/>
-                    <CarouselNext className="-right-4" />
+                    <CarouselPrevious className="hidden sm:flex -left-4"/>
+                    <CarouselNext className="hidden sm:flex -right-4" />
                 </Carousel>
             </CardContent>
         </Card>
@@ -313,36 +357,39 @@ export default function ConnectionsHubPage() {
             </div>
        </div>
 
-       <Tabs defaultValue="communities" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-card/60 rounded-xl h-auto">
-          <TabsTrigger value="communities" className="rounded-lg py-2 text-base">
-            <Users className="mr-2 h-5 w-5" />
-            Comunidades ({myCommunities.length})
-          </TabsTrigger>
-          <TabsTrigger value="federations" className="rounded-lg py-2 text-base">
-            <Landmark className="mr-2 h-5 w-5" />
-            Entidades ({myFederations.length})
-          </TabsTrigger>
-           <TabsTrigger value="events" className="rounded-lg py-2 text-base" disabled>
-            <Calendar className="mr-2 h-5 w-5" />
-            Eventos (0)
-          </TabsTrigger>
-          <TabsTrigger value="study_groups" className="rounded-lg py-2 text-base">
-            <BookOpen className="mr-2 h-5 w-5" />
-            Grupos ({myStudyGroups.length})
-          </TabsTrigger>
-          <TabsTrigger value="political_parties" className="rounded-lg py-2 text-base">
-            <Shield className="mr-2 h-5 w-5" />
-            Partidos ({myPoliticalParties.length})
-          </TabsTrigger>
-        </TabsList>
+       <div className="space-y-4">
+            <h2 className="text-3xl font-bold font-headline">Mis Páginas</h2>
+            <Tabs defaultValue="communities" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-card/60 rounded-xl h-auto">
+                <TabsTrigger value="communities" className="rounded-lg py-2 text-base">
+                    <Users className="mr-2 h-5 w-5" />
+                    Comunidades ({myCommunities.length})
+                </TabsTrigger>
+                <TabsTrigger value="federations" className="rounded-lg py-2 text-base">
+                    <Landmark className="mr-2 h-5 w-5" />
+                    Entidades ({myFederations.length})
+                </TabsTrigger>
+                <TabsTrigger value="events" className="rounded-lg py-2 text-base" disabled>
+                    <Calendar className="mr-2 h-5 w-5" />
+                    Eventos (0)
+                </TabsTrigger>
+                <TabsTrigger value="study_groups" className="rounded-lg py-2 text-base">
+                    <BookOpen className="mr-2 h-5 w-5" />
+                    Grupos ({myStudyGroups.length})
+                </TabsTrigger>
+                <TabsTrigger value="political_parties" className="rounded-lg py-2 text-base">
+                    <Shield className="mr-2 h-5 w-5" />
+                    Partidos ({myPoliticalParties.length})
+                </TabsTrigger>
+                </TabsList>
 
-        <TabsContent value="communities" className="mt-6">{renderList(myCommunities)}</TabsContent>
-        <TabsContent value="federations" className="mt-6">{renderList(myFederations)}</TabsContent>
-        <TabsContent value="events" className="mt-6">{renderList([])}</TabsContent>
-        <TabsContent value="study_groups" className="mt-6">{renderList(myStudyGroups)}</TabsContent>
-        <TabsContent value="political_parties" className="mt-6">{renderList(myPoliticalParties)}</TabsContent>
-      </Tabs>
+                <TabsContent value="communities" className="mt-6">{renderList(myCommunities)}</TabsContent>
+                <TabsContent value="federations" className="mt-6">{renderList(myFederations)}</TabsContent>
+                <TabsContent value="events" className="mt-6">{renderList([])}</TabsContent>
+                <TabsContent value="study_groups" className="mt-6">{renderList(myStudyGroups)}</TabsContent>
+                <TabsContent value="political_parties" className="mt-6">{renderList(myPoliticalParties)}</TabsContent>
+            </Tabs>
+       </div>
     </div>
   );
 }
