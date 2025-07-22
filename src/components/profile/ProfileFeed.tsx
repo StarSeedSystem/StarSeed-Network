@@ -43,7 +43,7 @@ function PostCreator({ profile }: { profile: DocumentData }) {
                 title: "Publicación de perfil",
                 content: content,
                 area: 'profile',
-                destinations: [{ id: profile.id, type: 'profile' }], // Post to own profile
+                destinations: [{ id: profile.id, type: 'profile', name: profile.name }], // Post to own profile
                 comments: 0,
                 reposts: 0,
                 likes: 0,
@@ -91,7 +91,7 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
     const postsCollection = collection(db, "posts");
     const q = query(
         postsCollection, 
-        where("destinations", "array-contains", { id: profile.id, type: 'profile' }), 
+        where("destinations", "array-contains", { id: profile.id, type: 'profile', name: profile.name }), 
         orderBy("createdAt", "desc")
     );
 
@@ -134,7 +134,7 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
                         comments: post.comments,
                         reposts: post.reposts,
                         likes: post.likes,
-                        destinations: post.destinations.map((d: any) => d.id), // Simplify for display
+                        destinations: post.destinations.map((d: any) => d.name), // Simplify for display
                     }} />
                 ))
             ) : (

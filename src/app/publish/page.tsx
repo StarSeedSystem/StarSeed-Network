@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
@@ -29,12 +29,12 @@ import federations from '@/data/federations.json';
 import studyGroups from '@/data/study-groups.json';
 import politicalParties from '@/data/political-parties.json';
 
-const userPages: UserPage[] = [
-    { id: "profile", name: "Mi Perfil Personal", type: 'profile', areas: ['culture', 'education'] },
-    ...Object.values(communities).map(c => ({ id: c.slug, name: c.name, type: 'community', areas: ['culture', 'education', 'politics'] })),
-    ...Object.values(studyGroups).map(g => ({ id: g.slug, name: g.name, type: 'study_group', areas: ['education'] })),
-    ...Object.values(federations).map(f => ({ id: f.slug, name: f.name, type: 'federation', areas: ['politics'] })),
-    ...Object.values(politicalParties).map(p => ({ id: p.slug, name: p.name, type: 'political_party', areas: ['politics'] })),
+
+const allPages: UserPage[] = [
+    ...Object.values(communities).map(c => ({ id: c.slug, name: c.name, type: 'community' as const, areas: ['culture', 'education', 'politics'] })),
+    ...Object.values(studyGroups).map(g => ({ id: g.slug, name: g.name, type: 'study_group' as const, areas: ['education'] })),
+    ...Object.values(federations).map(f => ({ id: f.slug, name: f.name, type: 'federation' as const, areas: ['politics'] })),
+    ...Object.values(politicalParties).map(p => ({ id: p.slug, name: p.name, type: 'political_party' as const, areas: ['politics'] })),
 ];
 
 
@@ -50,6 +50,7 @@ export default function PublishPage() {
     const [step, setStep] = useState<Step>("area");
     const [selectedArea, setSelectedArea] = useState<Area | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [myPages, setMyPages] = useState<UserPage[]>([]);
 
     // -- Form Data State ---
     const [title, setTitle] = useState("");
@@ -61,6 +62,21 @@ export default function PublishPage() {
     const [isLegislative, setIsLegislative] = useState(false);
     const [isNews, setIsNews] = useState(false);
     
+    useEffect(() => {
+        if (!profile) return;
+        
+        const joinedPagesIds = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+        
+        const userAffiliatedPages = allPages.filter(page => 
+            joinedPagesIds[page.id] || (authUser && (page as any).creatorId === authUser.uid)
+        );
+        
+        const profilePage: UserPage = { id: profile.id, name: "Mi Perfil Personal", type: 'profile', areas: ['culture', 'education'] };
+
+        setMyPages([profilePage, ...userAffiliatedPages]);
+
+    }, [profile, authUser]);
+
 
     const handleAreaSelect = (area: Area) => {
         setSelectedArea(area);
@@ -86,6 +102,7 @@ export default function PublishPage() {
             setIsSubmitting(false);
             return;
         }
+         const isFederationSelected = selectedDestinations.some(d => d.type === 'federation');
          if (isFederationSelected && !federationArea) {
             toast({ title: "Falta área de la E.F.", description: "Debes seleccionar un área de destino dentro de la Entidad Federativa.", variant: "destructive" });
             setIsSubmitting(false);
@@ -93,10 +110,10 @@ export default function PublishPage() {
         }
 
         try {
-            if (isLegislative) {
+            if (isLegislative && isFederationSelected) {
                 // Handle legislative proposals separately by redirecting
                 const destination = selectedDestinations[0];
-                router.push(`/participations/create/proposal?publishedInId=${destination.id}&publishedInType=${destination.type}&publishedInName=${destination.name}`);
+                router.push(`/participations/create/proposal?publishedInId=${destination.id}&publishedInType=${destination.type}&publishedInName=${encodeURIComponent(destination.name)}`);
                 return;
             }
 
@@ -110,7 +127,7 @@ export default function PublishPage() {
                 content,
                 area: selectedArea,
                 isNews,
-                destinations: selectedDestinations.map(d => ({ id: d.id, type: d.type })), // <-- Multi-destination
+                destinations: selectedDestinations.map(d => ({ id: d.id, type: d.type, name: d.name })), // <-- Multi-destination
                 comments: 0,
                 likes: 0,
                 reposts: 0,
@@ -181,7 +198,7 @@ export default function PublishPage() {
                             <div>
                                 <h3 className="font-headline text-xl font-semibold mb-2">Paso 2: Elige el Destino</h3>
                                 <AudienceSelector 
-                                    availablePages={userPages}
+                                    availablePages={myPages}
                                     selectedArea={selectedArea}
                                     selectedDestinations={selectedDestinations}
                                     onSelectionChange={setSelectedDestinations}
