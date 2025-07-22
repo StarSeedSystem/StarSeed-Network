@@ -2,10 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, onSnapshot, DocumentData, updateDoc, arrayRemove, arrayUnion } from "firebase/firestore";
-import { db } from "@/data/firebase";
 import { notFound } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,6 +13,11 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { StudyGroupFeed } from "./StudyGroupFeed";
 import { BackButton } from "../utils/BackButton";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { StudyGroup } from "@/types/content-types";
+
+// --- Import local data ---
+import studyGroupData from "@/data/study-groups.json";
 
 
 interface StudyGroupPageProps {
@@ -40,62 +42,57 @@ function StudyGroupSkeleton() {
 
 export function StudyGroupPage({ slug }: StudyGroupPageProps) {
   const { user: authUser, loading: authLoading } = useUser();
-  const [group, setGroup] = useState<DocumentData | null>(null);
+  const [group, setGroup] = useState<StudyGroup | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
   const [isMember, setIsMember] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
   const { toast } = useToast();
 
   const isCreator = authUser && group?.creatorId === authUser.uid;
 
   useEffect(() => {
-    if (!slug) return;
-    setIsLoading(true);
-    const docRef = doc(db, "study_groups", slug);
-    const unsubscribe = onSnapshot(docRef, (doc) => {
-        if (doc.exists()) {
-        const data = { id: doc.id, ...doc.data() };
-        setGroup(data);
-        } else {
-        setGroup(null);
+    const localData = (studyGroupData.groups as any)[slug];
+    if (localData) {
+        setGroup(localData);
+        setMemberCount(localData.members || 0);
+        if(authUser) {
+            const joinedPages = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+            if (joinedPages[localData.id]) {
+                setIsMember(true);
+            }
         }
-        setIsLoading(false);
-    }, (error) => {
-        console.error("Error fetching group:", error);
-        setIsLoading(false);
-    });
-    return () => unsubscribe();
-  }, [slug]);
-  
-  useEffect(() => {
-    if (group && authUser) {
-        setIsMember(Array.isArray(group.members) && group.members.includes(authUser.uid));
     }
-  }, [group, authUser]);
+    setIsLoading(false);
+  }, [slug, authUser]);
 
-  const handleJoinLeave = async () => {
-      if (!authUser || !group?.id) {
+  const handleJoinLeave = () => {
+      if (!authUser || !group) {
           toast({ title: "Authentication Required", variant: "destructive" });
           return;
       }
 
       setIsJoiningLeaving(true);
-      const groupRef = doc(db, "study_groups", group.id);
       
-      try {
-        if (isMember) {
-            await updateDoc(groupRef, { members: arrayRemove(authUser.uid) });
-            toast({ title: "Left Group", description: `You have left ${group.name}.` });
-        } else {
-            await updateDoc(groupRef, { members: arrayUnion(authUser.uid) });
+      // Simulate the action locally using localStorage
+      setTimeout(() => {
+        const joinedPages = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+        const newIsMember = !isMember;
+
+        if (newIsMember) {
+            joinedPages[group.id] = true;
+            setMemberCount(prev => prev + 1);
             toast({ title: "Joined Group", description: `You have joined ${group.name}.` });
+        } else {
+            delete joinedPages[group.id];
+            setMemberCount(prev => prev - 1);
+            toast({ title: "Left Group", description: `You have left ${group.name}.` });
         }
-      } catch (error) {
-        console.error("Error updating membership", error);
-        toast({title: "Error", description: "Failed to update membership.", variant: "destructive"});
-      } finally {
+        
+        localStorage.setItem('joined_pages', JSON.stringify(joinedPages));
+        setIsMember(newIsMember);
         setIsJoiningLeaving(false);
-      }
+      }, 300);
   }
 
   if (isLoading || authLoading) {
@@ -106,19 +103,17 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
     notFound();
   }
 
-  const memberCount = Array.isArray(group.members) ? group.members.length : 0;
-
   return (
     <div className="space-y-6">
         <BackButton />
         <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
-            <Image src={group.banner || `https://placehold.co/1200x400.png?text=${group.name}`} alt={`${group.name} Banner`} layout="fill" objectFit="cover" data-ai-hint={group.bannerHint} />
+            <Image src={group.banner} alt={`${group.name} Banner`} layout="fill" objectFit="cover" data-ai-hint={group.bannerHint} />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </div>
         <div className="relative px-4 sm:px-8 pb-8 -mt-24">
             <div className="flex flex-col sm:flex-row items-start gap-6">
                 <Avatar className="w-32 h-32 border-4 border-background ring-4 ring-primary">
-                    <AvatarImage src={group.avatar || `https://avatar.vercel.sh/${group.slug}.png`} alt={`${group.name} Avatar`} data-ai-hint={group.avatarHint} />
+                    <AvatarImage src={group.avatar} alt={`${group.name} Avatar`} data-ai-hint={group.avatarHint} />
                     <AvatarFallback>{group.name.substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div className="pt-16 flex-grow">
@@ -156,7 +151,7 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
                     <TabsTrigger value="settings" className="rounded-lg py-2 text-base" disabled>Ajustes</TabsTrigger>
                 </TabsList>
                 <TabsContent value="publications" className="mt-6">
-                    {group?.id && <StudyGroupFeed groupId={group.id} />}
+                    {group.id && <StudyGroupFeed groupId={group.id} />}
                 </TabsContent>
                 <TabsContent value="discussions" className="mt-6">
                     <div className="text-center text-muted-foreground py-8">La zona de debate aparecerá aquí.</div>
@@ -172,7 +167,7 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
                              pathname: '/participations/create/tutorial',
                              query: {
                                  publishedInId: group.id,
-                                 publishedInType: 'study-group',
+                                 publishedInType: 'study_group',
                                  publishedInName: group.name
                              }
                          }}>

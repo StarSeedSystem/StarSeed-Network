@@ -2,10 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
-import { db } from "@/data/firebase";
 import { notFound } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,6 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext"; 
 import { useToast } from "@/hooks/use-toast"; 
 import { BackButton } from "../utils/BackButton";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { Community } from "@/types/content-types";
+
+// --- Import local data ---
+import communityData from "@/data/communities.json";
+
 
 interface CommunityPageProps {
   slug: string;
@@ -39,65 +42,56 @@ function CommunitySkeleton() {
 
 export function CommunityPage({ slug }: CommunityPageProps) {
   const { user: authUser, loading: authLoading } = useUser();
-  const [community, setCommunity] = useState<DocumentData | null>(null);
+  const [community, setCommunity] = useState<Community | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
   const [isMember, setIsMember] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
   
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!slug) return;
-    setIsLoading(true);
-    const docRef = doc(db, "communities", slug);
-    const unsubscribe = onSnapshot(docRef, (doc) => {
-      if (doc.exists()) {
-        setCommunity({ id: doc.id, ...doc.data() });
-      } else {
-        setCommunity(null);
-      }
-      setIsLoading(false);
-    }, (error) => {
-        console.error("Error fetching community:", error);
-        setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [slug]);
-
-  useEffect(() => {
-    if (community && authUser) {
-        setIsMember(Array.isArray(community.members) && community.members.includes(authUser.uid));
+    const localData = (communityData.communities as any)[slug];
+    if (localData) {
+        setCommunity(localData);
+        setMemberCount(localData.members || 0);
+        if(authUser) {
+            const joinedPages = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+            if (joinedPages[localData.id]) {
+                setIsMember(true);
+            }
+        }
     }
-  }, [community, authUser]);
+    setIsLoading(false);
+  }, [slug, authUser]);
 
-  const handleJoinLeave = async () => {
-      if (!authUser || !community?.id) {
+
+  const handleJoinLeave = () => {
+      if (!authUser || !community) {
           toast({ title: "Authentication Required", description: "You must be logged in to join or leave.", variant: "destructive" });
           return;
       }
       setIsJoiningLeaving(true);
       
-      const communityRef = doc(db, "communities", community.id);
+      // Simulate the action locally using localStorage
+      setTimeout(() => {
+          const joinedPages = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+          const newIsMember = !isMember;
 
-      try {
-        if (isMember) {
-            await updateDoc(communityRef, {
-                members: arrayRemove(authUser.uid)
-            });
-            toast({ title: "Left Community", description: `You have left ${community.name}.` });
-        } else {
-            await updateDoc(communityRef, {
-                members: arrayUnion(authUser.uid)
-            });
-            toast({ title: "Joined Community", description: `Welcome to ${community.name}!` });
-        }
-      } catch (error) {
-        console.error("Error updating membership:", error);
-        toast({ title: "Error", description: "Could not update membership.", variant: "destructive" });
-      } finally {
-        setIsJoiningLeaving(false);
-      }
+          if (newIsMember) {
+              joinedPages[community.id] = true;
+              setMemberCount(prev => prev + 1);
+              toast({ title: "Joined Community", description: `Welcome to ${community.name}!` });
+          } else {
+              delete joinedPages[community.id];
+              setMemberCount(prev => prev - 1);
+              toast({ title: "Left Community", description: `You have left ${community.name}.` });
+          }
+          
+          localStorage.setItem('joined_pages', JSON.stringify(joinedPages));
+          setIsMember(newIsMember);
+          setIsJoiningLeaving(false);
+      }, 300); // Simulate network delay
   }
 
   if (isLoading || authLoading) {
@@ -108,26 +102,24 @@ export function CommunityPage({ slug }: CommunityPageProps) {
     notFound();
   }
 
-  const memberCount = Array.isArray(community.members) ? community.members.length : 0;
-
   return (
     <div className="space-y-6">
         <BackButton />
         <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
-            <Image src={community?.banner || ''} alt="Community Banner" layout="fill" objectFit="cover" data-ai-hint={community?.bannerHint} />
+            <Image src={community.banner} alt="Community Banner" layout="fill" objectFit="cover" data-ai-hint={community.bannerHint} />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </div>
         <div className="relative px-4 sm:px-8 pb-8 -mt-24">
             <div className="flex flex-col sm:flex-row items-start gap-6">
             <Avatar className="w-32 h-32 border-4 border-background ring-4 ring-primary">
-                <AvatarImage src={community?.avatar || ''} alt="Community Avatar" data-ai-hint={community?.avatarHint} />
-                <AvatarFallback>{community?.name?.substring(0, 2) || ''}</AvatarFallback>
+                <AvatarImage src={community.avatar} alt="Community Avatar" data-ai-hint={community.avatarHint} />
+                <AvatarFallback>{community.name.substring(0, 2) || ''}</AvatarFallback>
             </Avatar>
             <div className="pt-16 flex-grow">
                 <div className="flex justify-between items-center flex-wrap gap-2">
                     <div>
-                        <h1 className="text-3xl font-bold font-headline">{community?.name}</h1>
-                        <p className="text-muted-foreground">{community?.description}</p>
+                        <h1 className="text-3xl font-bold font-headline">{community.name}</h1>
+                        <p className="text-muted-foreground">{community.description}</p>
                     </div>
                     {authUser && ( 
                         <Button onClick={handleJoinLeave} disabled={isJoiningLeaving}>
@@ -144,7 +136,7 @@ export function CommunityPage({ slug }: CommunityPageProps) {
                         <span className="text-sm text-muted-foreground">Log in to join</span>
                     )}
                 </div>
-                <p className="mt-4 text-foreground/90">{community?.longDescription}</p>
+                <p className="mt-4 text-foreground/90">{community.longDescription}</p>
             </div>
             </div>
         </div>
