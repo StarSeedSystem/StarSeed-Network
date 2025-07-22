@@ -1,2 +1,31 @@
 
-{}
+{
+    "innovacion-sostenible": {
+        "id": "innovacion-sostenible",
+        "slug": "innovacion-sostenible",
+        "name": "Innovación Sostenible",
+        "description": "Un colectivo para construir un futuro más verde.",
+        "longDescription": "Innovación Sostenible es una comunidad de práctica dedicada a la investigación, desarrollo e implementación de tecnologías y sistemas que promueven la armonía entre el desarrollo humano y los ecosistemas naturales. Nuestro enfoque abarca desde la permacultura y la bio-construcción hasta las redes de energía descentralizadas y las economías circulares. Creemos en un futuro donde la tecnología sirva para regenerar nuestro planeta. Buscamos a ingenieros, diseñadores, biólogos, sociólogos y a cualquier persona apasionada por co-crear un mañana sostenible.",
+        "avatar": "https://avatar.vercel.sh/innovacion-sostenible.png",
+        "avatarHint": "green leaf",
+        "banner": "https://placehold.co/1200x400/228B22/ffffff.png?text=Innovaci%C3%B3n+Sostenible",
+        "bannerHint": "lush forest canopy",
+        "members": 1257,
+        "type": "community",
+        "creatorId": "system"
+    },
+    "art-ai-collective": {
+        "id": "art-ai-collective",
+        "slug": "art-ai-collective",
+        "name": "Art-AI Collective",
+        "description": "Explorando la creatividad emergente y la conciencia a través del arte generativo.",
+        "longDescription": "El Colectivo Art-AI es un espacio de experimentación en la frontera entre el arte, la conciencia y la inteligencia artificial. Utilizamos modelos generativos como pinceles para explorar paisajes oníricos, crear estéticas ciberdélicas y cuestionar la naturaleza de la creatividad. Organizamos exhibiciones virtuales, talleres de 'prompt-craft' y debates filosóficos sobre el futuro del arte en la era de la IA. Si eres un artista, programador, poeta o simplemente un curioso del futuro de la expresión, este es tu lugar.",
+        "avatar": "https://avatar.vercel.sh/art-ai-collective.png",
+        "avatarHint": "abstract art",
+        "banner": "https://placehold.co/1200x400/8A2BE2/ffffff.png?text=Art-AI+Collective",
+        "bannerHint": "abstract digital art",
+        "members": 843,
+        "type": "community",
+        "creatorId": "system"
+    }
+}

@@ -1,6 +1,6 @@
 
 // src/app/federated-entity/[slug]/page.tsx
-import { FederatedEntityClient } from "@/components/entities/FederatedEntityClient";
+import { FederatedEntityPage } from "@/components/entities/FederatedEntityPage";
 
 interface EntityPageProps {
   params: {
@@ -8,6 +8,6 @@ interface EntityPageProps {
   };
 }
 
-export default function FederatedEntityPage({ params }: EntityPageProps) {
-    return <FederatedEntityClient slug={params.slug} />;
+export default function FederatedEntityProfilePage({ params }: EntityPageProps) {
+    return <FederatedEntityPage slug={params.slug} />;
 }

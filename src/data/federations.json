@@ -1,2 +1,18 @@
 
-{}
+{
+    "consejo-etica-digital": {
+        "id": "consejo-etica-digital",
+        "slug": "consejo-etica-digital",
+        "name": "Consejo de Ética Digital",
+        "description": "Supervisando el desarrollo ético de la tecnología en la red.",
+        "longDescription": "El Consejo de Ética Digital es una Entidad Federativa independiente responsable de establecer, revisar y hacer cumplir las directrices éticas para el desarrollo y despliegue de tecnologías dentro de la red, con un enfoque especial en la Inteligencia Artificial y los sistemas autónomos. Nuestro mandato es asegurar que toda tecnología respete la soberanía individual, promueva la equidad y mitigue los posibles daños. El consejo está compuesto por miembros elegidos de diversos campos, incluyendo la filosofía, el derecho, la ingeniería y las artes, para garantizar una perspectiva holística.",
+        "avatar": "https://avatar.vercel.sh/consejo-etica-digital.png",
+        "avatarHint": "balanced scale",
+        "banner": "https://placehold.co/1200x400/6a0dad/ffffff.png?text=Consejo+de+%C3%89tica",
+        "bannerHint": "abstract judicial background",
+        "members": 42,
+        "type": "federation",
+        "scope": "Global",
+        "creatorId": "system"
+    }
+}

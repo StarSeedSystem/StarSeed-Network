@@ -1,2 +1,18 @@
 
-{}
+{
+    "exploradores-cuanticos": {
+        "id": "exploradores-cuanticos",
+        "slug": "exploradores-cuanticos",
+        "name": "Exploradores de Computación Cuántica",
+        "description": "Un grupo de estudio para desentrañar los misterios de lo cuántico.",
+        "longDescription": "Este grupo está dedicado al estudio riguroso y la discusión de la computación cuántica y sus implicaciones. Abordamos temas desde los fundamentos de la mecánica cuántica, algoritmos como el de Shor y Grover, hasta las arquitecturas de hardware emergentes y sus potenciales aplicaciones en criptografía, medicina y ciencia de materiales. No se requiere un doctorado, pero sí una curiosidad insaciable y ganas de enfrentarse a conceptos que desafían la intuición clásica. Nos reunimos semanalmente para discutir papers y resolver problemas.",
+        "avatar": "https://avatar.vercel.sh/exploradores-cuanticos.png",
+        "avatarHint": "quantum atom",
+        "banner": "https://placehold.co/1200x400/4B0082/ffffff.png?text=Computaci%C3%B3n+Cu%C3%A1ntica",
+        "bannerHint": "quantum computing abstract",
+        "members": 152,
+        "type": "study_group",
+        "topic": "Computación Cuántica",
+        "creatorId": "system"
+    }
+}

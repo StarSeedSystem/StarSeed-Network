@@ -1,2 +1,18 @@
 
-{}
+{
+    "partido-conciencia-digital": {
+        "id": "partido-conciencia-digital",
+        "slug": "partido-conciencia-digital",
+        "name": "Partido de la Conciencia Digital (PCD)",
+        "description": "Por la soberanía del ser en la era digital.",
+        "longDescription": "El Partido de la Conciencia Digital (PCD) aboga por un marco político centrado en la protección de la conciencia individual y la soberanía de los datos. Nuestros principios clave son: 1. **Propiedad de Datos:** Cada individuo es el único propietario de los datos que genera. 2. **IA Ética:** Promovemos el desarrollo de inteligencias artificiales alineadas con los valores humanos y la transparencia algorítmica. 3. **Democracia Líquida:** Impulsamos sistemas de gobernanza descentralizados que permitan una participación ciudadana más directa y fluida. Nuestro objetivo es asegurar que el progreso tecnológico sirva para la emancipación y no para el control.",
+        "avatar": "https://avatar.vercel.sh/partido-conciencia-digital.png",
+        "avatarHint": "digital brain",
+        "banner": "https://placehold.co/1200x400/00008B/ffffff.png?text=Conciencia+Digital",
+        "bannerHint": "glowing data network",
+        "members": 2341,
+        "type": "political_party",
+        "ideology": "Soberanía Digital",
+        "creatorId": "system"
+    }
+}
