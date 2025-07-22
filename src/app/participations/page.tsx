@@ -154,9 +154,9 @@ export default function ConnectionsHubPage() {
             if (user) {
                 const userPages = allPagesData.filter(page => {
                     if (page.type === 'event') {
-                        return Array.isArray(page.attendees) && page.attendees?.includes(user.uid);
+                        return Array.isArray((page as Event).attendees) && (page as Event).attendees?.includes(user.uid);
                     } else {
-                        return Array.isArray(page.members) && page.members?.includes(user.uid);
+                        return Array.isArray((page as AnyEntity).members) && (page as AnyEntity).members?.includes(user.uid);
                     }
                 });
                 setMyPages(userPages);
@@ -196,7 +196,7 @@ export default function ConnectionsHubPage() {
         }
         return (
             <div className="space-y-4">
-                {items.map((item) => <ConnectionCard key={item.id} item={item} />)}
+                {items.map((item) => <ConnectionCard key={`${item.type}-${item.id}`} item={item} />)}
             </div>
         );
     };
@@ -274,7 +274,7 @@ export default function ConnectionsHubPage() {
                 <Carousel opts={{ align: "start", loop: false }} className="w-full">
                     <CarouselContent className="-ml-2">
                         {filteredRecommendations.map((item, index) => (
-                        <CarouselItem key={index} className="pl-2 basis-full sm:basis-1/2 md:basis-1/2 lg:basis-1/3">
+                        <CarouselItem key={`${item.type}-${item.id}`} className="pl-2 basis-full sm:basis-1/2 md:basis-1/2 lg:basis-1/3">
                             <Card className="bg-primary/5 h-full flex flex-col group overflow-hidden rounded-xl">
                                 <CardContent className="flex flex-col p-4 gap-3 flex-grow">
                                     <div className="flex items-center gap-3">
@@ -396,3 +396,5 @@ export default function ConnectionsHubPage() {
     </div>
   );
 }
+
+    
