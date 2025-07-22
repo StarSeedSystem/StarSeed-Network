@@ -1,3 +1,4 @@
+
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
@@ -6,12 +7,12 @@ import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration - THIS IS A PUBLIC, READ-ONLY DEMO PROJECT
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCV_TTa_3YmB7J_89g_u4P8V_jA4aTjZ-c",
+  authDomain: "dev-prototyper-tools.firebaseapp.com",
+  projectId: "dev-prototyper-tools",
+  storageBucket: "dev-prototyper-tools.appspot.com",
+  messagingSenderId: "983277328114",
+  appId: "1:983277328114:web:80447387a3c3182b13c77c"
 };
 
 // --- CORRECT INITIALIZATION LOGIC ---
