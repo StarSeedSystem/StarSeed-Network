@@ -10,6 +10,8 @@ import { BackButton } from "@/components/utils/BackButton";
 import { Calendar, MapPin, Users, Check } from "lucide-react";
 import type { Event } from "@/types/content-types";
 import eventData from "@/data/events.json";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface EventClientProps {
   slug: string;
@@ -18,6 +20,8 @@ interface EventClientProps {
 export function EventClient({ slug }: EventClientProps) {
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAttending, setIsAttending] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const localData = (eventData as any)[slug];
@@ -26,6 +30,17 @@ export function EventClient({ slug }: EventClientProps) {
     }
     setIsLoading(false);
   }, [slug]);
+
+  const handleAttendClick = () => {
+    setIsAttending(!isAttending);
+    if (!isAttending) {
+      toast({
+        title: "¡Inscripción confirmada!",
+        description: `Nos vemos en ${event?.name}.`,
+      });
+    }
+  };
+
 
   if (isLoading) {
     // You can add a skeleton loader here
@@ -61,8 +76,16 @@ export function EventClient({ slug }: EventClientProps) {
               <span>Organizado por {event.organizer.name}</span>
             </div>
           </div>
-          <Button size="lg" className="mt-6 w-full sm:w-auto">
-            <Check className="mr-2 h-5 w-5" /> Asistiré
+          <Button
+            size="lg"
+            className={cn(
+                "mt-6 w-full sm:w-auto",
+                isAttending && "bg-green-600 hover:bg-green-700"
+            )}
+            onClick={handleAttendClick}
+          >
+            <Check className="mr-2 h-5 w-5" />
+            {isAttending ? "Asistiendo" : "Asistiré"}
           </Button>
         </div>
       </div>
