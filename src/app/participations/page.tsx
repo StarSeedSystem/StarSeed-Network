@@ -8,7 +8,7 @@ import { db } from "@/data/firebase";
 import { useUser } from "@/context/UserContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star, Activity, Gavel, PlaySquare, Loader2, View, Sparkles } from "lucide-react";
+import { Search, Users, Shield, BookOpen, Handshake, Globe, Landmark, PlusCircle, Calendar, Star, Activity, Gavel, PlaySquare, Loader2, View, Sparkles, SlidersHorizontal, RefreshCw } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,18 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Progress } from "@/components/ui/progress";
 import type { AnyEntity, AnyRecommendedPage, Event } from "@/types/content-types";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useToast } from "@/hooks/use-toast";
+
 
 import communities from '@/data/communities.json';
 import federations from '@/data/federations.json';
@@ -111,9 +123,12 @@ const ConnectionCard = ({ item }: { item: AnyEntity }) => {
 
 export default function ConnectionsHubPage() {
     const { user } = useUser();
+    const { toast } = useToast();
     const [myPages, setMyPages] = useState<AnyEntity[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [recommendationFilter, setRecommendationFilter] = useState('for-you');
+    const [recommendationFilter, setRecommendationFilter] = useState('all');
+    const [personalizedFilter, setPersonalizedFilter] = useState('activity');
+
 
     useEffect(() => {
         setIsLoading(true);
@@ -159,16 +174,26 @@ export default function ConnectionsHubPage() {
         setIsLoading(false);
     }, [user]);
     
+    const handleReloadRecommendations = () => {
+        // Here you would typically call an AI service to get new recommendations.
+        // For now, we'll just show a toast message.
+        toast({
+            title: "Recomendaciones Actualizadas",
+            description: "Se ha generado una nueva lista de recomendaciones para ti.",
+        });
+        // To simulate a change, we could shuffle the array.
+    };
+
     const filteredRecommendations = useMemo(() => {
         if (recommendationFilter === 'all') {
             return recommendations;
         }
         if (recommendationFilter === 'for-you') {
-            // Placeholder for AI logic, for now show a curated list
-            return recommendations.slice(0, 5);
+            // This is where more complex AI logic would go based on `personalizedFilter`
+            return recommendations.slice(0, 5).sort(() => Math.random() - 0.5); // shuffle for simulation
         }
         return recommendations.filter(r => r.type === recommendationFilter);
-    }, [recommendationFilter]);
+    }, [recommendationFilter, personalizedFilter]);
 
     const myCommunities = myPages.filter(p => p.type === 'community');
     const myFederations = myPages.filter(p => p.type === 'federation');
@@ -225,15 +250,36 @@ export default function ConnectionsHubPage() {
                 <CardDescription>Descubre nuevas páginas y comunidades basadas en tus intereses.</CardDescription>
             </CardHeader>
             <CardContent>
-                 <Tabs value={recommendationFilter} onValueChange={setRecommendationFilter} className="w-full mb-4">
-                    <TabsList className="grid w-full grid-cols-5 bg-card/80">
-                        <TabsTrigger value="for-you" className="flex items-center gap-1.5"><Sparkles className="h-4 w-4 text-primary" /> Para ti</TabsTrigger>
-                        <TabsTrigger value="all">Todos</TabsTrigger>
-                        <TabsTrigger value="community">Comunidades</TabsTrigger>
-                        <TabsTrigger value="event">Eventos</TabsTrigger>
-                        <TabsTrigger value="political_party">Partidos</TabsTrigger>
-                    </TabsList>
-                </Tabs>
+                 <div className="flex flex-wrap items-center gap-2 mb-4">
+                     <Tabs value={recommendationFilter} onValueChange={setRecommendationFilter} className="flex-grow">
+                        <TabsList className="grid w-full grid-cols-4 bg-card/80">
+                            <TabsTrigger value="all">Todos</TabsTrigger>
+                            <TabsTrigger value="community">Comunidades</TabsTrigger>
+                            <TabsTrigger value="event">Eventos</TabsTrigger>
+                            <TabsTrigger value="political_party">Partidos</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline">
+                            <SlidersHorizontal className="mr-2 h-4 w-4"/>
+                            Filtro Personalizado
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56 glass-card">
+                        <DropdownMenuLabel>Criterios de IA</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuRadioGroup value={personalizedFilter} onValueChange={setPersonalizedFilter}>
+                          <DropdownMenuRadioItem value="activity">Basado en Actividad</DropdownMenuRadioItem>
+                          <DropdownMenuRadioItem value="new">Nuevas Entidades</DropdownMenuRadioItem>
+                          <DropdownMenuRadioItem value="location">Cerca de mí (AR)</DropdownMenuRadioItem>
+                        </DropdownMenuRadioGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button variant="ghost" size="icon" onClick={handleReloadRecommendations}>
+                        <RefreshCw className="h-4 w-4"/>
+                    </Button>
+                 </div>
                 <Carousel opts={{ align: "start", loop: false }} className="w-full">
                     <CarouselContent className="-ml-2">
                         {filteredRecommendations.map((item, index) => (
