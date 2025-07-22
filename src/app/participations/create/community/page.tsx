@@ -46,7 +46,7 @@ export default function CreateCommunityPage() {
             slug: communitySlug,
             description: communityDescription,
             longDescription: communityLongDescription,
-            members: 1,
+            members: [authUser.uid], // Initialize with creator's UID
             creatorId: authUser.uid,
             avatar: `https://avatar.vercel.sh/${communitySlug}.png?size=128`,
             avatarHint: "community logo",

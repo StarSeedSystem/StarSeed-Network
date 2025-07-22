@@ -44,7 +44,8 @@ export function CommunityClient({ slug }: CommunityClientProps) {
   const { toast } = useToast();
 
   // Check if the authenticated user is a member of this community
-  const isMember = authUser && community?.members?.includes(authUser.uid);
+  const isMember = authUser && Array.isArray(community?.members) && community.members.includes(authUser.uid);
+
 
   useEffect(() => {
     if (!slug) return;
@@ -160,7 +161,7 @@ export function CommunityClient({ slug }: CommunityClientProps) {
                 {/* Update Members tab to show the count from Firestore */}
                 <TabsList className="grid w-full grid-cols-4 bg-card/60 rounded-xl h-auto">
                 <TabsTrigger value="publications" className="rounded-lg py-2 text-base"><PenSquare className="mr-2 h-4 w-4"/>Publicaciones</TabsTrigger>
-                <TabsTrigger value="members" className="rounded-lg py-2 text-base"><Users className="mr-2 h-4 w-4"/>Miembros ({community?.members ? community.members.length : 0})</TabsTrigger>
+                <TabsTrigger value="members" className="rounded-lg py-2 text-base"><Users className="mr-2 h-4 w-4"/>Miembros ({Array.isArray(community?.members) ? community.members.length : 0})</TabsTrigger>
                 <TabsTrigger value="goals" className="rounded-lg py-2 text-base">Objetivos</TabsTrigger>
                 <TabsTrigger value="settings" className="rounded-lg py-2 text-base" disabled>Configuración</TabsTrigger>
                 </TabsList>
