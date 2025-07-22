@@ -51,7 +51,7 @@ export function CommunityPage({ slug }: CommunityPageProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    const localData = (communityData.communities as any)[slug];
+    const localData = (communityData as any)[slug];
     if (localData) {
         setCommunity(localData);
         setMemberCount(localData.members || 0);
