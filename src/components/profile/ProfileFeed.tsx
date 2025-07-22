@@ -83,7 +83,6 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Ensure we have a profile with an ID before querying
     if (!profile?.id) {
         setIsLoading(false);
         return;
@@ -91,33 +90,22 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
 
     const postsCollection = collection(db, "posts");
     
-    // Simplified query: Find all posts created by this author.
-    // This is much more efficient and doesn't require complex indexes.
-    // We will sort client-side.
     const q = query(
         postsCollection, 
-        where("authorId", "==", profile.id)
+        where("authorId", "==", profile.id),
+        orderBy("createdAt", "desc")
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const postsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        // Sort the posts by date on the client side for correct chronological order
-        postsData.sort((a, b) => {
-            const dateA = a.createdAt?.toDate() || 0;
-            const dateB = b.createdAt?.toDate() || 0;
-            return dateB - dateA;
-        });
-
         setPosts(postsData);
         setIsLoading(false);
     }, (error) => {
         console.error("Error fetching profile feed:", error);
-        setPosts([]); // Clear posts on error
+        setPosts([]);
         setIsLoading(false);
     });
 
-    // Cleanup the listener when the component unmounts or profile changes
     return () => unsubscribe();
   }, [profile]);
 
@@ -136,15 +124,19 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
             {posts.length > 0 ? (
                 posts.map((post) => (
                     <FeedPost key={post.id} post={{
+                        id: post.id,
                         author: post.authorName,
                         handle: post.handle,
                         avatar: post.avatarUrl,
                         avatarHint: "user avatar",
+                        title: post.title,
                         content: post.content,
                         comments: post.comments,
                         reposts: post.reposts,
                         likes: post.likes,
                         destinations: post.destinations.map((d: any) => d.name),
+                        blocks: post.blocks,
+                        createdAt: post.createdAt,
                     }} />
                 ))
             ) : (

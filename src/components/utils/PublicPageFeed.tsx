@@ -23,20 +23,22 @@ export function PublicPageFeed({ pageId }: PublicPageFeedProps) {
         }
 
         const postsCollection = collection(db, "posts");
-        // Query for posts where the destinations array contains the current page's ID
+        
+        // This query requires a composite index on (destinations, createdAt)
+        // Since we cannot create it programmatically, we will fetch and sort on the client
+        const robustQuery = query(postsCollection, where("destinations", "array-contains", { id: pageId, name: "", type: "" }));
         const q = query(
-            postsCollection, 
-            where("destinations", "array-contains", { id: pageId, name: "", type: "" }), // Structure needs to match what's stored
-            orderBy("createdAt", "desc")
+            collection(db, "posts"),
+            where("destinations", "array-contains-any", [
+                {id: pageId},
+                {id: pageId, name: '', type: ''},
+            ])
         );
-        
-        // A more flexible but less performant query might be needed if the name/type aren't known or consistent
-        // For now, we assume we know the ID.
-        // Let's make it more robust by querying for all posts and filtering client side. This avoids complex index needs.
-        
-        const robustQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
 
-        const unsubscribe = onSnapshot(robustQuery, (querySnapshot) => {
+        // A more robust but less performant query that doesn't need a composite index
+        const allPostsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+        
+        const unsubscribe = onSnapshot(allPostsQuery, (querySnapshot) => {
             const allPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
             // Filter on the client side
@@ -63,15 +65,19 @@ export function PublicPageFeed({ pageId }: PublicPageFeedProps) {
             {posts.length > 0 ? (
                 posts.map((post) => (
                     <FeedPost key={post.id} post={{
+                        id: post.id,
                         author: post.authorName,
                         handle: post.handle,
                         avatar: post.avatarUrl,
                         avatarHint: "user avatar",
+                        title: post.title,
                         content: post.content,
                         comments: post.comments,
                         reposts: post.reposts,
                         likes: post.likes,
                         destinations: post.destinations.map((d: any) => d.name),
+                        blocks: post.blocks,
+                        createdAt: post.createdAt
                     }} />
                 ))
             ) : (

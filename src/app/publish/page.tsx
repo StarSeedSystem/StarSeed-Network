@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import { addDoc, collection, serverTimestamp, getDocs, query } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, getDocs } from "firebase/firestore";
 import { db } from "@/data/firebase";
 
 // --- UI Imports ---
@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PenSquare, Gavel, GraduationCap, Palette, Send, ArrowRight, Loader2, Info } from "lucide-react";
+import { PenSquare, Gavel, GraduationCap, Palette, Send, ArrowRight, Loader2, Info, ListPlus, BarChart2, Table, Link, Vote } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 
@@ -22,7 +22,7 @@ import { AudienceSelector, UserPage } from "@/components/publish/AudienceSelecto
 import { LegislativeSettings } from "@/components/publish/LegislativeSettings";
 import { NewsSettings } from "@/components/publish/NewsSettings";
 import { FederatedEntitySettings } from "@/components/publish/FederatedEntitySettings";
-import type { AnyRecommendedPage } from "@/types/content-types";
+import { PollBlock, PollData } from "@/components/publish/PollBlock";
 
 
 type Area = "politics" | "culture" | "education";
@@ -40,12 +40,14 @@ export default function PublishPage() {
     const [myPages, setMyPages] = useState<UserPage[]>([]);
     const [isLoadingPages, setIsLoadingPages] = useState(true);
 
-
     // -- Form Data State ---
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [selectedDestinations, setSelectedDestinations] = useState<UserPage[]>([]);
     
+    // -- Block Data State --
+    const [blocks, setBlocks] = useState<any[]>([]);
+
     // -- Contextual Settings State --
     const [federationArea, setFederationArea] = useState<string | null>(null);
     const [isLegislative, setIsLegislative] = useState(false);
@@ -66,7 +68,7 @@ export default function PublishPage() {
             const userAffiliatedPages: UserPage[] = [];
 
             for (const c of collectionsToFetch) {
-                const q = query(collection(db, c.name));
+                const q = collection(db, c.name);
                 const querySnapshot = await getDocs(q);
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
@@ -85,10 +87,43 @@ export default function PublishPage() {
 
     }, [profile, authUser]);
 
+    useEffect(() => {
+        // Automatically add legislative block when conditions are met
+        if (isFederationSelected && federationArea === 'legislative' && isLegislative) {
+             const hasPollBlock = blocks.some(b => b.type === 'poll');
+             if (!hasPollBlock) {
+                 handleAddPoll();
+             }
+        } else {
+            // Clean up legislative poll block if conditions are no longer met
+             setBlocks(blocks.filter(b => !b.isLegislative));
+        }
+    }, [isFederationSelected, federationArea, isLegislative]);
+
 
     const handleAreaSelect = (area: Area) => {
         setSelectedArea(area);
         setStep("details");
+    };
+
+    const handleAddPoll = (isLegislativePoll = false) => {
+        const newPoll: PollData = {
+            type: 'poll',
+            question: '',
+            options: [{ text: '' }, { text: '' }],
+            isLegislative: isLegislativePoll,
+        };
+        setBlocks([...blocks, newPoll]);
+    };
+    
+    const updateBlockData = (index: number, data: any) => {
+        const newBlocks = [...blocks];
+        newBlocks[index] = { ...newBlocks[index], ...data };
+        setBlocks(newBlocks);
+    };
+
+    const removeBlock = (index: number) => {
+        setBlocks(blocks.filter((_, i) => i !== index));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -118,13 +153,19 @@ export default function PublishPage() {
         }
 
         try {
-            if (isLegislative && isFederationSelected) {
-                const destination = selectedDestinations[0];
-                router.push(`/participations/create/proposal?publishedInId=${destination.id}&publishedInType=${destination.type}&publishedInName=${encodeURIComponent(destination.name)}`);
-                return;
-            }
+            // Prepare blocks for saving, adding initial votes count
+            const blocksToSave = blocks.map(block => {
+                if (block.type === 'poll') {
+                    return {
+                        ...block,
+                        options: block.options.map((opt: {text: string}) => ({ text: opt.text, votes: 0 })),
+                    };
+                }
+                return block;
+            });
 
-            const postData = {
+
+            const postData: any = {
                 authorId: authUser.uid,
                 authorName: profile.name,
                 handle: profile.handle,
@@ -134,11 +175,18 @@ export default function PublishPage() {
                 area: selectedArea,
                 isNews,
                 destinations: selectedDestinations.map(d => ({ id: d.id, type: d.type, name: d.name })),
+                blocks: blocksToSave,
                 comments: 0,
                 likes: 0,
                 reposts: 0,
                 createdAt: serverTimestamp(),
             };
+            
+            if (isLegislative && isFederationSelected) {
+                postData.isLegislative = true;
+                // Add legislative settings to the post data from the form if needed
+            }
+
 
             await addDoc(collection(db, "posts"), postData);
             
@@ -167,6 +215,7 @@ export default function PublishPage() {
         setFederationArea(null);
         setIsLegislative(false);
         setIsNews(false);
+        setBlocks([]);
     }
     
     const isFederationSelected = selectedDestinations.some(d => d.type === 'federation');
@@ -214,6 +263,14 @@ export default function PublishPage() {
                             {isFederationSelected && (
                                  <FederatedEntitySettings onAreaChange={setFederationArea} />
                             )}
+                            
+                            {isFederationSelected && federationArea === 'legislative' && (
+                                <div className="flex items-center space-x-2 p-3 rounded-lg border border-primary/20 bg-primary/10">
+                                    <Info className="h-5 w-5 text-primary"/>
+                                    <Label htmlFor="add-voting" className="flex-grow">Convertir esta publicación en una Propuesta Legislativa formal (con votación)</Label>
+                                    <Switch id="add-voting" checked={isLegislative} onCheckedChange={setIsLegislative} />
+                                </div>
+                             )}
 
                             <div className="flex justify-end">
                                 <Button size="lg" onClick={() => setStep('canvas')} disabled={selectedDestinations.length === 0 || (isFederationSelected && !federationArea)}>
@@ -242,31 +299,48 @@ export default function PublishPage() {
                                             required
                                         />
                                     </div>
+
+                                    {/* Render blocks */}
+                                    <div className="space-y-4">
+                                        {blocks.map((block, index) => {
+                                            if (block.type === 'poll') {
+                                                return <PollBlock 
+                                                            key={index} 
+                                                            data={block} 
+                                                            onChange={(data) => updateBlockData(index, data)} 
+                                                            onRemove={() => removeBlock(index)}
+                                                            isLegislative={block.isLegislative}
+                                                        />
+                                            }
+                                            return null;
+                                        })}
+                                    </div>
                                 </div>
                                 <div className="space-y-4">
-                                     <h3 className="font-headline text-xl font-semibold">Ajustes de Publicación</h3>
+                                     <h3 className="font-headline text-xl font-semibold">Ajustes y Herramientas</h3>
                                      {(selectedArea === 'culture' || selectedArea === 'education') && (
                                          <NewsSettings isNews={isNews} onIsNewsChange={setIsNews} />
                                      )}
-
-                                     {isFederationSelected && federationArea === 'legislative' && (
-                                        <div className="flex items-center space-x-2 p-3 rounded-lg border border-primary/20 bg-primary/10">
-                                            <Info className="h-5 w-5 text-primary"/>
-                                            <Label htmlFor="add-voting" className="flex-grow">Convertir esta publicación en una Propuesta Legislativa formal (con votación)</Label>
-                                            <Switch id="add-voting" checked={isLegislative} onCheckedChange={setIsLegislative} />
-                                        </div>
-                                     )}
-                                     
+                                    
                                      {isLegislative && (
                                          <LegislativeSettings isLegislativeProposal={isLegislative} />
                                      )}
-                                     
+                                    
+                                    {/* Tool Palette */}
+                                    <Card className="glass-card">
+                                        <CardHeader className="pb-2">
+                                            <CardTitle className="text-base font-headline">Añadir Bloques</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="grid grid-cols-2 gap-2">
+                                            <ToolButton icon={Vote} label="Encuesta" onClick={() => handleAddPoll(false)} disabled={blocks.some(b => b.type === 'poll')}/>
+                                            <ToolButton icon={BarChart2} label="Gráfico" disabled/>
+                                            <ToolButton icon={Table} label="Tabla" disabled/>
+                                            <ToolButton icon={Link} label="Enlace" disabled/>
+                                        </CardContent>
+                                    </Card>
+
                                      <Button size="lg" className="w-full" type="submit" disabled={isSubmitting}>
-                                        {isSubmitting ? (
-                                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                        ) : (
-                                             <Send className="mr-2 h-5 w-5" />
-                                        )}
+                                        {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Send className="mr-2 h-5 w-5" />}
                                         Publicar en la Red
                                      </Button>
                                 </div>
@@ -280,7 +354,7 @@ export default function PublishPage() {
 }
 
 
-// --- Helper Component for Area Selection ---
+// --- Helper Components ---
 function AreaCard({ icon: Icon, title, description, onClick }: { icon: React.ElementType, title: string, description: string, onClick: () => void }) {
     return (
         <button onClick={onClick} className="text-left">
@@ -291,4 +365,13 @@ function AreaCard({ icon: Icon, title, description, onClick }: { icon: React.Ele
             </Card>
         </button>
     );
+}
+
+function ToolButton({ icon: Icon, label, onClick, disabled = false }: { icon: React.ElementType, label: string, onClick?: () => void, disabled?: boolean}) {
+    return (
+        <Button variant="outline" className="h-auto flex-col p-3 gap-1" onClick={onClick} disabled={disabled}>
+            <Icon className="h-5 w-5 text-primary/80" />
+            <span className="text-xs">{label}</span>
+        </Button>
+    )
 }

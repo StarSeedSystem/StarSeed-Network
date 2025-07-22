@@ -5,21 +5,28 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Repeat, Heart, Share, SendHorizonal } from "lucide-react";
+import { MessageSquare, Repeat, Heart, Share, SendHorizonal, Dot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import { Textarea } from "../ui/textarea";
+import { PollBlockDisplay } from "../publish/PollBlock";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 
 export interface FeedPostType {
+  id: string; // Add id to post type
   author: string;
   handle: string;
   avatar: string;
   avatarHint: string;
+  title: string;
   content: string;
   comments: number;
   reposts: number;
   likes: number;
   destinations?: string[];
+  blocks?: any[]; // For polls, etc.
+  createdAt?: { seconds: number, nanoseconds: number };
 }
 
 export function FeedPost({ post }: { post: FeedPostType }) {
@@ -57,6 +64,10 @@ export function FeedPost({ post }: { post: FeedPostType }) {
       }
   }
 
+  const timeAgo = post.createdAt?.seconds 
+    ? formatDistanceToNow(new Date(post.createdAt.seconds * 1000), { addSuffix: true, locale: es })
+    : "ahora";
+
   return (
     <Card className="glass-card rounded-2xl overflow-hidden flex flex-col">
       <CardHeader>
@@ -65,14 +76,27 @@ export function FeedPost({ post }: { post: FeedPostType }) {
             <AvatarImage src={post.avatar} alt={post.author} data-ai-hint={post.avatarHint} />
             <AvatarFallback>{post.author.substring(0, 2)}</AvatarFallback>
           </Avatar>
-          <div>
+          <div className="flex-grow">
             <p className="font-bold">{post.author}</p>
-            <p className="text-sm text-muted-foreground">@{post.handle}</p>
+            <div className="flex items-center text-sm text-muted-foreground">
+                <span>@{post.handle}</span>
+                <Dot />
+                <span>{timeAgo}</span>
+            </div>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="flex-grow">
+      <CardContent className="flex-grow space-y-4">
+        <h3 className="text-xl font-headline font-semibold">{post.title}</h3>
         <p className="text-foreground/90 whitespace-pre-wrap">{post.content}</p>
+        
+        {/* Render blocks */}
+        {post.blocks && post.blocks.map((block, index) => {
+            if (block.type === 'poll') {
+                return <PollBlockDisplay key={index} data={block} postId={post.id} />;
+            }
+            return null;
+        })}
       </CardContent>
       <CardFooter className="flex flex-col items-start gap-4">
         {post.destinations && post.destinations.length > 0 && (
