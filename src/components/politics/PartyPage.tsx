@@ -44,6 +44,7 @@ export function PartyPage({ slug }: PartyPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
   const [isMember, setIsMember] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
   const { toast } = useToast();
 
   const isCreator = authUser && party?.creatorId === authUser.uid;
@@ -52,12 +53,15 @@ export function PartyPage({ slug }: PartyPageProps) {
     const localData = (partyData as any)[slug];
     if (localData) {
         setParty(localData);
+        setMemberCount(localData.members || 0);
         setIsLoading(false);
     } else {
         const docRef = doc(db, "political_parties", slug);
         const unsubscribe = onSnapshot(docRef, (doc) => {
           if (doc.exists()) {
-            setParty({ id: doc.id, ...doc.data() });
+            const data = { id: doc.id, ...doc.data() };
+            setParty(data);
+            setMemberCount(Array.isArray(data.members) ? data.members.length : 0);
           } else {
             setParty(null);
           }
@@ -73,12 +77,12 @@ export function PartyPage({ slug }: PartyPageProps) {
 
   useEffect(() => {
     if (party && authUser) {
-        const membersArray = Array.isArray(party.members) ? party.members : [];
-        setIsMember(membersArray.includes(authUser.uid));
+        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+        setIsMember(!!localMembers[party.id]);
     }
   }, [party, authUser]);
 
-   const handleJoinLeave = async () => {
+   const handleJoinLeave = () => {
       if (!authUser || !party?.id) {
           toast({ title: "Authentication Required", variant: "destructive" });
           return;
@@ -87,38 +91,32 @@ export function PartyPage({ slug }: PartyPageProps) {
       setIsJoiningLeaving(true);
       
       setTimeout(() => {
-        if (isMember) {
-            setParty((prev: any) => ({ 
-                ...prev, 
-                members: typeof prev.members === 'number' ? prev.members - 1 : (Array.isArray(prev.members) ? prev.members.filter((uid: string) => uid !== authUser.uid) : 0)
-            }));
-            setIsMember(false);
-            toast({ title: "Left Party", description: `You have left ${party.name}.` });
-        } else {
-            setParty((prev: any) => ({ 
-                ...prev, 
-                members: typeof prev.members === 'number' ? prev.members + 1 : (Array.isArray(prev.members) ? [...prev.members, authUser.uid] : 1)
-            }));
-            setIsMember(true);
+        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+        const newIsMember = !isMember;
+
+        if (newIsMember) {
+            localMembers[party.id] = true;
+            setMemberCount(prev => prev + 1);
             toast({ title: "Joined Party", description: `You have joined ${party.name}.` });
+        } else {
+            delete localMembers[party.id];
+            setMemberCount(prev => prev - 1);
+            toast({ title: "Left Party", description: `You have left ${party.name}.` });
         }
+        
+        localStorage.setItem('joined_pages', JSON.stringify(localMembers));
+        setIsMember(newIsMember);
         setIsJoiningLeaving(false);
-      }, 500);
+      }, 300);
   }
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return <PartySkeleton />;
   }
 
   if (!party) {
     notFound();
   }
-
-  if (authLoading) {
-      return <PartySkeleton />;
-  }
-
-  const memberCount = Array.isArray(party?.members) ? party.members.length : (party?.members || 0);
 
   return (
     <div className="space-y-6">

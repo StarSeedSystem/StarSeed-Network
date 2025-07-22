@@ -17,67 +17,16 @@ import { Progress } from "@/components/ui/progress";
 import type { AnyEntity } from "@/types/content-types";
 import { cn } from "@/lib/utils";
 
-const recommendations: (AnyEntity & { type: 'community' | 'political_party' | 'study_group' | 'federation' })[] = [
-    {
-        id: "innovacion-sostenible",
-        name: "Innovación Sostenible",
-        slug: "innovacion-sostenible",
-        description: "Colectivo para construir un futuro más verde.",
-        avatar: "https://avatar.vercel.sh/innovacion-sostenible.png",
-        avatarHint: "green leaf",
-        type: "community",
-        members: 1257,
-        banner: "",
-        bannerHint: "",
-    },
-    {
-        id: "partido-conciencia-digital",
-        name: "Partido de la Conciencia Digital",
-        slug: "partido-conciencia-digital",
-        description: "Promoviendo la soberanía de datos y la IA ética.",
-        avatar: "https://avatar.vercel.sh/partido-conciencia-digital.png",
-        avatarHint: "digital brain",
-        type: "political_party",
-        members: 2341,
-        banner: "",
-        bannerHint: "",
-    },
-     {
-        id: "exploradores-cuanticos",
-        name: "Exploradores de Computación Cuántica",
-        slug: "exploradores-cuanticos",
-        description: "Grupo para investigar los límites de la computación.",
-        avatar: "https://avatar.vercel.sh/exploradores-cuanticos.png",
-        avatarHint: "quantum atom",
-        type: "study_group",
-        members: 152,
-        banner: "",
-        bannerHint: "",
-    },
-    {
-        id: "art-ai-collective",
-        name: "Art-AI Collective",
-        slug: "art-ai-collective",
-        description: "Comunidad para la exploración de la creatividad emergente.",
-        avatar: "https://avatar.vercel.sh/art-ai-collective.png",
-        avatarHint: "abstract art",
-        type: "community",
-        members: 843,
-        banner: "",
-        bannerHint: "",
-    },
-    {
-        id: "consejo-etica-digital",
-        name: "Consejo de Ética Digital",
-        slug: "consejo-etica-digital",
-        description: "Entidad que supervisa el desarrollo ético de la IA.",
-        avatar: "https://avatar.vercel.sh/consejo-etica-digital.png",
-        avatarHint: "balanced scale",
-        type: "federation",
-        members: 42,
-        banner: "",
-        bannerHint: "",
-    },
+import communities from '@/data/communities.json';
+import federations from '@/data/federations.json';
+import studyGroups from '@/data/study-groups.json';
+import politicalParties from '@/data/political-parties.json';
+
+const recommendations: AnyEntity[] = [
+    ...(Object.values(communities) as AnyEntity[]),
+    ...(Object.values(federations) as AnyEntity[]),
+    ...(Object.values(studyGroups) as AnyEntity[]),
+    ...(Object.values(politicalParties) as AnyEntity[]),
 ];
 
 const activeParticipations = {
@@ -101,10 +50,6 @@ const activeParticipations = {
         role: "Investigador Principal"
     }]
 };
-
-type ConnectionCardProps = {
-    item: AnyEntity;
-}
 
 const getEntityPath = (type: AnyEntity['type'], slug: string) => {
     switch (type) {
@@ -135,8 +80,9 @@ const entityCreationLinks = [
     { href: "#", icon: Calendar, label: "Evento", description: "Organiza encuentros y actividades.", disabled: true },
 ];
 
-const ConnectionCard = ({ item }: ConnectionCardProps) => {
+const ConnectionCard = ({ item }: { item: AnyEntity }) => {
     const href = getEntityPath(item.type, item.slug);
+    const memberCount = Array.isArray(item.members) ? item.members.length : (item.members || 0);
 
     return (
         <Card className="glass-card flex items-center p-4 gap-4">
@@ -148,7 +94,7 @@ const ConnectionCard = ({ item }: ConnectionCardProps) => {
                 <h3 className="font-headline text-lg font-semibold">{item.name}</h3>
                 <p className="text-sm font-semibold flex items-center mt-1">
                     <Users className="h-4 w-4 mr-2 text-primary" /> 
-                    {Array.isArray(item.members) ? item.members.length : (item.members || 0).toLocaleString()} Miembros
+                    {memberCount.toLocaleString()} Miembros
                 </p>
             </div>
             <Button asChild variant="outline">
@@ -160,46 +106,53 @@ const ConnectionCard = ({ item }: ConnectionCardProps) => {
 
 export default function ConnectionsHubPage() {
     const { user } = useUser();
-    const [myCommunities, setMyCommunities] = useState<AnyEntity[]>([]);
-    const [myFederations, setMyFederations] = useState<AnyEntity[]>([]);
-    const [myStudyGroups, setMyStudyGroups] = useState<AnyEntity[]>([]);
-    const [myPoliticalParties, setMyPoliticalParties] = useState<AnyEntity[]>([]);
+    const [myPages, setMyPages] = useState<AnyEntity[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [recommendationFilter, setRecommendationFilter] = useState('all');
 
     useEffect(() => {
-        if (!user) {
-            setIsLoading(false);
-            return;
-        }
-
-        const fetchAllData = async () => {
-            setIsLoading(true);
-            try {
-                const collections: { key: string; setter: Function; type: AnyEntity['type'] }[] = [
-                    { key: 'communities', setter: setMyCommunities, type: 'community' },
-                    { key: 'federated_entities', setter: setMyFederations, type: 'federation' },
-                    { key: 'study_groups', setter: setMyStudyGroups, type: 'study_group' },
-                    { key: 'political_parties', setter: setMyPoliticalParties, type: 'political_party' },
+        setIsLoading(true);
+        if (user) {
+            const fetchCreatedPages = async () => {
+                const collections: { key: string; type: AnyEntity['type'] }[] = [
+                    { key: 'communities', type: 'community' },
+                    { key: 'federated_entities', type: 'federation' },
+                    { key: 'study_groups', type: 'study_group' },
+                    { key: 'political_parties', type: 'political_party' },
                 ];
+                
+                try {
+                    const promises = collections.map(async ({ key, type }) => {
+                        const q = query(collection(db, key), where("creatorId", "==", user.uid));
+                        const querySnapshot = await getDocs(q);
+                        return querySnapshot.docs.map(doc => ({ type, id: doc.id, ...doc.data() } as AnyEntity));
+                    });
 
-                const promises = collections.map(async ({ key, setter, type }) => {
-                    const q = query(collection(db, key), where("creatorId", "==", user.uid));
-                    const querySnapshot = await getDocs(q);
-                    const data = querySnapshot.docs.map(doc => ({ type, id: doc.id, ...doc.data() } as AnyEntity));
-                    setter(data);
-                });
-
-                await Promise.all(promises);
-
-            } catch (error) {
-                console.error("Error fetching connection data from Firestore: ", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchAllData();
+                    const allCreatedPagesNested = await Promise.all(promises);
+                    const allCreatedPages = allCreatedPagesNested.flat();
+                    
+                    const joinedPagesIds = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+                    const joinedPages = recommendations.filter(rec => joinedPagesIds[rec.id]);
+                    
+                    const combinedPages = [...allCreatedPages, ...joinedPages];
+                    const uniquePages = Array.from(new Map(combinedPages.map(item => [item.id, item])).values());
+                    
+                    setMyPages(uniquePages);
+                } catch (error) {
+                    console.error("Error fetching created pages:", error);
+                    // On permission error, we still show joined pages
+                    const joinedPagesIds = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+                    const joinedPages = recommendations.filter(rec => joinedPagesIds[rec.id]);
+                    setMyPages(joinedPages);
+                }
+            };
+            fetchCreatedPages();
+        } else {
+             const joinedPagesIds = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+             const joinedPages = recommendations.filter(rec => joinedPagesIds[rec.id]);
+             setMyPages(joinedPages);
+        }
+        setIsLoading(false);
     }, [user]);
     
     const filteredRecommendations = useMemo(() => {
@@ -208,6 +161,11 @@ export default function ConnectionsHubPage() {
         }
         return recommendations.filter(r => r.type === recommendationFilter);
     }, [recommendationFilter]);
+
+    const myCommunities = myPages.filter(p => p.type === 'community');
+    const myFederations = myPages.filter(p => p.type === 'federation');
+    const myStudyGroups = myPages.filter(p => p.type === 'study_group');
+    const myPoliticalParties = myPages.filter(p => p.type === 'political_party');
 
     const renderList = (items: AnyEntity[]) => {
         if (isLoading) {
@@ -222,7 +180,6 @@ export default function ConnectionsHubPage() {
             </div>
         );
     };
-
 
   return (
     <div className="space-y-8">

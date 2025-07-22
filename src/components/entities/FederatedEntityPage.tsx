@@ -42,20 +42,22 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
   const [isMember, setIsMember] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
-    // First, try to load from local JSON data for recommended pages
     const localData = (federationData as any)[slug];
     if (localData) {
         setEntity(localData);
+        setMemberCount(localData.members || 0);
         setIsLoading(false);
     } else {
-        // If not a recommended page, fetch from Firestore
         const docRef = doc(db, "federated_entities", slug);
         const unsubscribe = onSnapshot(docRef, (doc) => {
           if (doc.exists()) {
-            setEntity({ id: doc.id, ...doc.data() });
+            const data = { id: doc.id, ...doc.data() };
+            setEntity(data);
+            setMemberCount(Array.isArray(data.members) ? data.members.length : 0);
           } else {
             setEntity(null);
           }
@@ -69,13 +71,13 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
   }, [slug]);
 
   useEffect(() => {
-    if(entity && authUser) {
-        const membersArray = Array.isArray(entity.members) ? entity.members : [];
-        setIsMember(membersArray.includes(authUser.uid));
+    if (entity && authUser) {
+        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+        setIsMember(!!localMembers[entity.id]);
     }
   }, [entity, authUser]);
 
-   const handleJoinLeave = async () => {
+   const handleJoinLeave = () => {
       if (!authUser || !entity?.id) {
           toast({ title: "Authentication Required", variant: "destructive" });
           return;
@@ -84,39 +86,32 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
       setIsJoiningLeaving(true);
       
       setTimeout(() => {
-          if (isMember) {
-              setEntity((prev: any) => ({
-                ...prev,
-                members: typeof prev.members === 'number' ? prev.members - 1 : (Array.isArray(prev.members) ? prev.members.filter((uid: string) => uid !== authUser.uid) : 0)
-              }));
-              setIsMember(false);
-              toast({ title: "Left Entity", description: `You have left ${entity.name}.` });
-          } else {
-              setEntity((prev: any) => ({
-                ...prev,
-                members: typeof prev.members === 'number' ? prev.members + 1 : (Array.isArray(prev.members) ? [...prev.members, authUser.uid] : 1)
-              }));
-              setIsMember(true);
+          const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+          const newIsMember = !isMember;
+
+          if (newIsMember) {
+              localMembers[entity.id] = true;
+              setMemberCount(prev => prev + 1);
               toast({ title: "Joined Entity", description: `You have joined ${entity.name}.` });
+          } else {
+              delete localMembers[entity.id];
+              setMemberCount(prev => prev - 1);
+              toast({ title: "Left Entity", description: `You have left ${entity.name}.` });
           }
+          
+          localStorage.setItem('joined_pages', JSON.stringify(localMembers));
+          setIsMember(newIsMember);
           setIsJoiningLeaving(false);
-      }, 500);
+      }, 300);
   }
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return <EntitySkeleton />;
   }
 
   if (!entity) {
     notFound();
   }
-
-  if (authLoading) {
-      return <EntitySkeleton />;
-  }
-  
-  const memberCount = Array.isArray(entity?.members) ? entity.members.length : (entity?.members || 0);
-
 
   return (
     <div className="space-y-6">
