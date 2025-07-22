@@ -91,12 +91,17 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
     const postsCollection = collection(db, "posts");
     const q = query(
         postsCollection, 
-        where("destinations", "array-contains", { id: profile.id, name: profile.name, type: 'profile'}), 
-        orderBy("createdAt", "desc")
+        where("destinations", "array-contains", { id: profile.id, name: profile.name, type: 'profile'})
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const postsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Sort posts by date on the client side
+        postsData.sort((a, b) => {
+            const dateA = a.createdAt?.toDate() || 0;
+            const dateB = b.createdAt?.toDate() || 0;
+            return dateB - dateA;
+        });
         setPosts(postsData);
         setIsLoading(false);
     }, (error) => {
