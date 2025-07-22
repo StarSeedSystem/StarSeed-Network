@@ -22,13 +22,16 @@ export function StudyGroupFeed({ groupId }: StudyGroupFeedProps) {
 
         const tutorialsCollection = collection(db, "tutorials");
         // Query for tutorials specifically published in this study group
-        const q = query(tutorialsCollection, where("publishedInProfileId", "==", groupId), orderBy("createdAt", "desc"));
+        const q = query(tutorialsCollection, orderBy("createdAt", "desc"));
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const tutorialsData = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            const tutorialsData = querySnapshot.docs
+                .map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }))
+                .filter(doc => doc.publishedInProfileId === groupId); // Filter client-side
+
             setTutorials(tutorialsData);
             setIsLoading(false);
         }, (error) => {

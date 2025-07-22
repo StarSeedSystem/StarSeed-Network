@@ -21,13 +21,16 @@ export function PartyFeed({ partyId }: PartyFeedProps) {
 
         const proposalsCollection = collection(db, "proposals");
         // Query for proposals specifically published in this party
-        const q = query(proposalsCollection, where("publishedInProfileId", "==", partyId), orderBy("createdAt", "desc"));
+        const q = query(proposalsCollection, orderBy("createdAt", "desc"));
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const proposalsData = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            const proposalsData = querySnapshot.docs
+                .map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }))
+                .filter(doc => doc.publishedInProfileId === partyId); // Filter client-side
+                
             setProposals(proposalsData);
             setIsLoading(false);
         }, (error) => {
@@ -53,6 +56,7 @@ export function PartyFeed({ partyId }: PartyFeedProps) {
                       title={proposal.title}
                        // Use author data from the proposal document
                       proposer={{ name: proposal.authorName, avatar: proposal.authorAvatar || "", avatarHint: "user avatar" }}
+                      entity={proposal.publishedInProfileName || "Red General"}
                       summary={proposal.summary}
                       status={proposal.status}
                       stats={{ support: proposal.votes?.for || 0, reject: proposal.votes?.against || 0, abstain: proposal.votes?.abstain || 0 }}
