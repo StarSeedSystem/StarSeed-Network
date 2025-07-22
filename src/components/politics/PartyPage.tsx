@@ -16,6 +16,7 @@ import { BackButton } from "../utils/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "@/data/firebase";
+import { PublicPageFeed } from "../utils/PublicPageFeed";
 
 interface PartyPageProps {
   slug: string;
@@ -52,8 +53,8 @@ export function PartyPage({ slug }: PartyPageProps) {
         if (doc.exists()) {
             const data = { id: doc.id, ...doc.data() };
             setParty(data);
-            if (authUser) {
-                setIsMember(Array.isArray(data.members) && data.members.includes(authUser.uid));
+            if (authUser && Array.isArray(data.members)) {
+                setIsMember(data.members.includes(authUser.uid));
             }
         } else {
             setParty(null);
@@ -137,7 +138,7 @@ export function PartyPage({ slug }: PartyPageProps) {
         </div>
 
         <div className="px-4 sm:px-8">
-            <Tabs defaultValue="proposals" className="w-full">
+            <Tabs defaultValue="publications" className="w-full">
                 <TabsList className="grid w-full grid-cols-4 bg-card/60 rounded-xl">
                     <TabsTrigger value="proposals" className="rounded-lg py-2 text-base"><Vote className="mr-2 h-4 w-4"/>Propuestas</TabsTrigger>
                     <TabsTrigger value="publications" className="rounded-lg py-2 text-base"><PenSquare className="mr-2 h-4 w-4"/>Publicaciones</TabsTrigger>
@@ -148,7 +149,7 @@ export function PartyPage({ slug }: PartyPageProps) {
                    {party.id && <PartyFeed partyId={party.id} />}
                 </TabsContent>
                 <TabsContent value="publications" className="mt-6">
-                   <div className="text-center text-muted-foreground py-8">Las publicaciones del partido aparecerán aquí.</div>
+                   <PublicPageFeed pageId={party.id} />
                 </TabsContent>
                 <TabsContent value="members" className="mt-6">
                     <div className="text-center text-muted-foreground py-8">La lista de miembros aparecerá aquí.</div>

@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Community } from "@/types/content-types";
 import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "@/data/firebase";
+import { PublicPageFeed } from "../utils/PublicPageFeed";
 
 interface CommunityPageProps {
   slug: string;
@@ -153,7 +154,7 @@ export function CommunityPage({ slug }: CommunityPageProps) {
                 <TabsTrigger value="settings" className="rounded-lg py-2 text-base" disabled>Configuración</TabsTrigger>
                 </TabsList>
                 <TabsContent value="publications" className="mt-6">
-                    <div className="text-center text-muted-foreground py-8">Las publicaciones de la comunidad aparecerán aquí.</div>
+                    <PublicPageFeed pageId={community.id} />
                 </TabsContent>
                 <TabsContent value="members" className="mt-6">
                      <div className="text-center text-muted-foreground py-8">La lista de miembros aparecerá aquí.</div>

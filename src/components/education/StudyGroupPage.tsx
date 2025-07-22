@@ -11,11 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { StudyGroupFeed } from "./StudyGroupFeed";
 import { BackButton } from "../utils/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "@/data/firebase";
+import { PublicPageFeed } from "../utils/PublicPageFeed";
 
 interface StudyGroupPageProps {
   slug: string;
@@ -52,8 +52,8 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
         if (doc.exists()) {
             const data = { id: doc.id, ...doc.data() };
             setGroup(data);
-            if (authUser) {
-                setIsMember(data.members?.includes(authUser.uid));
+            if (authUser && Array.isArray(data.members)) {
+                setIsMember(data.members.includes(authUser.uid));
             }
         } else {
             setGroup(null);
@@ -131,15 +131,13 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
                         )}
                         {!authUser && (<span className="text-sm text-muted-foreground">Log in to join</span>)}
                     </div>
-                     <div className="mt-4 text-foreground/90">
-                         <p>{group.longDescription || "No detailed description provided."}</p>
-                     </div>
+                    <p className="mt-4 text-foreground/90">{group.longDescription || "No detailed description provided."}</p>
                 </div>
             </div>
         </div>
 
         <div className="px-4 sm:px-8">
-            <Tabs defaultValue="discussions" className="w-full">
+            <Tabs defaultValue="publications" className="w-full">
                 <TabsList className="grid w-full grid-cols-4 bg-card/60 rounded-xl">
                     <TabsTrigger value="discussions" className="rounded-lg py-2 text-base"><BookOpen className="mr-2 h-4 w-4"/>Debates</TabsTrigger>
                      <TabsTrigger value="publications" className="rounded-lg py-2 text-base"><PenSquare className="mr-2 h-4 w-4"/>Recursos</TabsTrigger>
@@ -147,7 +145,7 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
                     <TabsTrigger value="settings" className="rounded-lg py-2 text-base" disabled>Ajustes</TabsTrigger>
                 </TabsList>
                 <TabsContent value="publications" className="mt-6">
-                    {group.id && <StudyGroupFeed groupId={group.id} />}
+                    <PublicPageFeed pageId={group.id} />
                 </TabsContent>
                 <TabsContent value="discussions" className="mt-6">
                     <div className="text-center text-muted-foreground py-8">La zona de debate aparecerá aquí.</div>

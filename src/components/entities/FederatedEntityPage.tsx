@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { FederatedEntity } from "@/types/content-types";
 import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "@/data/firebase";
+import { PublicPageFeed } from "../utils/PublicPageFeed";
 
 
 interface FederatedEntityPageProps {
@@ -137,18 +138,18 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
         </div>
 
         <div className="px-4 sm:px-8">
-            <Tabs defaultValue="directives" className="w-full">
+            <Tabs defaultValue="publications" className="w-full">
                 <TabsList className="grid w-full grid-cols-4 bg-card/60 rounded-xl">
                     <TabsTrigger value="directives" className="rounded-lg py-2 text-base"><Gavel className="mr-2 h-4 w-4"/>Directives</TabsTrigger>
                     <TabsTrigger value="publications" className="rounded-lg py-2 text-base"><PenSquare className="mr-2 h-4 w-4"/>Publications</TabsTrigger>
                     <TabsTrigger value="members" className="rounded-lg py-2 text-base"><Users className="mr-2 h-4 w-4"/>Miembros ({memberCount})</TabsTrigger>
                     <TabsTrigger value="settings" className="rounded-lg py-2 text-base" disabled>Settings</TabsTrigger>
                 </TabsList>
+                 <TabsContent value="publications" className="mt-6">
+                    <PublicPageFeed pageId={entity.id} />
+                </TabsContent>
                 <TabsContent value="directives" className="mt-6">
                     <div className="text-center text-muted-foreground py-8">Official directives and resolutions will appear here.</div>
-                </TabsContent>
-                <TabsContent value="publications" className="mt-6">
-                    <div className="text-center text-muted-foreground py-8">Las publicaciones de la entidad aparecerán aquí.</div>
                 </TabsContent>
                 <TabsContent value="members" className="mt-6">
                     <div className="text-center text-muted-foreground py-8">La lista de miembros aparecerá aquí.</div>
