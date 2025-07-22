@@ -2,8 +2,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
-import { db } from "@/data/firebase";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -17,6 +15,7 @@ import { StudyGroupFeed } from "./StudyGroupFeed";
 import { BackButton } from "../utils/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { StudyGroup } from "@/types/content-types";
+import studyGroupData from "@/data/study-groups.json";
 
 interface StudyGroupPageProps {
   slug: string;
@@ -40,62 +39,53 @@ function StudyGroupSkeleton() {
 
 export function StudyGroupPage({ slug }: StudyGroupPageProps) {
   const { user: authUser, loading: authLoading } = useUser();
-  const [group, setGroup] = useState<DocumentData | null>(null);
+  const [group, setGroup] = useState<StudyGroup | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
   const [isMember, setIsMember] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
   const { toast } = useToast();
 
-  const isCreator = authUser && group?.creatorId === authUser.uid;
+  useEffect(() => {
+    const localData = (studyGroupData as any)[slug];
+    if (localData) {
+        setGroup(localData);
+        setMemberCount(localData.members || 0);
+    }
+    setIsLoading(false);
+  }, [slug]);
 
   useEffect(() => {
     if (group && authUser) {
-        setIsMember(Array.isArray(group.members) && group.members.includes(authUser.uid));
+        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+        setIsMember(!!localMembers[group.id]);
     }
   }, [group, authUser]);
 
-  useEffect(() => {
-    if (!slug) return;
-
-    const docRef = doc(db, "study_groups", slug);
-    const unsubscribe = onSnapshot(docRef, (doc) => {
-      if (doc.exists()) {
-        setGroup({ id: doc.id, ...doc.data() });
-      } else {
-        setGroup(null);
-      }
-      setIsLoading(false);
-    }, (error) => {
-        console.error("Error fetching group:", error);
-        setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [slug]);
-
-  const handleJoinLeave = async () => {
+  const handleJoinLeave = () => {
       if (!authUser || !group?.id) {
           toast({ title: "Authentication Required", variant: "destructive" });
           return;
       }
-
       setIsJoiningLeaving(true);
-      const groupRef = doc(db, "study_groups", group.id);
-      
-      try {
-        if (isMember) {
-            await updateDoc(groupRef, { members: arrayRemove(authUser.uid) });
-            toast({ title: "Left Group", description: `You have left ${group.name}.` });
-        } else {
-            await updateDoc(groupRef, { members: arrayUnion(authUser.uid) });
+      setTimeout(() => {
+        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+        const newIsMember = !isMember;
+
+        if (newIsMember) {
+            localMembers[group.id] = true;
+            setMemberCount(prev => prev + 1);
             toast({ title: "Joined Group", description: `You have joined ${group.name}.` });
+        } else {
+            delete localMembers[group.id];
+            setMemberCount(prev => prev - 1);
+            toast({ title: "Left Group", description: `You have left ${group.name}.` });
         }
-      } catch(error) {
-        console.error("Error updating membership:", error);
-        toast({ title: "Error", description: "Could not update membership.", variant: "destructive"});
-      } finally {
+        
+        localStorage.setItem('joined_pages', JSON.stringify(localMembers));
+        setIsMember(newIsMember);
         setIsJoiningLeaving(false);
-      }
+      }, 300);
   }
 
   if (isLoading || authLoading) {
@@ -105,8 +95,6 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
   if (!group) {
     notFound();
   }
-  
-  const memberCount = Array.isArray(group.members) ? group.members.length : 0;
 
   return (
     <div className="space-y-6">

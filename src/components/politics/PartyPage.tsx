@@ -2,8 +2,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
-import { db } from "@/data/firebase";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -17,6 +15,7 @@ import { PartyFeed } from "./PartyFeed";
 import { BackButton } from "../utils/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PoliticalParty } from "@/types/content-types";
+import partyData from "@/data/political-parties.json";
 
 interface PartyPageProps {
   slug: string;
@@ -40,62 +39,53 @@ function PartySkeleton() {
 
 export function PartyPage({ slug }: PartyPageProps) {
   const { user: authUser, loading: authLoading } = useUser();
-  const [party, setParty] = useState<DocumentData | null>(null);
+  const [party, setParty] = useState<PoliticalParty | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
   const [isMember, setIsMember] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
   const { toast } = useToast();
 
-  const isCreator = authUser && party?.creatorId === authUser.uid;
+  useEffect(() => {
+    const localData = (partyData as any)[slug];
+    if (localData) {
+        setParty(localData);
+        setMemberCount(localData.members || 0);
+    }
+    setIsLoading(false);
+  }, [slug]);
 
   useEffect(() => {
     if (party && authUser) {
-        setIsMember(Array.isArray(party.members) && party.members.includes(authUser.uid));
+        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+        setIsMember(!!localMembers[party.id]);
     }
   }, [party, authUser]);
 
-  useEffect(() => {
-    if (!slug) return;
-
-    const docRef = doc(db, "political_parties", slug);
-    const unsubscribe = onSnapshot(docRef, (doc) => {
-      if (doc.exists()) {
-        setParty({ id: doc.id, ...doc.data() });
-      } else {
-        setParty(null);
-      }
-      setIsLoading(false);
-    }, (error) => {
-        console.error("Error fetching party:", error);
-        setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [slug]);
-
-
-   const handleJoinLeave = async () => {
-      if (!authUser || !party) {
+  const handleJoinLeave = () => {
+      if (!authUser || !party?.id) {
           toast({ title: "Authentication Required", variant: "destructive" });
           return;
       }
       setIsJoiningLeaving(true);
-      const partyRef = doc(db, "political_parties", party.id);
-      
-      try {
-        if (isMember) {
-            await updateDoc(partyRef, { members: arrayRemove(authUser.uid) });
-            toast({ title: "Left Party", description: `You have left ${party.name}.` });
-        } else {
-            await updateDoc(partyRef, { members: arrayUnion(authUser.uid) });
+      setTimeout(() => {
+        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+        const newIsMember = !isMember;
+
+        if (newIsMember) {
+            localMembers[party.id] = true;
+            setMemberCount(prev => prev + 1);
             toast({ title: "Joined Party", description: `You have joined ${party.name}.` });
+        } else {
+            delete localMembers[party.id];
+            setMemberCount(prev => prev - 1);
+            toast({ title: "Left Party", description: `You have left ${party.name}.` });
         }
-      } catch (error) {
-          console.error("Error updating membership:", error);
-          toast({ title: "Error", description: "Could not update membership.", variant: "destructive" });
-      } finally {
+        
+        localStorage.setItem('joined_pages', JSON.stringify(localMembers));
+        setIsMember(newIsMember);
         setIsJoiningLeaving(false);
-      }
+      }, 300);
   }
 
   if (isLoading || authLoading) {
@@ -105,8 +95,6 @@ export function PartyPage({ slug }: PartyPageProps) {
   if (!party) {
     notFound();
   }
-
-  const memberCount = Array.isArray(party.members) ? party.members.length : 0;
 
   return (
     <div className="space-y-6">

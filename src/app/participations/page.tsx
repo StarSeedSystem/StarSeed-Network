@@ -2,8 +2,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "@/data/firebase";
 import { useUser } from "@/context/UserContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +26,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast";
 
-// Fetching will now happen inside the component
+// Import local data
+import communitiesData from "@/data/communities.json";
+import federationsData from "@/data/federations.json";
+import partiesData from "@/data/political-parties.json";
+import studyGroupsData from "@/data/study-groups.json";
+import chatGroupsData from "@/data/chat-groups.json";
+import eventsData from "@/data/events.json";
+
+
 const activeParticipations = {
     votes: [{
         id: "prop-001",
@@ -88,7 +94,7 @@ const entityCreationLinks = [
 const ConnectionCard = ({ item }: { item: AnyRecommendedPage }) => {
     const href = getEntityPath(item.type, item.slug);
     const isEvent = item.type === 'event';
-    const memberCount = !isEvent ? (Array.isArray((item as AnyEntity).members) ? (item as AnyEntity).members.length : (item as AnyEntity).members) : 0;
+    const memberCount = !isEvent ? (item as AnyEntity).members : 0;
     const itemImage = 'avatar' in item ? item.avatar : item.image;
     const itemImageHint = 'avatarHint' in item ? item.avatarHint : item.imageHint;
 
@@ -123,71 +129,53 @@ const ConnectionCard = ({ item }: { item: AnyRecommendedPage }) => {
 export default function ConnectionsHubPage() {
     const { user } = useUser();
     const { toast } = useToast();
-    const [allPages, setAllPages] = useState<AnyEntity[]>([]);
-    const [myPages, setMyPages] = useState<AnyEntity[]>([]);
+    const [allPages, setAllPages] = useState<AnyRecommendedPage[]>([]);
+    const [myPages, setMyPages] = useState<AnyRecommendedPage[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [recommendationFilter, setRecommendationFilter] = useState('all');
     const [personalizedFilter, setPersonalizedFilter] = useState('activity');
 
 
     useEffect(() => {
-        const fetchAllData = async () => {
-            setIsLoading(true);
-            const collections: { key: string; type: AnyEntity['type'] }[] = [
-                { key: 'communities', type: 'community' },
-                { key: 'federated_entities', type: 'federation' },
-                { key: 'study_groups', type: 'study_group' },
-                { key: 'political_parties', type: 'political_party' },
-                { key: 'chat_groups', type: 'chat_group' },
-            ];
+        setIsLoading(true);
+        // Load all data from local JSON files
+        const loadedCommunities = Object.values(communitiesData).map(c => ({...c, type: 'community' as const}));
+        const loadedFederations = Object.values(federationsData).map(f => ({...f, type: 'federation' as const}));
+        const loadedParties = Object.values(partiesData).map(p => ({...p, type: 'political_party' as const}));
+        const loadedStudyGroups = Object.values(studyGroupsData).map(g => ({...g, type: 'study_group' as const}));
+        const loadedChatGroups = Object.values(chatGroupsData).map(g => ({...g, type: 'chat_group' as const}));
+        const loadedEvents = Object.values(eventsData).map(e => ({...e, type: 'event' as const}));
 
-            try {
-                const promises = collections.map(async ({ key, type }) => {
-                    const q = query(collection(db, key));
-                    const querySnapshot = await getDocs(q);
-                    return querySnapshot.docs.map(doc => ({ type, id: doc.id, ...doc.data() } as AnyEntity));
-                });
+        const allDataFlat = [
+            ...loadedCommunities,
+            ...loadedFederations,
+            ...loadedParties,
+            ...loadedStudyGroups,
+            ...loadedChatGroups,
+            ...loadedEvents
+        ];
+        
+        setAllPages(allDataFlat);
 
-                const allDataNested = await Promise.all(promises);
-                const allDataFlat = allDataNested.flat();
-                setAllPages(allDataFlat);
+        if (user) {
+            const joinedPagesData = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+            const userPages = allDataFlat.filter(page => joinedPagesData[page.id]);
+            setMyPages(userPages);
+        }
 
-                if (user) {
-                    const userPages = allDataFlat.filter(page => 
-                        (page.creatorId === user.uid) || 
-                        (Array.isArray(page.members) && page.members.includes(user.uid))
-                    );
-                    setMyPages(userPages);
-                }
-
-            } catch (error) {
-                console.error("Error fetching Firestore data:", error);
-                toast({ title: "Error al cargar datos", description: "No se pudo conectar con el servidor.", variant: "destructive" });
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchAllData();
-    }, [user, toast]);
+        setIsLoading(false);
+    }, [user]);
     
     const handleReloadRecommendations = () => {
-        // Here you would typically call an AI service to get new recommendations.
-        // For now, we'll just show a toast message.
         toast({
             title: "Recomendaciones Actualizadas",
             description: "Se ha generado una nueva lista de recomendaciones para ti.",
         });
-        // To simulate a change, we could shuffle the array.
     };
 
     const filteredRecommendations = useMemo(() => {
-        if (recommendationFilter === 'all') {
-            return allPages;
-        }
-        if (recommendationFilter === 'groups') {
-            return allPages.filter(r => r.type === 'study_group' || r.type === 'chat_group');
-        }
+        if (recommendationFilter === 'all') return allPages;
+        if (recommendationFilter === 'groups') return allPages.filter(r => r.type === 'study_group' || r.type === 'chat_group');
         return allPages.filter(r => r.type === recommendationFilter);
     }, [recommendationFilter, allPages]);
 
@@ -195,7 +183,7 @@ export default function ConnectionsHubPage() {
     const myFederations = myPages.filter(p => p.type === 'federation');
     const myGroups = myPages.filter(p => p.type === 'study_group' || p.type === 'chat_group');
     const myPoliticalParties = myPages.filter(p => p.type === 'political_party');
-    const myEvents: Event[] = []; // This should be fetched from user data if stored there
+    const myEvents = myPages.filter(p => p.type === 'event');
 
     const renderList = (items: AnyRecommendedPage[]) => {
         if (isLoading) {
@@ -255,7 +243,7 @@ export default function ConnectionsHubPage() {
                             <TabsTrigger value="federation">Entidades</TabsTrigger>
                             <TabsTrigger value="groups">Grupos</TabsTrigger>
                             <TabsTrigger value="political_party">Partidos</TabsTrigger>
-                            <TabsTrigger value="event" disabled>Eventos</TabsTrigger>
+                            <TabsTrigger value="event">Eventos</TabsTrigger>
                         </TabsList>
                     </Tabs>
                     <div className="flex gap-2">
@@ -390,7 +378,7 @@ export default function ConnectionsHubPage() {
                     <Shield className="mr-2 h-5 w-5" />
                     Partidos ({myPoliticalParties.length})
                 </TabsTrigger>
-                <TabsTrigger value="events" className="rounded-lg py-2 text-base" disabled>
+                <TabsTrigger value="events" className="rounded-lg py-2 text-base">
                     <Calendar className="mr-2 h-5 w-5" />
                     Eventos ({myEvents.length})
                 </TabsTrigger>
