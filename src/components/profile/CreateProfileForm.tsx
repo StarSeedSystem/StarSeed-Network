@@ -4,7 +4,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { doc, setDoc } from "firebase/firestore";
-import { db } from "@/data/firebase";
+import { updateProfile } from "firebase/auth";
+import { db, auth } from "@/data/firebase";
 import { useUser } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,20 +35,34 @@ export function CreateProfileForm() {
         setIsCreatingProfile(true);
 
         const finalHandle = slugify(handle);
+        const avatarUrl = `https://avatar.vercel.sh/${finalHandle}.png`;
 
         try {
+            // 1. Update the Firebase Auth user profile
+            await updateProfile(auth.currentUser!, {
+                displayName: displayName,
+                photoURL: avatarUrl,
+            });
+
+            // 2. Create the Firestore user document
             const newProfile = {
                 name: displayName,
                 handle: finalHandle,
                 bio: bio,
-                avatarUrl: `https://avatar.vercel.sh/${finalHandle}.png`,
+                avatarUrl: avatarUrl,
                 bannerUrl: "https://placehold.co/1200x400/0a0a0b/9ca3af.png?text=Bienvenido+al+Nexo",
                 badges: { nexusPioneer: true },
                 createdAt: new Date(),
             };
             await setDoc(doc(db, "users", authUser.uid), newProfile, { merge: true });
+            
             toast({ title: "¡Perfil Creado!", description: "Bienvenido al Nexo, Pionero." });
+            
+            // 3. Force a reload of the /profile page to reflect new state
             router.push('/profile');
+            // A full refresh might be needed if UserContext doesn't update immediately
+            router.refresh(); 
+
         } catch (error) {
             console.error("Error creando perfil:", error);
             toast({ title: "Error", description: "No se pudo crear tu perfil.", variant: "destructive" });
