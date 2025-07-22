@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -252,9 +251,10 @@ export default function ConnectionsHubPage() {
             <CardContent>
                  <div className="flex flex-wrap items-center gap-2 mb-4">
                      <Tabs value={recommendationFilter} onValueChange={setRecommendationFilter} className="flex-grow">
-                        <TabsList className="grid w-full grid-cols-4 bg-card/80">
+                        <TabsList className="grid w-full grid-cols-5 bg-card/80">
                             <TabsTrigger value="all">Todos</TabsTrigger>
                             <TabsTrigger value="community">Comunidades</TabsTrigger>
+                            <TabsTrigger value="federation">Entidades</TabsTrigger>
                             <TabsTrigger value="event">Eventos</TabsTrigger>
                             <TabsTrigger value="political_party">Partidos</TabsTrigger>
                         </TabsList>
@@ -405,3 +405,5 @@ export default function ConnectionsHubPage() {
     </div>
   );
 }
+
+    
