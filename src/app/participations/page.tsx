@@ -33,7 +33,7 @@ import communities from '@/data/communities.json';
 import federations from '@/data/federations.json';
 import studyGroups from '@/data/study-groups.json';
 import politicalParties from '@/data/political-parties.json';
-import events from '@/data/events.json';
+import eventsData from '@/data/events.json';
 import chatGroups from '@/data/chat-groups.json';
 
 const recommendations: AnyRecommendedPage[] = [
@@ -42,7 +42,7 @@ const recommendations: AnyRecommendedPage[] = [
     ...(Object.values(studyGroups) as AnyEntity[]),
     ...(Object.values(politicalParties) as AnyEntity[]),
     ...(Object.values(chatGroups) as AnyEntity[]),
-    ...(Object.values(events) as Event[]),
+    ...(Object.values(eventsData) as Event[]),
 ];
 
 const activeParticipations = {
@@ -101,22 +101,33 @@ const entityCreationLinks = [
     { href: "/participations/create/event", icon: Calendar, label: "Evento", description: "Organiza encuentros y actividades.", disabled: false },
 ];
 
-const ConnectionCard = ({ item }: { item: AnyEntity }) => {
+const ConnectionCard = ({ item }: { item: AnyRecommendedPage }) => {
     const href = getEntityPath(item.type, item.slug);
-    const memberCount = Array.isArray(item.members) ? item.members.length : (item.members || 0);
+    const isEvent = item.type === 'event';
+    const memberCount = !isEvent ? (item as AnyEntity).members : 0;
+    const itemImage = 'avatar' in item ? item.avatar : item.image;
+    const itemImageHint = 'avatarHint' in item ? item.avatarHint : item.imageHint;
+
 
     return (
         <Card className="glass-card flex items-center p-4 gap-4">
             <Avatar className="h-16 w-16 border-2 border-primary/30">
-                <AvatarImage src={item.avatar} alt={item.name} data-ai-hint={item.avatarHint} />
+                <AvatarImage src={itemImage} alt={item.name} data-ai-hint={itemImageHint} />
                 <AvatarFallback>{item.name.substring(0,2)}</AvatarFallback>
             </Avatar>
             <div className="flex-grow">
                 <h3 className="font-headline text-lg font-semibold">{item.name}</h3>
-                <p className="text-sm font-semibold flex items-center mt-1">
-                    <Users className="h-4 w-4 mr-2 text-primary" /> 
-                    {memberCount.toLocaleString()} Miembros
-                </p>
+                 {isEvent ? (
+                     <p className="text-sm font-semibold flex items-center mt-1">
+                        <Calendar className="h-4 w-4 mr-2 text-primary" /> 
+                        {(item as Event).date}
+                    </p>
+                 ) : (
+                    <p className="text-sm font-semibold flex items-center mt-1">
+                        <Users className="h-4 w-4 mr-2 text-primary" /> 
+                        {memberCount.toLocaleString()} Miembros
+                    </p>
+                 )}
             </div>
             <Button asChild variant="outline">
                 <Link href={href}>Ver Página</Link>
@@ -129,6 +140,7 @@ export default function ConnectionsHubPage() {
     const { user } = useUser();
     const { toast } = useToast();
     const [myPages, setMyPages] = useState<AnyEntity[]>([]);
+    const [myEvents, setMyEvents] = useState<Event[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [recommendationFilter, setRecommendationFilter] = useState('all');
     const [personalizedFilter, setPersonalizedFilter] = useState('activity');
@@ -136,6 +148,15 @@ export default function ConnectionsHubPage() {
 
     useEffect(() => {
         setIsLoading(true);
+        // Load joined pages from local storage
+        const joinedPagesIds = JSON.parse(localStorage.getItem('joined_pages') || '{}');
+        const joinedPages = recommendations.filter(rec => rec.type !== 'event' && joinedPagesIds[rec.id]) as AnyEntity[];
+
+        // Load attended events from local storage
+        const attendedEventsIds = JSON.parse(localStorage.getItem('attended_events') || '{}');
+        const attendedEvents = recommendations.filter(rec => rec.type === 'event' && attendedEventsIds[rec.id]) as Event[];
+        setMyEvents(attendedEvents);
+
         if (user) {
             const fetchCreatedPages = async () => {
                 const collections: { key: string; type: AnyEntity['type'] }[] = [
@@ -156,24 +177,17 @@ export default function ConnectionsHubPage() {
                     const allCreatedPagesNested = await Promise.all(promises);
                     const allCreatedPages = allCreatedPagesNested.flat();
                     
-                    const joinedPagesIds = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-                    const joinedPages = recommendations.filter(rec => rec.type !== 'event' && joinedPagesIds[rec.id]) as AnyEntity[];
-                    
                     const combinedPages = [...allCreatedPages, ...joinedPages];
                     const uniquePages = Array.from(new Map(combinedPages.map(item => [item.id, item])).values());
                     
                     setMyPages(uniquePages);
                 } catch (error) {
                     console.error("Error fetching created pages:", error);
-                    const joinedPagesIds = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-                    const joinedPages = recommendations.filter(rec => rec.type !== 'event' && joinedPagesIds[rec.id]) as AnyEntity[];
                     setMyPages(joinedPages);
                 }
             };
             fetchCreatedPages();
         } else {
-             const joinedPagesIds = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-             const joinedPages = recommendations.filter(rec => rec.type !== 'event' && joinedPagesIds[rec.id]) as AnyEntity[];
              setMyPages(joinedPages);
         }
         setIsLoading(false);
@@ -204,7 +218,7 @@ export default function ConnectionsHubPage() {
     const myGroups = myPages.filter(p => p.type === 'study_group' || p.type === 'chat_group');
     const myPoliticalParties = myPages.filter(p => p.type === 'political_party');
 
-    const renderList = (items: AnyEntity[]) => {
+    const renderList = (items: AnyRecommendedPage[]) => {
         if (isLoading) {
             return <div className="flex justify-center items-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
         }
@@ -397,9 +411,9 @@ export default function ConnectionsHubPage() {
                     <Shield className="mr-2 h-5 w-5" />
                     Partidos ({myPoliticalParties.length})
                 </TabsTrigger>
-                <TabsTrigger value="events" className="rounded-lg py-2 text-base" disabled>
+                <TabsTrigger value="events" className="rounded-lg py-2 text-base">
                     <Calendar className="mr-2 h-5 w-5" />
-                    Eventos (0)
+                    Eventos ({myEvents.length})
                 </TabsTrigger>
                 </TabsList>
 
@@ -407,7 +421,7 @@ export default function ConnectionsHubPage() {
                 <TabsContent value="federations" className="mt-6">{renderList(myFederations)}</TabsContent>
                 <TabsContent value="groups" className="mt-6">{renderList(myGroups)}</TabsContent>
                 <TabsContent value="political_parties" className="mt-6">{renderList(myPoliticalParties)}</TabsContent>
-                <TabsContent value="events" className="mt-6">{renderList([])}</TabsContent>
+                <TabsContent value="events" className="mt-6">{renderList(myEvents)}</TabsContent>
             </Tabs>
        </div>
     </div>

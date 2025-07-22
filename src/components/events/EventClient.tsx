@@ -4,14 +4,14 @@
 import { useState, useEffect } from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/utils/BackButton";
-import { Calendar, MapPin, Users, Check } from "lucide-react";
+import { Calendar, MapPin, Users, Check, Loader2 } from "lucide-react";
 import type { Event } from "@/types/content-types";
 import eventData from "@/data/events.json";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/context/UserContext";
 
 interface EventClientProps {
   slug: string;
@@ -21,24 +21,53 @@ export function EventClient({ slug }: EventClientProps) {
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAttending, setIsAttending] = useState(false);
+  const [isUpdatingAttendance, setIsUpdatingAttendance] = useState(false);
   const { toast } = useToast();
+  const { user } = useUser();
 
   useEffect(() => {
     const localData = (eventData as any)[slug];
     if (localData) {
       setEvent(localData);
+      if(user) {
+        const attendedEvents = JSON.parse(localStorage.getItem('attended_events') || '{}');
+        if (attendedEvents[localData.id]) {
+            setIsAttending(true);
+        }
+      }
     }
     setIsLoading(false);
-  }, [slug]);
+  }, [slug, user]);
 
   const handleAttendClick = () => {
-    setIsAttending(!isAttending);
-    if (!isAttending) {
-      toast({
-        title: "¡Inscripción confirmada!",
-        description: `Nos vemos en ${event?.name}.`,
-      });
+    if (!user || !event) {
+        toast({ title: "Debes iniciar sesión para asistir.", variant: "destructive" });
+        return;
     }
+
+    setIsUpdatingAttendance(true);
+    setTimeout(() => {
+        const attendedEvents = JSON.parse(localStorage.getItem('attended_events') || '{}');
+        const newIsAttending = !isAttending;
+
+        if (newIsAttending) {
+            attendedEvents[event.id] = true;
+            toast({
+                title: "¡Inscripción confirmada!",
+                description: `Nos vemos en ${event?.name}.`,
+            });
+        } else {
+            delete attendedEvents[event.id];
+            toast({
+                title: "Asistencia cancelada",
+                description: `Ya no asistirás a ${event?.name}.`,
+            });
+        }
+        
+        localStorage.setItem('attended_events', JSON.stringify(attendedEvents));
+        setIsAttending(newIsAttending);
+        setIsUpdatingAttendance(false);
+    }, 300);
   };
 
 
@@ -83,9 +112,15 @@ export function EventClient({ slug }: EventClientProps) {
                 isAttending && "bg-green-600 hover:bg-green-700"
             )}
             onClick={handleAttendClick}
+            disabled={!user || isUpdatingAttendance}
           >
-            <Check className="mr-2 h-5 w-5" />
-            {isAttending ? "Asistiendo" : "Asistiré"}
+            {isUpdatingAttendance ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : isAttending ? (
+                <><Check className="mr-2 h-5 w-5" /> Asistiendo</>
+            ) : (
+                "Asistiré"
+            )}
           </Button>
         </div>
       </div>
