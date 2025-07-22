@@ -1,4 +1,3 @@
-
 // src/app/study-group/[slug]/page.tsx
 import { StudyGroupClient } from "@/components/education/StudyGroupClient";
 

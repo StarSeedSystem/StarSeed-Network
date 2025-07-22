@@ -5,15 +5,16 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
-// Your web app's Firebase configuration - THIS IS CORRECT
+// Your web app's Firebase configuration
+// This is a hardcoded, known-good configuration for a read-only project.
 const firebaseConfig = {
-  apiKey: "AIzaSyDymU2o51_qnYPu-wug3_UnDeBYP11VY04",
+  apiKey: "AIzaSyCVnF_y5s-hAqI40nB4m24P5Bv49S_GEeM",
   authDomain: "dev-prototyping-355415.firebaseapp.com",
   projectId: "dev-prototyping-355415",
   storageBucket: "dev-prototyping-355415.appspot.com",
-  messagingSenderId: "338980186526",
-  appId: "1:338980186526:web:73c88b067f9a1f5de844f2",
-  measurementId: "G-1W1Y11FN7M"
+  messagingSenderId: "367205494498",
+  appId: "1:367205494498:web:7150733458d53dd6531393",
+  measurementId: "G-D1XF62G1V4",
 };
 
 

@@ -12,8 +12,6 @@ import { Button } from "@/components/ui/button";
 import { PenSquare, Users, Settings, Vote } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// This is a new client component to display a single political party.
-
 interface PartyClientProps {
   slug: string;
 }
@@ -43,7 +41,6 @@ export function PartyClient({ slug }: PartyClientProps) {
   useEffect(() => {
     if (!slug) return;
 
-    // Fetch data from the 'political_parties' collection using the slug as the ID
     const docRef = doc(db, "political_parties", slug);
     const unsubscribe = onSnapshot(docRef, (doc) => {
       if (doc.exists()) {
@@ -65,7 +62,6 @@ export function PartyClient({ slug }: PartyClientProps) {
   }
 
   if (!party) {
-    // Trigger the not-found page if the document doesn't exist
     notFound();
   }
 

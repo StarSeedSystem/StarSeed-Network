@@ -197,6 +197,7 @@ export default function ConnectionsHubPage() {
                 <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center" disabled><Link href="#"><Calendar className="h-5 w-5 text-primary"/><span>Evento</span></Link></Button>
                 <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/study-group"><BookOpen className="h-5 w-5 text-primary"/><span>Grupo Estudio</span></Link></Button>
                 <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/party"><Shield className="h-5 w-5 text-primary"/><span>Partido Político</span></Link></Button>
+                 <Button asChild variant="outline" className="h-auto flex-col py-3 gap-2 text-center"><Link href="/participations/create/proposal"><Gavel className="h-5 w-5 text-primary"/><span>Propuesta</span></Link></Button>
             </CardContent>
         </Card>
         <Card className="glass-card">

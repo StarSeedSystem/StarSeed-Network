@@ -1,4 +1,3 @@
-
 // src/app/community/[slug]/page.tsx
 import { CommunityClient } from "@/components/community/CommunityClient";
 

@@ -1,58 +1,80 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { collection, addDoc, query, onSnapshot, serverTimestamp, orderBy, DocumentData } from "firebase/firestore";
+import { db } from "@/data/firebase";
+import { useUser } from "@/context/UserContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
 import { Separator } from "../ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
 interface Comment {
     id: string;
     author: { name: string; avatar: string; avatarHint: string; };
     content: string;
-    timestamp: string;
+    timestamp: any;
     likes: number;
     dislikes: number;
 }
 
-const initialComments: Comment[] = [
-    {
-        id: "comment-1",
-        author: { name: "Helios", avatar: "https://placehold.co/100x100.png", avatarHint: "sun god" },
-        content: "Apoyo firmemente esta ley. La soberanía de datos es la base de la libertad individual en esta era digital. Sin ella, no somos más que productos.",
-        timestamp: "Hace 2 horas",
-        likes: 15,
-        dislikes: 1
-    },
-    {
-        id: "comment-2",
-        author: { name: "CyberSec-DAO", avatar: "https://placehold.co/100x100.png", avatarHint: "cybernetic eye" },
-        content: "La intención es buena, pero la implementación técnica propuesta en el anexo B tiene vulnerabilidades. Sugerimos un enfoque de cifrado de conocimiento cero (Zero-Knowledge) para la verificación de consentimiento. Adjunto un borrador técnico.",
-        timestamp: "Hace 1 hora",
-        likes: 22,
-        dislikes: 0
-    },
-];
+interface CommentSectionProps {
+    proposalId: string;
+}
 
-export function CommentSection() {
-    const [comments, setComments] = useState(initialComments);
+export function CommentSection({ proposalId }: CommentSectionProps) {
+    const [comments, setComments] = useState<Comment[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [newComment, setNewComment] = useState("");
+    const [isPosting, setIsPosting] = useState(false);
+    const { user } = useUser();
+    const { toast } = useToast();
 
-    const handleAddComment = () => {
-        if (!newComment.trim()) return;
-        const newCommentObj: Comment = {
-            id: `comment-${Date.now()}`,
-            author: { name: "Starlight", avatar: "https://placehold.co/100x100.png", avatarHint: "glowing astronaut" },
-            content: newComment,
-            timestamp: "Ahora mismo",
-            likes: 0,
-            dislikes: 0,
-        };
-        setComments([newCommentObj, ...comments]);
-        setNewComment("");
+    useEffect(() => {
+        const commentsRef = collection(db, "proposals", proposalId, "comments");
+        const q = query(commentsRef, orderBy("timestamp", "desc"));
+        
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const commentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Comment));
+            setComments(commentsData);
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [proposalId]);
+
+    const handleAddComment = async () => {
+        if (!newComment.trim() || !user) {
+            toast({ title: "Debes iniciar sesión y escribir un comentario.", variant: "destructive" });
+            return;
+        }
+
+        setIsPosting(true);
+        const commentsRef = collection(db, "proposals", proposalId, "comments");
+
+        try {
+            await addDoc(commentsRef, {
+                author: { 
+                    name: user.displayName || "Anonymous", 
+                    avatar: user.photoURL || `https://avatar.vercel.sh/${user.uid}.png`, 
+                    avatarHint: "user avatar" 
+                },
+                content: newComment,
+                timestamp: serverTimestamp(),
+                likes: 0,
+                dislikes: 0,
+            });
+            setNewComment("");
+        } catch (error) {
+            console.error("Error adding comment:", error);
+            toast({ title: "Error al publicar comentario", variant: "destructive" });
+        } finally {
+            setIsPosting(false);
+        }
     };
 
     return (
@@ -61,11 +83,10 @@ export function CommentSection() {
                 <CardTitle>Debate y Comentarios</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-                {/* New Comment Input */}
                 <div className="flex gap-4">
                     <Avatar className="h-10 w-10">
-                        <AvatarImage src="https://placehold.co/100x100.png" alt="Starlight" data-ai-hint="glowing astronaut" />
-                        <AvatarFallback>SL</AvatarFallback>
+                        <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || ''} data-ai-hint="glowing astronaut" />
+                        <AvatarFallback>{user?.displayName?.substring(0,2) || 'U'}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 space-y-2">
                         <Textarea 
@@ -73,42 +94,53 @@ export function CommentSection() {
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
                             className="text-base"
+                            disabled={!user || isPosting}
                         />
                         <div className="flex justify-end">
-                            <Button onClick={handleAddComment} disabled={!newComment.trim()}>Publicar Comentario</Button>
+                            <Button onClick={handleAddComment} disabled={!newComment.trim() || !user || isPosting}>
+                                {isPosting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Publicar Comentario
+                            </Button>
                         </div>
                     </div>
                 </div>
 
                 <Separator className="bg-white/10" />
 
-                {/* Comments List */}
-                <div className="space-y-6">
-                    {comments.map(comment => (
-                        <div key={comment.id} className="flex gap-4">
-                             <Avatar className="h-10 w-10">
-                                <AvatarImage src={comment.author.avatar} alt={comment.author.name} data-ai-hint={comment.author.avatarHint} />
-                                <AvatarFallback>{comment.author.name.substring(0,2)}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                                <div className="flex justify-between items-center">
-                                    <p className="font-semibold">{comment.author.name}</p>
-                                    <p className="text-xs text-muted-foreground">{comment.timestamp}</p>
-                                </div>
-                                <p className="text-foreground/90 mt-1">{comment.content}</p>
-                                <div className="flex items-center gap-4 mt-2">
-                                    <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-muted-foreground hover:text-sea-green">
-                                        <ThumbsUp className="h-4 w-4" /> {comment.likes}
-                                    </Button>
-                                    <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-muted-foreground hover:text-coral">
-                                        <ThumbsDown className="h-4 w-4" /> {comment.dislikes}
-                                    </Button>
-                                    <Button variant="ghost" size="sm" className="text-muted-foreground">Responder</Button>
+                {isLoading ? (
+                    <div className="text-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+                ) : (
+                    <div className="space-y-6">
+                        {comments.length > 0 ? comments.map(comment => (
+                            <div key={comment.id} className="flex gap-4">
+                                 <Avatar className="h-10 w-10">
+                                    <AvatarImage src={comment.author.avatar} alt={comment.author.name} data-ai-hint={comment.author.avatarHint} />
+                                    <AvatarFallback>{comment.author.name.substring(0,2)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-center">
+                                        <p className="font-semibold">{comment.author.name}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {comment.timestamp?.toDate ? comment.timestamp.toDate().toLocaleDateString() : 'Just now'}
+                                        </p>
+                                    </div>
+                                    <p className="text-foreground/90 mt-1">{comment.content}</p>
+                                    <div className="flex items-center gap-4 mt-2">
+                                        <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-muted-foreground hover:text-sea-green">
+                                            <ThumbsUp className="h-4 w-4" /> {comment.likes}
+                                        </Button>
+                                        <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-muted-foreground hover:text-coral">
+                                            <ThumbsDown className="h-4 w-4" /> {comment.dislikes}
+                                        </Button>
+                                        <Button variant="ghost" size="sm" className="text-muted-foreground">Responder</Button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        )) : (
+                            <p className="text-muted-foreground text-center py-4">Sé el primero en comentar.</p>
+                        )}
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

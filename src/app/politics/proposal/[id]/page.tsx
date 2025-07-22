@@ -2,15 +2,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, onSnapshot, DocumentData } from "firebase/firestore";
+import { doc, onSnapshot, DocumentData, updateDoc, increment } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { notFound, useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ThumbsUp, ThumbsDown, Hand } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { CommentSection } from "@/components/politics/CommentSection"; // Assuming this exists
+import { CommentSection } from "@/components/politics/CommentSection";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProposalPageProps {
   params: {
@@ -42,17 +44,18 @@ export default function ProposalPage({ params }: ProposalPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { id } = params;
+  const { user } = useUser();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!id) return;
 
-    // Fetch the specific proposal document from the 'proposals' collection
     const docRef = doc(db, "proposals", id);
     const unsubscribe = onSnapshot(docRef, (doc) => {
       if (doc.exists()) {
         setProposal({ id: doc.id, ...doc.data() });
       } else {
-        setProposal(null); // Document does not exist
+        setProposal(null);
       }
       setIsLoading(false);
     }, (error) => {
@@ -68,14 +71,27 @@ export default function ProposalPage({ params }: ProposalPageProps) {
   }
 
   if (!proposal) {
-    // If after loading the proposal is still null, show not-found page
     return notFound();
   }
   
-  // TODO: Implement the voting logic
-  const handleVote = (voteType: 'for' | 'against' | 'abstain') => {
-      console.log(`Voted ${voteType} for proposal ${proposal.id}`);
-      // Here we would update the document in Firestore
+  const handleVote = async (voteType: 'for' | 'against' | 'abstain') => {
+      if (!user) {
+        toast({ title: "Debes iniciar sesión para votar.", variant: "destructive" });
+        return;
+      }
+      if (!proposal) return;
+
+      const docRef = doc(db, "proposals", proposal.id);
+      
+      try {
+        await updateDoc(docRef, {
+            [`votes.${voteType}`]: increment(1)
+        });
+        toast({ title: "¡Voto registrado!", description: "Gracias por tu participación." });
+      } catch (error) {
+        console.error("Error al registrar el voto:", error);
+        toast({ title: "Error al votar", variant: "destructive" });
+      }
   };
 
   return (
@@ -121,7 +137,6 @@ export default function ProposalPage({ params }: ProposalPageProps) {
         </CardContent>
       </Card>
 
-      {/* For the comment section, we will need to pass the proposal ID to it */}
       <CommentSection proposalId={proposal.id} />
 
     </div>

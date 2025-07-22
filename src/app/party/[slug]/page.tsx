@@ -1,4 +1,4 @@
-
+// src/app/party/[slug]/page.tsx
 import { PartyClient } from "@/components/politics/PartyClient";
 
 interface PartyPageProps {
