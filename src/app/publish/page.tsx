@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { PenSquare, Gavel, GraduationCap, Palette, Send, ArrowRight, Loader2, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
 
 // --- Sub-components for a cleaner structure ---
 import { AudienceSelector } from "@/components/publish/AudienceSelector";
@@ -231,5 +232,7 @@ function AreaCard({ icon: Icon, title, description, onClick }: { icon: React.Ele
         </button>
     );
 }
+
+    
 
     
