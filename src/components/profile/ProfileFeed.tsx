@@ -22,7 +22,8 @@ function PostCreator({ profile }: { profile: DocumentData }) {
     const { toast } = useToast();
     const { user: authUser } = useUser();
 
-    if (authUser?.uid !== profile.id) {
+    // The user can only post on their own profile.
+    if (!authUser || !profile || authUser.uid !== profile.id) {
         return null;
     }
 
@@ -82,20 +83,26 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    if (!profile?.id) return;
+    // Ensure we have a profile with an ID before querying
+    if (!profile?.id) {
+        setIsLoading(false);
+        return;
+    }
 
     const postsCollection = collection(db, "posts");
-    // Remove the orderBy clause to prevent the composite index error.
-    // We will sort the results on the client side.
+    
+    // Simplified query: Find all posts created by this author.
+    // This is much more efficient and doesn't require complex indexes.
+    // We will sort client-side.
     const q = query(
         postsCollection, 
-        where("destinations", "array-contains", { id: profile.id, name: profile.name, type: 'profile' })
+        where("authorId", "==", profile.id)
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const postsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        // Sort the posts by date on the client side
+        // Sort the posts by date on the client side for correct chronological order
         postsData.sort((a, b) => {
             const dateA = a.createdAt?.toDate() || 0;
             const dateB = b.createdAt?.toDate() || 0;
@@ -106,10 +113,11 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
         setIsLoading(false);
     }, (error) => {
         console.error("Error fetching profile feed:", error);
-        setPosts([]);
+        setPosts([]); // Clear posts on error
         setIsLoading(false);
     });
 
+    // Cleanup the listener when the component unmounts or profile changes
     return () => unsubscribe();
   }, [profile]);
 
