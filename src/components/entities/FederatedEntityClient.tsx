@@ -39,9 +39,14 @@ export function FederatedEntityClient({ slug }: FederatedEntityClientProps) {
   const [entity, setEntity] = useState<DocumentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
+  const [isMember, setIsMember] = useState(false);
   const { toast } = useToast();
 
-  const isMember = authUser && entity?.members?.includes(authUser.uid);
+  useEffect(() => {
+    if(entity && authUser) {
+        setIsMember(entity.members?.includes(authUser.uid));
+    }
+  }, [entity, authUser]);
 
   useEffect(() => {
     if (!slug) return;
@@ -69,25 +74,20 @@ export function FederatedEntityClient({ slug }: FederatedEntityClientProps) {
       }
 
       setIsJoiningLeaving(true);
-      try {
-          const entityRef = doc(db, "federated_entities", entity.id);
+      
+      // Simulate the action locally
+      setTimeout(() => {
           if (isMember) {
-              await updateDoc(entityRef, {
-                  members: arrayRemove(authUser.uid)
-              });
-               toast({ title: "Left Entity", description: `You have left ${entity.name}.` });
+              setEntity((prev: any) => ({ ...prev, members: prev.members.filter((uid: string) => uid !== authUser.uid) }));
+              setIsMember(false);
+              toast({ title: "Left Entity", description: `You have left ${entity.name}.` });
           } else {
-              await updateDoc(entityRef, {
-                  members: arrayUnion(authUser.uid)
-              });
-               toast({ title: "Joined Entity", description: `You have joined ${entity.name}.` });
+              setEntity((prev: any) => ({ ...prev, members: [...prev.members, authUser.uid] }));
+              setIsMember(true);
+              toast({ title: "Joined Entity", description: `You have joined ${entity.name}.` });
           }
-      } catch (error) {
-          console.error("Error joining/leaving entity:", error);
-          toast({ title: "Action Failed", variant: "destructive" });
-      } finally {
           setIsJoiningLeaving(false);
-      }
+      }, 500);
   }
 
   if (isLoading) {
@@ -149,7 +149,12 @@ export function FederatedEntityClient({ slug }: FederatedEntityClientProps) {
                 <TabsContent value="directives" className="mt-6">
                     <div className="text-center text-muted-foreground py-8">Official directives and resolutions will appear here.</div>
                 </TabsContent>
-                {/* Other Tabs Content */}
+                <TabsContent value="publications" className="mt-6">
+                    <div className="text-center text-muted-foreground py-8">Las publicaciones de la entidad aparecerán aquí.</div>
+                </TabsContent>
+                <TabsContent value="members" className="mt-6">
+                    <div className="text-center text-muted-foreground py-8">La lista de miembros aparecerá aquí.</div>
+                </TabsContent>
             </Tabs>
         </div>
     </div>

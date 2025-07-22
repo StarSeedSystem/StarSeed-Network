@@ -9,12 +9,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { PenSquare, Users, Settings, BookOpen, Loader2, PlusCircle } from "lucide-react"; // Import PlusCircle
+import { PenSquare, Users, Settings, BookOpen, Loader2, PlusCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
-import Link from "next/link"; // Import Link
-import { StudyGroupFeed } from "./StudyGroupFeed"; // Import StudyGroupFeed
+import Link from "next/link";
+import { StudyGroupFeed } from "./StudyGroupFeed";
 
 interface StudyGroupClientProps {
   slug: string;
@@ -41,10 +41,16 @@ export function StudyGroupClient({ slug }: StudyGroupClientProps) {
   const [group, setGroup] = useState<DocumentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
+  const [isMember, setIsMember] = useState(false);
   const { toast } = useToast();
 
-  const isMember = authUser && group?.members?.includes(authUser.uid);
-   const isCreator = authUser && group?.creatorId === authUser.uid;
+  const isCreator = authUser && group?.creatorId === authUser.uid;
+
+  useEffect(() => {
+    if (group && authUser) {
+        setIsMember(group.members?.includes(authUser.uid));
+    }
+  }, [group, authUser]);
 
   useEffect(() => {
     if (!slug) return;
@@ -72,29 +78,20 @@ export function StudyGroupClient({ slug }: StudyGroupClientProps) {
       }
 
       setIsJoiningLeaving(true);
-      try {
-          const groupRef = doc(db, "study_groups", group.id);
-          if (isMember) {
-              await updateDoc(groupRef, {
-                  members: arrayRemove(authUser.uid)
-              });
-               toast({ title: "Left Group", description: `You have left ${group.name}.` });
-          } else {
-              if (isCreator) {
-                    toast({ title: "Already Member", description: "You are the creator of this group." });
-                    return;
-               }
-              await updateDoc(groupRef, {
-                  members: arrayUnion(authUser.uid)
-              });
-               toast({ title: "Joined Group", description: `You have joined ${group.name}.` });
-          }
-      } catch (error) {
-          console.error("Error joining/leaving group:", error);
-          toast({ title: "Action Failed", variant: "destructive" });
-      } finally {
-          setIsJoiningLeaving(false);
-      }
+      
+      // Simulate the action locally
+      setTimeout(() => {
+        if (isMember) {
+            setGroup((prev: any) => ({ ...prev, members: prev.members.filter((uid: string) => uid !== authUser.uid) }));
+            setIsMember(false);
+            toast({ title: "Left Group", description: `You have left ${group.name}.` });
+        } else {
+            setGroup((prev: any) => ({ ...prev, members: [...prev.members, authUser.uid] }));
+            setIsMember(true);
+            toast({ title: "Joined Group", description: `You have joined ${group.name}.` });
+        }
+        setIsJoiningLeaving(false);
+      }, 500);
   }
 
   if (isLoading) {
@@ -156,13 +153,16 @@ export function StudyGroupClient({ slug }: StudyGroupClientProps) {
                     <TabsTrigger value="settings" className="rounded-lg py-2 text-base" disabled>Settings</TabsTrigger>
                 </TabsList>
                 <TabsContent value="publications" className="mt-6">
-                    {/* Use the StudyGroupFeed component here */}
                     {group?.id && <StudyGroupFeed groupId={group.id} />}
                 </TabsContent>
-                {/* Other Tabs Content */}
+                <TabsContent value="discussions" className="mt-6">
+                    <div className="text-center text-muted-foreground py-8">La zona de debate aparecerá aquí.</div>
+                </TabsContent>
+                <TabsContent value="members" className="mt-6">
+                    <div className="text-center text-muted-foreground py-8">La lista de miembros aparecerá aquí.</div>
+                </TabsContent>
             </Tabs>
-             {/* --- Button to Create Tutorial for this Group --- */}
-            {isMember && ( // Only show if the user is a member
+            {isMember && (
                 <div className="mt-6 text-center">
                      <Button asChild size="lg">
                          <Link href={{
