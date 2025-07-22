@@ -193,7 +193,7 @@ export default function ConnectionsHubPage() {
         if (recommendationFilter === 'all') {
             return recommendations;
         }
-        if (recommendationFilter === 'group') {
+        if (recommendationFilter === 'groups') {
             return recommendations.filter(r => r.type === 'study_group' || r.type === 'chat_group');
         }
         return recommendations.filter(r => r.type === recommendationFilter);
@@ -256,34 +256,37 @@ export default function ConnectionsHubPage() {
             <CardContent>
                  <div className="flex flex-wrap items-center gap-2 mb-4">
                      <Tabs value={recommendationFilter} onValueChange={setRecommendationFilter} className="flex-grow">
-                        <TabsList className="grid w-full grid-cols-5 bg-card/80">
+                        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 bg-card/80">
                             <TabsTrigger value="all">Todos</TabsTrigger>
                             <TabsTrigger value="community">Comunidades</TabsTrigger>
                             <TabsTrigger value="federation">Entidades</TabsTrigger>
-                            <TabsTrigger value="group">Grupos</TabsTrigger>
+                            <TabsTrigger value="groups">Grupos</TabsTrigger>
+                            <TabsTrigger value="political_party">Partidos</TabsTrigger>
                             <TabsTrigger value="event">Eventos</TabsTrigger>
                         </TabsList>
                     </Tabs>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline">
-                            <SlidersHorizontal className="mr-2 h-4 w-4"/>
-                            Filtro Personalizado
+                    <div className="flex gap-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="hidden sm:flex">
+                                <SlidersHorizontal className="mr-2 h-4 w-4"/>
+                                Filtro IA
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-56 glass-card">
+                            <DropdownMenuLabel>Criterios de IA</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuRadioGroup value={personalizedFilter} onValueChange={setPersonalizedFilter}>
+                              <DropdownMenuRadioItem value="activity">Basado en Actividad</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="new">Nuevas Entidades</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="location">Cerca de mí (AR)</DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button variant="ghost" size="icon" onClick={handleReloadRecommendations}>
+                            <RefreshCw className="h-4 w-4"/>
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56 glass-card">
-                        <DropdownMenuLabel>Criterios de IA</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuRadioGroup value={personalizedFilter} onValueChange={setPersonalizedFilter}>
-                          <DropdownMenuRadioItem value="activity">Basado en Actividad</DropdownMenuRadioItem>
-                          <DropdownMenuRadioItem value="new">Nuevas Entidades</DropdownMenuRadioItem>
-                          <DropdownMenuRadioItem value="location">Cerca de mí (AR)</DropdownMenuRadioItem>
-                        </DropdownMenuRadioGroup>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Button variant="ghost" size="icon" onClick={handleReloadRecommendations}>
-                        <RefreshCw className="h-4 w-4"/>
-                    </Button>
+                    </div>
                  </div>
                 <Carousel opts={{ align: "start", loop: false }} className="w-full">
                     <CarouselContent className="-ml-2">
@@ -409,4 +412,5 @@ export default function ConnectionsHubPage() {
        </div>
     </div>
   );
-}
+
+    
