@@ -44,7 +44,7 @@ export default function CreateStudyGroupPage() {
             slug: groupSlug,
             topic: groupTopic,
             description: groupDescription,
-            members: 1,
+            members: [authUser.uid],
             creatorId: authUser.uid,
             avatar: `https://avatar.vercel.sh/${groupSlug}.png`,
             avatarHint: "group logo",

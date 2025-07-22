@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, onSnapshot, DocumentData } from "firebase/firestore";
+import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { notFound } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,7 +13,6 @@ import { PenSquare, Users, Settings, Gavel, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
-import federationData from "@/data/federations.json";
 import { BackButton } from "../utils/BackButton";
 
 interface FederatedEntityPageProps {
@@ -42,67 +41,55 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
   const [isMember, setIsMember] = useState(false);
-  const [memberCount, setMemberCount] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
-    const localData = (federationData as any)[slug];
-    if (localData) {
-        setEntity(localData);
-        setMemberCount(localData.members || 0);
+    if (!slug) return;
+    setIsLoading(true);
+    const docRef = doc(db, "federated_entities", slug);
+    const unsubscribe = onSnapshot(docRef, (doc) => {
+        if (doc.exists()) {
+        const data = { id: doc.id, ...doc.data() };
+        setEntity(data);
+        } else {
+        setEntity(null);
+        }
         setIsLoading(false);
-    } else {
-        const docRef = doc(db, "federated_entities", slug);
-        const unsubscribe = onSnapshot(docRef, (doc) => {
-          if (doc.exists()) {
-            const data = { id: doc.id, ...doc.data() };
-            setEntity(data);
-            setMemberCount(Array.isArray(data.members) ? data.members.length : 0);
-          } else {
-            setEntity(null);
-          }
-          setIsLoading(false);
-        }, (error) => {
-            console.error("Error fetching entity:", error);
-            setIsLoading(false);
-        });
-        return () => unsubscribe();
-    }
+    }, (error) => {
+        console.error("Error fetching entity:", error);
+        setIsLoading(false);
+    });
+    return () => unsubscribe();
   }, [slug]);
 
   useEffect(() => {
     if (entity && authUser) {
-        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-        setIsMember(!!localMembers[entity.id]);
+        setIsMember(Array.isArray(entity.members) && entity.members.includes(authUser.uid));
     }
   }, [entity, authUser]);
 
-   const handleJoinLeave = () => {
+   const handleJoinLeave = async () => {
       if (!authUser || !entity?.id) {
           toast({ title: "Authentication Required", variant: "destructive" });
           return;
       }
-
       setIsJoiningLeaving(true);
+      const entityRef = doc(db, "federated_entities", entity.id);
       
-      setTimeout(() => {
-          const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-          const newIsMember = !isMember;
-
-          if (newIsMember) {
-              localMembers[entity.id] = true;
-              setMemberCount(prev => prev + 1);
-              toast({ title: "Joined Entity", description: `You have joined ${entity.name}.` });
-          } else {
-              delete localMembers[entity.id];
-              setMemberCount(prev => prev - 1);
-              toast({ title: "Left Entity", description: `You have left ${entity.name}.` });
-          }
-          
-          localStorage.setItem('joined_pages', JSON.stringify(localMembers));
-          setIsMember(newIsMember);
-          setIsJoiningLeaving(false);
-      }, 300);
+      try {
+        if (isMember) {
+            await updateDoc(entityRef, { members: arrayRemove(authUser.uid) });
+            toast({ title: "Left Entity", description: `You have left ${entity.name}.` });
+        } else {
+            await updateDoc(entityRef, { members: arrayUnion(authUser.uid) });
+            toast({ title: "Joined Entity", description: `You have joined ${entity.name}.` });
+        }
+      } catch (error) {
+        console.error("Error updating membership", error);
+        toast({title: "Error", description: "Failed to update membership.", variant: "destructive"});
+      } finally {
+        setIsJoiningLeaving(false);
+      }
   }
 
   if (isLoading || authLoading) {
@@ -112,6 +99,8 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
   if (!entity) {
     notFound();
   }
+  
+  const memberCount = Array.isArray(entity.members) ? entity.members.length : 0;
 
   return (
     <div className="space-y-6">
@@ -143,7 +132,7 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
                                  )}
                              </Button>
                          )}
-                        {!authUser && !authLoading && (<span className="text-sm text-muted-foreground">Log in to join</span>)}
+                        {!authUser && (<span className="text-sm text-muted-foreground">Log in to join</span>)}
                     </div>
                     <p className="mt-4 text-foreground/90">{entity.longDescription}</p>
                 </div>

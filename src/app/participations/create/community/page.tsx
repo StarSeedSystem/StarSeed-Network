@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, arrayUnion } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { useUser } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";

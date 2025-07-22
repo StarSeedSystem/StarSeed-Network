@@ -43,7 +43,7 @@ export default function CreatePartyPage() {
             name: partyName,
             slug: partySlug,
             description: partyDescription,
-            members: 1,
+            members: [authUser.uid],
             creatorId: authUser.uid,
             avatar: `https://avatar.vercel.sh/${partySlug}.png`,
             avatarHint: "party logo",

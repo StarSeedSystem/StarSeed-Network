@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, onSnapshot, DocumentData } from "firebase/firestore";
+import { doc, onSnapshot, DocumentData, updateDoc, arrayRemove, arrayUnion } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { notFound } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +15,6 @@ import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { StudyGroupFeed } from "./StudyGroupFeed";
-import studyGroupData from "@/data/study-groups.json";
 import { BackButton } from "../utils/BackButton";
 
 
@@ -45,69 +44,58 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningLeaving, setIsJoiningLeaving] = useState(false);
   const [isMember, setIsMember] = useState(false);
-  const [memberCount, setMemberCount] = useState(0);
   const { toast } = useToast();
 
   const isCreator = authUser && group?.creatorId === authUser.uid;
 
   useEffect(() => {
-    const localData = (studyGroupData as any)[slug];
-    if (localData) {
-        setGroup(localData);
-        setMemberCount(localData.members || 0);
+    if (!slug) return;
+    setIsLoading(true);
+    const docRef = doc(db, "study_groups", slug);
+    const unsubscribe = onSnapshot(docRef, (doc) => {
+        if (doc.exists()) {
+        const data = { id: doc.id, ...doc.data() };
+        setGroup(data);
+        } else {
+        setGroup(null);
+        }
         setIsLoading(false);
-    } else {
-        const docRef = doc(db, "study_groups", slug);
-        const unsubscribe = onSnapshot(docRef, (doc) => {
-          if (doc.exists()) {
-            const data = { id: doc.id, ...doc.data() };
-            setGroup(data);
-            setMemberCount(Array.isArray(data.members) ? data.members.length : 0);
-          } else {
-            setGroup(null);
-          }
-          setIsLoading(false);
-        }, (error) => {
-            console.error("Error fetching group:", error);
-            setIsLoading(false);
-        });
-        return () => unsubscribe();
-    }
+    }, (error) => {
+        console.error("Error fetching group:", error);
+        setIsLoading(false);
+    });
+    return () => unsubscribe();
   }, [slug]);
   
   useEffect(() => {
     if (group && authUser) {
-        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-        setIsMember(!!localMembers[group.id]);
+        setIsMember(Array.isArray(group.members) && group.members.includes(authUser.uid));
     }
   }, [group, authUser]);
 
-  const handleJoinLeave = () => {
+  const handleJoinLeave = async () => {
       if (!authUser || !group?.id) {
           toast({ title: "Authentication Required", variant: "destructive" });
           return;
       }
 
       setIsJoiningLeaving(true);
+      const groupRef = doc(db, "study_groups", group.id);
       
-      setTimeout(() => {
-        const localMembers = JSON.parse(localStorage.getItem('joined_pages') || '{}');
-        const newIsMember = !isMember;
-
-        if (newIsMember) {
-            localMembers[group.id] = true;
-            setMemberCount(prev => prev + 1);
-            toast({ title: "Joined Group", description: `You have joined ${group.name}.` });
-        } else {
-            delete localMembers[group.id];
-            setMemberCount(prev => prev - 1);
+      try {
+        if (isMember) {
+            await updateDoc(groupRef, { members: arrayRemove(authUser.uid) });
             toast({ title: "Left Group", description: `You have left ${group.name}.` });
+        } else {
+            await updateDoc(groupRef, { members: arrayUnion(authUser.uid) });
+            toast({ title: "Joined Group", description: `You have joined ${group.name}.` });
         }
-        
-        localStorage.setItem('joined_pages', JSON.stringify(localMembers));
-        setIsMember(newIsMember);
+      } catch (error) {
+        console.error("Error updating membership", error);
+        toast({title: "Error", description: "Failed to update membership.", variant: "destructive"});
+      } finally {
         setIsJoiningLeaving(false);
-      }, 300);
+      }
   }
 
   if (isLoading || authLoading) {
@@ -117,6 +105,8 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
   if (!group) {
     notFound();
   }
+
+  const memberCount = Array.isArray(group.members) ? group.members.length : 0;
 
   return (
     <div className="space-y-6">
@@ -148,7 +138,7 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
                                 )}
                             </Button>
                         )}
-                        {!authUser && !authLoading && (<span className="text-sm text-muted-foreground">Log in to join</span>)}
+                        {!authUser && (<span className="text-sm text-muted-foreground">Log in to join</span>)}
                     </div>
                      <div className="mt-4 text-foreground/90">
                          <p>{group.longDescription || "No detailed description provided."}</p>
