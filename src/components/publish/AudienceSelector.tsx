@@ -1,64 +1,140 @@
 
 "use client";
 
+import { useState, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, Globe, Users, Landmark, Shield, BookOpen } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { User, Globe, Users, Landmark, Shield, BookOpen, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-// Mock data simulating pages the user is a member of.
-// In a real app, this would be fetched based on the logged-in user.
-const userPages = [
-    { id: "profile", label: "Mi Perfil Personal", icon: User, areas: ['culture', 'education'] },
-    { id: "community_innovation", label: "Comunidad: Innovación Sostenible", icon: Globe, areas: ['culture', 'education', 'politics'] },
-    { id: "community_art", label: "Comunidad: Art-AI Collective", icon: Users, areas: ['culture'] },
-    { id: "group_philosophy", label: "Grupo Estudio: Exploradores Cuánticos", icon: BookOpen, areas: ['education'] },
-    { id: "federation_local", label: "E.F. Localidad Central", icon: Landmark, areas: ['politics'] },
-    { id: "federation_global", label: "E.F. Global", icon: Landmark, areas: ['politics'] },
-    { id: "party_transhumanist", label: "Partido: Conciencia Digital", icon: Shield, areas: ['politics'] },
-];
+type PageType = 'profile' | 'community' | 'federation' | 'study_group' | 'political_party';
 
-interface AudienceSelectorProps {
-    selectedArea: 'politics' | 'culture' | 'education';
-    selectedDestinations: string[];
-    onSelectionChange: (selectedIds: string[]) => void;
+export interface UserPage {
+    id: string;
+    name: string;
+    type: PageType;
+    areas: string[];
 }
 
-export function AudienceSelector({ selectedArea, selectedDestinations, onSelectionChange }: AudienceSelectorProps) {
+const typeIcons: Record<PageType, React.ElementType> = {
+    profile: User,
+    community: Globe,
+    study_group: BookOpen,
+    federation: Landmark,
+    political_party: Shield,
+};
+
+const typeLabels: Record<PageType, string> = {
+    profile: "Perfil",
+    community: "Comunidad",
+    study_group: "G. Estudio",
+    federation: "E. Federada",
+    political_party: "Partido",
+}
+
+interface AudienceSelectorProps {
+    availablePages: UserPage[];
+    selectedArea: 'politics' | 'culture' | 'education';
+    selectedDestinations: UserPage[];
+    onSelectionChange: (selectedPages: UserPage[]) => void;
+}
+
+export function AudienceSelector({ availablePages, selectedArea, selectedDestinations, onSelectionChange }: AudienceSelectorProps) {
+    const [searchTerm, setSearchTerm] = useState("");
+    const [typeFilter, setTypeFilter] = useState<PageType | 'all'>('all');
     
-    const handleCheckedChange = (checked: boolean, id: string) => {
-        // For politics, only allow single selection. For others, allow multiple.
+    const handleCheckedChange = (checked: boolean, page: UserPage) => {
         if (selectedArea === 'politics') {
-            onSelectionChange(checked ? [id] : []);
+            onSelectionChange(checked ? [page] : []);
         } else {
             const newSelection = checked 
-                ? [...selectedDestinations, id] 
-                : selectedDestinations.filter(destId => destId !== id);
+                ? [...selectedDestinations, page] 
+                : selectedDestinations.filter(p => p.id !== page.id);
             onSelectionChange(newSelection);
         }
     };
 
-    const availableDestinations = userPages.filter(dest => {
-        return dest.areas && dest.areas.includes(selectedArea);
-    });
+    const filteredPages = useMemo(() => {
+        return availablePages.filter(page => {
+            const areaMatch = page.areas.includes(selectedArea);
+            const typeMatch = typeFilter === 'all' || page.type === typeFilter;
+            const searchMatch = page.name.toLowerCase().includes(searchTerm.toLowerCase());
+            return areaMatch && typeMatch && searchMatch;
+        });
+    }, [availablePages, selectedArea, typeFilter, searchTerm]);
+    
+    const availableFilters = useMemo(() => {
+        const types = new Set(availablePages.filter(p => p.areas.includes(selectedArea)).map(p => p.type));
+        return Array.from(types);
+    }, [availablePages, selectedArea]);
 
     return (
-        <Card className="bg-background/50">
-            <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {availableDestinations.map((dest) => (
-                    <div key={dest.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-primary/10 transition-colors border border-transparent has-[:checked]:bg-primary/10 has-[:checked]:border-primary/20">
-                        <Checkbox 
-                            id={`dest-${dest.id}`} 
-                            checked={selectedDestinations.includes(dest.id)}
-                            onCheckedChange={(checked) => handleCheckedChange(!!checked, dest.id)}
-                            className="mt-1"
+        <Card className="bg-background/50 border border-border/50">
+            <CardContent className="p-4 space-y-4">
+                 <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="relative flex-grow">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                            placeholder="Buscar en mis páginas..." 
+                            className="pl-9"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                        <Label htmlFor={`dest-${dest.id}`} className="flex items-center gap-2 cursor-pointer text-sm font-normal w-full">
-                             <dest.icon className="h-5 w-5 text-primary/80" />
-                             <span>{dest.label}</span>
-                        </Label>
                     </div>
-                ))}
+                     <div className="flex items-center gap-1 p-1 rounded-lg bg-card/50">
+                         <Button 
+                            variant={typeFilter === 'all' ? 'secondary' : 'ghost'} 
+                            size="sm"
+                            onClick={() => setTypeFilter('all')}
+                            className="flex-1"
+                         >
+                             Todos
+                         </Button>
+                        {availableFilters.map(type => (
+                             <Button 
+                                key={type}
+                                variant={typeFilter === type ? 'secondary' : 'ghost'} 
+                                size="sm"
+                                onClick={() => setTypeFilter(type)}
+                                className="flex-1"
+                             >
+                                 {typeLabels[type]}
+                             </Button>
+                        ))}
+                    </div>
+                </div>
+
+                <ScrollArea className="h-64 pr-3">
+                    <div className="space-y-2">
+                        {filteredPages.map((page) => {
+                            const Icon = typeIcons[page.type];
+                            return (
+                                <div key={page.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-primary/10 transition-colors border border-transparent has-[:checked]:bg-primary/10 has-[:checked]:border-primary/20">
+                                    <Checkbox 
+                                        id={`dest-${page.id}`} 
+                                        checked={selectedDestinations.some(p => p.id === page.id)}
+                                        onCheckedChange={(checked) => handleCheckedChange(!!checked, page)}
+                                        className="mt-1"
+                                    />
+                                    <Label htmlFor={`dest-${page.id}`} className="flex items-center gap-2 cursor-pointer text-sm font-normal w-full">
+                                         <Icon className="h-5 w-5 text-primary/80" />
+                                         <span>{page.name}</span>
+                                    </Label>
+                                </div>
+                            )
+                        })}
+                        {filteredPages.length === 0 && (
+                            <div className="text-center text-muted-foreground py-10">
+                                <p>No se encontraron páginas que coincidan.</p>
+                                <p className="text-xs">Intenta ajustar tu búsqueda o filtros.</p>
+                            </div>
+                        )}
+                    </div>
+                </ScrollArea>
             </CardContent>
         </Card>
     );

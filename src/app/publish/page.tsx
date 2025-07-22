@@ -14,10 +14,26 @@ import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 
 // --- Sub-components for a cleaner structure ---
-import { AudienceSelector } from "@/components/publish/AudienceSelector";
+import { AudienceSelector, UserPage } from "@/components/publish/AudienceSelector";
 import { LegislativeSettings } from "@/components/publish/LegislativeSettings";
 import { NewsSettings } from "@/components/publish/NewsSettings";
 import { FederatedEntitySettings } from "@/components/publish/FederatedEntitySettings";
+
+// Mock data simulating pages the user is a member of.
+// In a real app, this would be fetched based on the logged-in user.
+import communities from '@/data/communities.json';
+import federations from '@/data/federations.json';
+import studyGroups from '@/data/study-groups.json';
+import politicalParties from '@/data/political-parties.json';
+
+const userPages: UserPage[] = [
+    { id: "profile", name: "Mi Perfil Personal", type: 'profile', areas: ['culture', 'education'] },
+    ...Object.values(communities).map(c => ({ id: c.slug, name: c.name, type: 'community', areas: ['culture', 'education', 'politics'] })),
+    ...Object.values(studyGroups).map(g => ({ id: g.slug, name: g.name, type: 'study_group', areas: ['education'] })),
+    ...Object.values(federations).map(f => ({ id: f.slug, name: f.name, type: 'federation', areas: ['politics'] })),
+    ...Object.values(politicalParties).map(p => ({ id: p.slug, name: p.name, type: 'political_party', areas: ['politics'] })),
+];
+
 
 type Area = "politics" | "culture" | "education";
 type Step = "area" | "details" | "canvas";
@@ -34,7 +50,7 @@ export default function PublishPage() {
     // -- Form Data State ---
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
-    const [selectedDestinations, setSelectedDestinations] = useState<string[]>([]);
+    const [selectedDestinations, setSelectedDestinations] = useState<UserPage[]>([]);
     
     // -- Contextual Settings State --
     const [federationArea, setFederationArea] = useState<string | null>(null);
@@ -62,7 +78,7 @@ export default function PublishPage() {
             setIsSubmitting(false);
             return;
         }
-         if (selectedDestinations.some(d => d.includes('federation')) && !federationArea) {
+         if (isFederationSelected && !federationArea) {
             toast({ title: "Falta área de la E.F.", description: "Debes seleccionar un área de destino dentro de la Entidad Federativa.", variant: "destructive" });
             setIsSubmitting(false);
             return;
@@ -85,7 +101,7 @@ export default function PublishPage() {
              message = "Tu aporte ha sido publicado en la sección de Educación.";
         }
         
-        console.log("Submitting with data:", { title, content, selectedDestinations, federationArea, isLegislative, isNews });
+        console.log("Submitting with data:", { title, content, selectedDestinations: selectedDestinations.map(d => d.id), federationArea, isLegislative, isNews });
         
         // --- Simulate Submission & Redirect ---
         setTimeout(() => {
@@ -111,7 +127,7 @@ export default function PublishPage() {
     }
     
     // Check if any federated entity is selected
-    const isFederationSelected = selectedDestinations.some(d => d.includes('federation'));
+    const isFederationSelected = selectedDestinations.some(d => d.type === 'federation');
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -127,7 +143,7 @@ export default function PublishPage() {
                      <CardDescription>
                         {step === 'area' && "Elige el área principal de tu publicación para empezar."}
                         {step === 'details' && `Publicando en el área de ${selectedArea}. Elige los detalles y el destino.`}
-                        {step === 'canvas' && `Estás listo para escribir. Destino: ${selectedDestinations.join(', ')}.`}
+                        {step === 'canvas' && `Estás listo para escribir. Destino: ${selectedDestinations.map(d => d.name).join(', ')}.`}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -144,6 +160,7 @@ export default function PublishPage() {
                             <div>
                                 <h3 className="font-headline text-xl font-semibold mb-2">Paso 2: Elige el Destino</h3>
                                 <AudienceSelector 
+                                    availablePages={userPages}
                                     selectedArea={selectedArea}
                                     selectedDestinations={selectedDestinations}
                                     onSelectionChange={setSelectedDestinations}
@@ -232,7 +249,3 @@ function AreaCard({ icon: Icon, title, description, onClick }: { icon: React.Ele
         </button>
     );
 }
-
-    
-
-    
