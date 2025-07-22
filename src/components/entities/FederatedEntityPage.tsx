@@ -52,8 +52,8 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
         if (doc.exists()) {
             const data = { id: doc.id, ...doc.data() };
             setEntity(data);
-            if (authUser) {
-                setIsMember(data.members?.includes(authUser.uid));
+            if (authUser && Array.isArray(data.members)) {
+                setIsMember(data.members.includes(authUser.uid));
             }
         } else {
             setEntity(null);
@@ -97,7 +97,7 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
     notFound();
   }
   
-  const memberCount = entity?.members?.length || 0;
+  const memberCount = Array.isArray(entity?.members) ? entity.members.length : 0;
 
   return (
     <div className="space-y-6">
