@@ -6,12 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { ChevronsRight, Search, FileText, BookOpen, Share2, Folder, ChevronRight } from 'lucide-react';
+import { ChevronsRight, Search, FileText, BookOpen, Share2, Folder, ChevronRight, Lightbulb } from 'lucide-react';
 import { KnowledgeNode, UserPage } from '@/types/content-types';
 import { DocumentData } from 'firebase/firestore';
 import { FeedPost } from '../dashboard/FeedPost';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { Badge } from '../ui/badge';
 
 export type ViewMode = "list" | "map" | "network";
 
@@ -35,7 +36,6 @@ const findNodeById = (nodes: KnowledgeNode[], id: string): KnowledgeNode | null 
     return null;
 };
 
-// CORRECTED LOGIC: Now considers the parentId to find the correct path in a complex graph.
 const getPathToNode = (nodes: KnowledgeNode[], nodeId: string, parentId?: string): KnowledgeNode[] => {
     const path: KnowledgeNode[] = [];
     
@@ -43,10 +43,9 @@ const getPathToNode = (nodes: KnowledgeNode[], nodeId: string, parentId?: string
         for (const node of currentNodes) {
             const newPath = [...currentPath, node];
             if (node.id === nodeId) {
-                // If a parentId is specified, ensure this node is in the correct branch.
-                if (!parentId || node.parentIds.includes(parentId)) {
-                    path.push(...newPath);
-                    return true;
+                if (!parentId || (node.parentIds && node.parentIds.includes(parentId))) {
+                     path.push(...newPath);
+                     return true;
                 }
             }
             if (node.children && findPath(node.children, newPath)) {
@@ -84,10 +83,9 @@ const ListView = ({ nodes, posts, selectionMode, selectedDestinations, onSelecti
 
     const handleNodeClick = (node: KnowledgeNode) => {
         if (searchTerm) {
-            // When clicking from search results, construct the full path to that node
-            const currentParentId = activePath.length > 0 ? activePath[activePath.length - 1].id : undefined;
+            const currentParentId = activePath.length > 1 ? activePath[activePath.length - 2]?.id : undefined;
             const pathToNode = getPathToNode(nodes, node.id, currentParentId);
-            setActivePath(pathToNode.length > 0 ? pathToNode : [node]); // Fallback to just the node if path isn't found
+            setActivePath(pathToNode.length > 0 ? pathToNode : [node]);
             setSearchTerm('');
         } else {
              setActivePath([...activePath, node]);
@@ -112,16 +110,35 @@ const ListView = ({ nodes, posts, selectionMode, selectedDestinations, onSelecti
     const postsForNode = activeNode ? posts.filter(post => post.destinations?.some((d: any) => d.id === activeNode.id)) : [];
 
     const otherLocations = useMemo(() => {
-        if (!activeNode || (activeNode.parentIds?.length || 0) <= 1) return [];
+        if (!activeNode || !activeNode.parentIds || activeNode.parentIds.length <= 1) return [];
 
         const currentParentId = activePath.length > 1 ? activePath[activePath.length - 2].id : null;
         
-        return (activeNode.parentIds || [])
+        return activeNode.parentIds
             .filter(parentId => parentId !== currentParentId)
             .map(parentId => findNodeById(nodes, parentId))
             .filter((n): n is KnowledgeNode => n !== null);
     }, [activeNode, activePath, nodes]);
     
+    const getNodeIcon = (node: KnowledgeNode) => {
+        switch(node.type) {
+            case 'category': return <Folder className="h-4 w-4 text-primary"/>;
+            case 'topic': return <FileText className="h-4 w-4 text-muted-foreground"/>;
+            case 'concept': return <Lightbulb className="h-4 w-4 text-yellow-400"/>;
+            default: return <FileText className="h-4 w-4 text-muted-foreground"/>;
+        }
+    };
+    
+    const getNodeTypeLabel = (node: KnowledgeNode) => {
+        switch(node.type) {
+            case 'category': return "Categoría";
+            case 'topic': return "Tema";
+            case 'concept': return "Concepto";
+            default: return "";
+        }
+    }
+
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 min-h-[60vh]">
             <div className="md:col-span-1 flex flex-col gap-4">
@@ -151,8 +168,9 @@ const ListView = ({ nodes, posts, selectionMode, selectedDestinations, onSelecti
                                 <div key={node.id} className={cn("w-full text-left p-2 rounded-md text-sm hover:bg-muted flex items-center justify-between", selectionMode && isSelected && 'bg-primary/20 ring-1 ring-primary')}>
                                    <button onClick={() => handleNodeClick(node)} className="flex-grow text-left">
                                         <div className="flex items-center gap-2">
-                                            {node.children ? <Folder className="h-4 w-4 text-primary"/> : <FileText className="h-4 w-4 text-muted-foreground"/>}
-                                            {node.name}
+                                            {getNodeIcon(node)}
+                                            <span>{node.name}</span>
+                                            <Badge variant="outline" className="text-xs">{getNodeTypeLabel(node)}</Badge>
                                         </div>
                                     </button>
                                     {selectionMode && (
