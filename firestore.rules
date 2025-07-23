@@ -1,34 +1,65 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Allow public read on most collections
-    match /{collection}/{docId} {
+  
+    // --- GENERAL PUBLIC CONTENT ---
+    // Anyone can read public pages, but only logged-in users can create them.
+    // Members can update (e.g., join/leave).
+    match /{pageCollection}/{slug} where pageCollection in ['communities', 'federated_entities', 'political_parties', 'study_groups', 'chat_groups', 'events'] {
       allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null; // Allows joining/leaving
+      allow delete: if false; // Prevent deletion for now
     }
 
-    // Allow authenticated users to create documents in most collections
-    match /{collection}/{docId} {
+    // --- PROPOSALS AND POSTS ---
+    // Anyone can read posts/proposals. Only logged-in users can interact.
+    match /posts/{postId} {
+      allow read: if true;
+      allow create, update: if request.auth != null;
+      
+      // Comments Subcollection
+      match /comments/{commentId} {
+        allow read: if true;
         allow create: if request.auth != null;
+        allow update, delete: if request.auth.uid == resource.data.author.uid;
+      }
     }
     
-    // Allow users to update their own profile, but not others'.
+    match /proposals/{proposalId} {
+      allow read: if true;
+      allow create, update: if request.auth != null;
+      
+      // Comments Subcollection for Proposals
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+        allow update, delete: if request.auth.uid == resource.data.author.uid;
+      }
+    }
+    
+    // --- USER PROFILES & COLLECTIONS ---
+    // Public read for user profiles, but only the user can write to their own profile.
     match /users/{userId} {
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if true;
+      allow create: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId;
+      allow delete: if false;
     }
     
-    // NEW RULE: Allow reading across the entire 'users' collection group.
-    // This is required for the collection page to find the owner of a collection.
-    // Write access is still restricted by the rule above.
+    // This is the crucial rule for Collection queries. It allows anyone to
+    // query across all user documents, which is needed to find a specific collection.
+    // This is safe because the rule above still protects writing to other users' documents.
     match /users/{document=**} {
       allow read: if true;
     }
-
-    // Allow authenticated users to write to subcollections (like comments)
-    match /{collection}/{docId}/{subcollection}/{subDocId} {
-      allow write: if request.auth != null;
+    
+    // --- TUTORIALS ---
+    match /tutorials/{tutorialId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth.uid == resource.data.authorId;
     }
   }
 }
