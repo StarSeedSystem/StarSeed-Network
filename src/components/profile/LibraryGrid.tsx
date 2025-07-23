@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import { Video, Image as ImageIcon, PlusCircle, CheckCircle, Folder, LayoutGrid, X, File, FolderPlus } from "lucide-react";
+import { Video, Image as ImageIcon, PlusCircle, CheckCircle, Folder, LayoutGrid, X, File, FolderPlus, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "../ui/input";
+import { SaveToCollectionDialog } from "../utils/SaveToCollectionDialog";
 
 export interface LibraryItem {
     id: string;
@@ -81,6 +82,9 @@ export function LibraryGrid({ items, folders: initialFolders = [], selectionMode
                 <div className="aspect-square relative">
                     <Image src={item.thumbnail} alt={item.title} layout="fill" objectFit="cover" className="group-hover:scale-105 transition-transform duration-300" data-ai-hint={item.thumbnailHint} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute top-2 right-2">
+                        <SaveToCollectionDialog itemId={item.id} pageName={item.title}/>
+                    </div>
                     <div className="absolute bottom-2 left-2 text-white">
                         <div className="flex items-center gap-1.5 text-xs bg-black/50 backdrop-blur-sm rounded-full px-2 py-1">
                             {typeIcons[item.type as keyof typeof typeIcons] || <File className="h-4 w-4" />}
@@ -88,7 +92,7 @@ export function LibraryGrid({ items, folders: initialFolders = [], selectionMode
                         </div>
                     </div>
                     {isSelected && (
-                         <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full h-6 w-6 flex items-center justify-center">
+                         <div className="absolute top-2 left-2 bg-primary text-primary-foreground rounded-full h-6 w-6 flex items-center justify-center">
                             <CheckCircle className="h-4 w-4" />
                         </div>
                     )}

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,14 +38,13 @@ export function CollectionsTab({ collections }: CollectionsTabProps) {
                                  <><Lock className="h-3 w-3" /> Privada</>
                              )}
                              <span>· {collection.pageIds.length} páginas</span>
+                             <span>· {(collection.itemIds || []).length} archivos</span>
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {/* Here you could fetch and show some of the pages in the collection */}
-                        <p className="text-sm text-muted-foreground">
-                            Contenido de la colección aparecerá aquí.
-                        </p>
-                        <Button variant="link" className="p-0 mt-2">Ver colección</Button>
+                        <Button asChild className="w-full">
+                            <Link href={`/collection/${collection.id}`}>Ver colección</Link>
+                        </Button>
                     </CardContent>
                 </Card>
             ))}

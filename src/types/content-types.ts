@@ -3,6 +3,7 @@
 
 
 
+
 export interface Author {
     name: string;
     avatar: string;
@@ -97,6 +98,7 @@ export interface UserCollection {
     id: string;
     name: string;
     pageIds: string[];
+    itemIds?: string[]; // Added to store library item IDs
     privacy: 'public' | 'private';
 }
 

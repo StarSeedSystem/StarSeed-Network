@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from "react";
@@ -15,11 +16,12 @@ import { Bookmark, Folder, FolderPlus, Globe, Loader2, Lock } from "lucide-react
 import type { UserCollection } from "@/types/content-types";
 
 interface SaveToCollectionDialogProps {
-    pageId: string;
-    pageName: string;
+    pageId?: string;
+    itemId?: string;
+    pageName: string; // Used for the title, can be page name or item name
 }
 
-export function SaveToCollectionDialog({ pageId, pageName }: SaveToCollectionDialogProps) {
+export function SaveToCollectionDialog({ pageId, itemId, pageName }: SaveToCollectionDialogProps) {
     const { user, profile } = useUser();
     const { toast } = useToast();
     const [isOpen, setIsOpen] = useState(false);
@@ -31,22 +33,34 @@ export function SaveToCollectionDialog({ pageId, pageName }: SaveToCollectionDia
     if (!user) return null;
 
     const collections: UserCollection[] = profile?.collections || [];
-    const isPageInAnyCollection = collections.some(c => c.pageIds.includes(pageId));
+    const isPageInAnyCollection = pageId ? collections.some(c => c.pageIds.includes(pageId)) : false;
+    const isItemInAnyCollection = itemId ? collections.some(c => c.itemIds?.includes(itemId)) : false;
+    const isSaved = isPageInAnyCollection || isItemInAnyCollection;
+
 
     const handleSave = async () => {
-        if (!selectedCollection || !user) return;
+        if (!selectedCollection || !user || (!pageId && !itemId)) return;
+        
         setIsCreating(true);
 
         const collection = collections.find(c => c.id === selectedCollection);
         if (!collection) return;
         
-        const isAlreadyInCollection = collection.pageIds.includes(pageId);
+        const isPageInCollection = pageId ? collection.pageIds.includes(pageId) : false;
+        const isItemInCollection = itemId ? collection.itemIds?.includes(itemId) : false;
+        const isAlreadyInCollection = isPageInCollection || isItemInCollection;
+
         const newCollections = collections.map(c => {
             if (c.id === selectedCollection) {
-                return {
-                    ...c,
-                    pageIds: isAlreadyInCollection ? c.pageIds.filter(id => id !== pageId) : [...c.pageIds, pageId]
-                };
+                const newPageIds = pageId 
+                    ? (isPageInCollection ? c.pageIds.filter(id => id !== pageId) : [...c.pageIds, pageId])
+                    : c.pageIds;
+                
+                const newItemIds = itemId
+                    ? (isItemInCollection ? (c.itemIds || []).filter(id => id !== itemId) : [...(c.itemIds || []), itemId])
+                    : (c.itemIds || []);
+
+                return { ...c, pageIds: newPageIds, itemIds: newItemIds };
             }
             return c;
         });
@@ -54,7 +68,7 @@ export function SaveToCollectionDialog({ pageId, pageName }: SaveToCollectionDia
         try {
             const userRef = doc(db, "users", user.uid);
             await updateDoc(userRef, { collections: newCollections });
-            toast({ title: isAlreadyInCollection ? "Página eliminada de la colección" : "Página guardada en la colección" });
+            toast({ title: isAlreadyInCollection ? "Eliminado de la colección" : "Guardado en la colección" });
             setIsOpen(false);
         } catch (error) {
             console.error(error);
@@ -65,13 +79,14 @@ export function SaveToCollectionDialog({ pageId, pageName }: SaveToCollectionDia
     };
     
     const handleCreateAndSave = async () => {
-        if (!newCollectionName.trim() || !user) return;
+        if (!newCollectionName.trim() || !user || (!pageId && !itemId)) return;
         setIsCreating(true);
 
         const newCollection: UserCollection = {
             id: `coll_${Date.now()}`,
             name: newCollectionName.trim(),
-            pageIds: [pageId],
+            pageIds: pageId ? [pageId] : [],
+            itemIds: itemId ? [itemId] : [],
             privacy: newCollectionPrivacy,
         };
         const newCollections = [...collections, newCollection];
@@ -79,7 +94,7 @@ export function SaveToCollectionDialog({ pageId, pageName }: SaveToCollectionDia
         try {
             const userRef = doc(db, "users", user.uid);
             await updateDoc(userRef, { collections: newCollections });
-            toast({ title: "Colección creada y página guardada" });
+            toast({ title: "Colección creada y elemento guardado" });
             setIsOpen(false);
             setNewCollectionName("");
         } catch (error) {
@@ -93,15 +108,15 @@ export function SaveToCollectionDialog({ pageId, pageName }: SaveToCollectionDia
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                 <Button variant={isPageInAnyCollection ? "secondary" : "outline"} size="icon">
-                    <Bookmark className={isPageInAnyCollection ? "fill-current" : ""} />
-                    <span className="sr-only">Guardar Página</span>
+                 <Button variant={isSaved ? "secondary" : "outline"} size="icon" className="h-8 w-8">
+                    <Bookmark className={isSaved ? "fill-current" : ""} />
+                    <span className="sr-only">Guardar</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="glass-card">
                 <DialogHeader>
                     <DialogTitle>Guardar "{pageName}" en una Colección</DialogTitle>
-                    <DialogDescription>Organiza tus páginas favoritas en colecciones públicas o privadas.</DialogDescription>
+                    <DialogDescription>Organiza tus páginas y archivos favoritos en colecciones.</DialogDescription>
                 </DialogHeader>
                 
                 <div className="space-y-4">
