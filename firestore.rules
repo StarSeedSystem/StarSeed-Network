@@ -50,10 +50,37 @@ service cloud.firestore {
     }
     
     // --- REGLAS GENÉRICAS PARA PÁGINAS PÚBLICAS ---
-    // (Comunidades, Entidades, Partidos, Grupos de Estudio, Grupos de Chat, Eventos)
     // Son de lectura pública, pero la creación y actualización (como unirse) requiere autenticación.
-    match /{collectionName}/{docId} 
-        where collectionName in ['communities', 'federated_entities', 'political_parties', 'study_groups', 'chat_groups', 'events', 'tutorials', 'cultural_posts'] {
+
+    match /communities/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+    }
+    match /federated_entities/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+    }
+    match /political_parties/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+    }
+    match /study_groups/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+    }
+    match /chat_groups/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+    }
+    match /events/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+    }
+    match /tutorials/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+    }
+     match /cultural_posts/{docId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
     }
