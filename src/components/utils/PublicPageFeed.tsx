@@ -24,13 +24,41 @@ export function PublicPageFeed({ pageId }: PublicPageFeedProps) {
 
         const postsCollection = collection(db, "posts");
         
-        // A more robust but less performant query that doesn't need a composite index
-        const allPostsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+        // OPTIMIZED QUERY: Use 'array-contains' to filter on the server-side.
+        // This is highly efficient and scalable.
+        // Firebase requires an index for this query, which it will prompt you to create
+        // in the console logs the first time it runs if one doesn't exist.
+        const q = query(
+            postsCollection,
+            where("destinations", "array-contains", { id: pageId, name: "", type: "" }), // NOTE: Firestore only matches on the full object. We will need to save the full object.
+            orderBy("createdAt", "desc")
+        );
         
-        const unsubscribe = onSnapshot(allPostsQuery, (querySnapshot) => {
+        // A more robust query that doesn't need a composite index, but is less performant on large datasets.
+        // We will switch to this one to avoid requiring index creation from the user.
+        const allPostsQuery = query(
+            postsCollection,
+            where("destinations", "array-contains-any", [{id: pageId}]),
+             orderBy("createdAt", "desc")
+        );
+
+        const robustQuery = query(
+            postsCollection,
+            where("destinations", "array-contains-any", [
+                {id: pageId, name: "Mi Perfil Personal", type: "profile"},
+                // This is still not perfect, as we need all possible combinations.
+                // The best approach for production is a dedicated index.
+                // For this app, we will filter client-side to ensure it works out of the box.
+            ])
+        )
+
+        // The most robust client-side approach that requires no special indexes
+        const finalQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+        
+        const unsubscribe = onSnapshot(finalQuery, (querySnapshot) => {
             const allPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            // Filter on the client side
+            // Filter on the client side to ensure it works without complex index configuration
             const pagePosts = allPosts.filter(post => 
                 Array.isArray(post.destinations) && post.destinations.some(dest => dest.id === pageId)
             );
