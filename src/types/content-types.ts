@@ -1,4 +1,5 @@
 
+
 export interface Author {
     name: string;
     avatar: string;
@@ -64,6 +65,20 @@ interface BaseEntity {
     members: string[]; // Now an array of user IDs
     creatorId: string;
     type: 'community' | 'federation' | 'study_group' | 'political_party' | 'chat_group';
+}
+
+export interface KnowledgeNode {
+    id: string;
+    name: string;
+    description: string;
+    relatedIds: string[];
+}
+
+export interface UserPage {
+    id: string;
+    name: string;
+    type: 'profile' | 'community' | 'federation' | 'study_group' | 'political_party' | 'knowledge_node';
+    areas: string[];
 }
 
 export interface Community extends BaseEntity {
@@ -144,5 +159,3 @@ export interface User {
     showLibrary: 'public' | 'private' | 'friends';
   };
 }
-
-    

@@ -8,36 +8,29 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { User, Globe, Users, Landmark, Shield, BookOpen, Search, Folder, PlusCircle } from "lucide-react";
+import { User, Globe, Users, Landmark, Shield, BookOpen, Search, Folder, PlusCircle, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/context/UserContext";
-import type { UserCollection } from "@/types/content-types";
+import type { UserCollection, UserPage } from "@/types/content-types";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
 import { Separator } from "../ui/separator";
 
-type PageType = 'profile' | 'community' | 'federation' | 'study_group' | 'political_party';
-
-export interface UserPage {
-    id: string;
-    name: string;
-    type: PageType;
-    areas: string[];
-}
-
-const typeIcons: Record<PageType, React.ElementType> = {
+const typeIcons: Record<UserPage['type'], React.ElementType> = {
     profile: User,
     community: Globe,
     study_group: BookOpen,
     federation: Landmark,
     political_party: Shield,
+    knowledge_node: Brain,
 };
 
-const typeLabels: Record<PageType, string> = {
+const typeLabels: Record<UserPage['type'], string> = {
     profile: "Perfil",
     community: "Comunidad",
     study_group: "G. Estudio",
     federation: "E. Federada",
     political_party: "Partido",
+    knowledge_node: "Nodo de Conocimiento",
 }
 
 interface AudienceSelectorProps {
@@ -50,7 +43,7 @@ interface AudienceSelectorProps {
 export function AudienceSelector({ availablePages, selectedArea, selectedDestinations, onSelectionChange }: AudienceSelectorProps) {
     const { profile } = useUser();
     const [searchTerm, setSearchTerm] = useState("");
-    const [typeFilter, setTypeFilter] = useState<PageType | 'all'>('all');
+    const [typeFilter, setTypeFilter] = useState<UserPage['type'] | 'all'>('all');
     
     const handleCheckedChange = (checked: boolean, page: UserPage) => {
         const newSelection = checked 

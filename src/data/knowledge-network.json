@@ -1,0 +1,191 @@
+
+{
+  "nodes": [
+    {
+      "id": "ciencia",
+      "name": "Ciencia",
+      "description": "Exploración sistemática del universo físico y natural a través de la observación y la experimentación.",
+      "relatedIds": ["tecnologia", "filosofia", "matematicas", "fisica", "biologia", "quimica"]
+    },
+    {
+      "id": "tecnologia",
+      "name": "Tecnología",
+      "description": "La aplicación del conocimiento científico para fines prácticos, especialmente en la industria.",
+      "relatedIds": ["ciencia", "ia", "robotica", "informatica", "bio-tecnologia"]
+    },
+    {
+      "id": "filosofia",
+      "name": "Filosofía",
+      "description": "El estudio de las cuestiones fundamentales y generales, como las relativas a la existencia, el conocimiento, los valores, la razón, la mente y el lenguaje.",
+      "relatedIds": ["ciencia", "etica", "metafisica", "epistemologia", "filosofia-mente"]
+    },
+    {
+      "id": "arte",
+      "name": "Arte",
+      "description": "La expresión o aplicación de la habilidad e imaginación creativa humana, típicamente en una forma visual como la pintura o la escultura.",
+      "relatedIds": ["cultura", "musica", "arte-generativo", "literatura"]
+    },
+    {
+      "id": "matematicas",
+      "name": "Matemáticas",
+      "description": "La ciencia abstracta del número, la cantidad y el espacio.",
+      "relatedIds": ["ciencia", "fisica", "informatica"]
+    },
+    {
+      "id": "fisica",
+      "name": "Física",
+      "description": "La ciencia natural que estudia la materia, su movimiento y comportamiento a través del espacio y el tiempo, y las entidades relacionadas de energía y fuerza.",
+      "relatedIds": ["ciencia", "matematicas", "fisica-cuantica", "astrofisica"]
+    },
+    {
+      "id": "biologia",
+      "name": "Biología",
+      "description": "El estudio científico de la vida y los organismos vivos.",
+      "relatedIds": ["ciencia", "genetica", "ecologia", "bio-tecnologia"]
+    },
+    {
+      "id": "quimica",
+      "name": "Química",
+      "description": "La rama de la ciencia que se ocupa de las sustancias de las que se compone la materia, la investigación de sus propiedades e interacciones.",
+      "relatedIds": ["ciencia", "bioquimica"]
+    },
+    {
+      "id": "ia",
+      "name": "Inteligencia Artificial",
+      "description": "La teoría y el desarrollo de sistemas informáticos capaces de realizar tareas que normalmente requieren inteligencia humana.",
+      "relatedIds": ["tecnologia", "informatica", "etica", "filosofia-mente", "aprendizaje-automatico", "redes-neuronales"]
+    },
+    {
+      "id": "robotica",
+      "name": "Robótica",
+      "description": "La rama de la tecnología que se ocupa del diseño, construcción, operación y aplicación de robots.",
+      "relatedIds": ["tecnologia", "ia", "informatica"]
+    },
+    {
+      "id": "informatica",
+      "name": "Informática",
+      "description": "El estudio de los principios y el uso de las computadoras.",
+      "relatedIds": ["tecnologia", "matematicas", "ia"]
+    },
+    {
+      "id": "bio-tecnologia",
+      "name": "Biotecnología",
+      "description": "La explotación de procesos biológicos para fines industriales y otros, especialmente la manipulación genética de microorganismos para la producción de antibióticos, hormonas, etc.",
+      "relatedIds": ["tecnologia", "biologia", "genetica", "etica"]
+    },
+    {
+      "id": "etica",
+      "name": "Ética",
+      "description": "Principios morales que rigen el comportamiento de una persona o la realización de una actividad.",
+      "relatedIds": ["filosofia", "ia", "bio-tecnologia"]
+    },
+    {
+      "id": "metafisica",
+      "name": "Metafísica",
+      "description": "La rama de la filosofía que trata de la naturaleza primera de las cosas, incluyendo los conceptos de ser, conocer, sustancia, causa, identidad, tiempo y espacio.",
+      "relatedIds": ["filosofia", "fisica-cuantica"]
+    },
+    {
+      "id": "epistemologia",
+      "name": "Epistemología",
+      "description": "La teoría del conocimiento, especialmente con respecto a sus métodos, validez y alcance.",
+      "relatedIds": ["filosofia", "ciencia"]
+    },
+    {
+      "id": "filosofia-mente",
+      "name": "Filosofía de la Mente",
+      "description": "Una rama de la filosofía que estudia la naturaleza de la mente y su relación con el cuerpo físico.",
+      "relatedIds": ["filosofia", "ia", "neurociencia"]
+    },
+    {
+      "id": "cultura",
+      "name": "Cultura",
+      "description": "Las artes y otras manifestaciones del logro intelectual humano consideradas colectivamente.",
+      "relatedIds": ["arte", "sociologia"]
+    },
+    {
+      "id": "musica",
+      "name": "Música",
+      "description": "El arte de organizar los sonidos en el tiempo a través de los elementos de la melodía, la armonía, el ritmo y el timbre.",
+      "relatedIds": ["arte", "arte-generativo"]
+    },
+    {
+      "id": "arte-generativo",
+      "name": "Arte Generativo",
+      "description": "Arte que en todo o en parte ha sido creado con el uso de un sistema autónomo.",
+      "relatedIds": ["arte", "ia", "informatica"]
+    },
+    {
+      "id": "literatura",
+      "name": "Literatura",
+      "description": "Obras escritas, especialmente aquellas consideradas de mérito artístico superior o duradero.",
+      "relatedIds": ["arte", "cultura"]
+    },
+    {
+      "id": "fisica-cuantica",
+      "name": "Física Cuántica",
+      "description": "Una teoría fundamental en física que proporciona una descripción de las propiedades físicas de la naturaleza a escala de átomos y partículas subatómicas.",
+      "relatedIds": ["fisica", "metafisica", "informatica"]
+    },
+    {
+      "id": "astrofisica",
+      "name": "Astrofísica",
+      "description": "La rama de la astronomía que se ocupa de la física del universo, incluyendo las propiedades físicas de los objetos celestes.",
+      "relatedIds": ["fisica", "ciencia"]
+    },
+    {
+      "id": "genetica",
+      "name": "Genética",
+      "description": "El estudio de la herencia y la variación de las características heredadas.",
+      "relatedIds": ["biologia", "bio-tecnologia"]
+    },
+    {
+      "id": "ecologia",
+      "name": "Ecología",
+      "description": "La rama de la biología que se ocupa de las relaciones de los organismos entre sí y con su entorno físico.",
+      "relatedIds": ["biologia", "ciencia"]
+    },
+    {
+      "id": "bioquimica",
+      "name": "Bioquímica",
+      "description": "La rama de la ciencia que se ocupa de los procesos químicos dentro y relacionados con los organismos vivos.",
+      "relatedIds": ["biologia", "quimica"]
+    },
+    {
+      "id": "aprendizaje-automatico",
+      "name": "Aprendizaje Automático",
+      "description": "Una aplicación de la inteligencia artificial (IA) que proporciona a los sistemas la capacidad de aprender y mejorar automáticamente a partir de la experiencia sin ser explícitamente programados.",
+      "relatedIds": ["ia", "estadistica"]
+    },
+    {
+      "id": "redes-neuronales",
+      "name": "Redes Neuronales",
+      "description": "Un conjunto de algoritmos, modelados vagamente a partir del cerebro humano, que están diseñados para reconocer patrones.",
+      "relatedIds": ["ia", "aprendizaje-automatico"]
+    },
+    {
+      "id": "neurociencia",
+      "name": "Neurociencia",
+      "description": "El estudio científico de la estructura o función del sistema nervioso y el cerebro.",
+      "relatedIds": ["biologia", "filosofia-mente"]
+    },
+    {
+      "id": "sociologia",
+      "name": "Sociología",
+      "description": "El estudio del desarrollo, la estructura y el funcionamiento de la sociedad humana.",
+      "relatedIds": ["cultura", "politica"]
+    },
+    {
+      "id": "estadistica",
+      "name": "Estadística",
+      "description": "La práctica o ciencia de recopilar y analizar datos numéricos en grandes cantidades.",
+      "relatedIds": ["matematicas", "aprendizaje-automatico"]
+    },
+    {
+      "id": "politica",
+      "name": "Política",
+      "description": "Las actividades asociadas con la gobernanza de un país u otra área.",
+      "relatedIds": ["sociologia", "etica", "filosofia"]
+    }
+  ]
+}

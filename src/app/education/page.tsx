@@ -12,13 +12,13 @@ import { useUser } from "@/context/UserContext";
 import { FeedPost } from "@/components/dashboard/FeedPost";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AdvancedFilter, FilterState } from "@/components/politics/AdvancedFilter";
 import type { AnyEntity } from "@/types/content-types";
 import { ConnectionCard } from "@/components/participations/ConnectionCard";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { KnowledgeNetwork, ViewMode } from "@/components/education/KnowledgeNetwork";
+import { KnowledgeNode } from "@/types/content-types";
+import knowledgeData from "@/data/knowledge-network.json";
 
-type SubArea = "classes" | "articles";
-type ViewMode = "list" | "map" | "network";
 
 export default function EducationPage() {
   const [posts, setPosts] = useState<DocumentData[]>([]);
@@ -26,21 +26,19 @@ export default function EducationPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingPages, setIsLoadingPages] = useState(true);
   const { user } = useUser();
-   const [filters, setFilters] = useState<FilterState>({
-    entity: 'all', status: 'all', tags: '', saved: false, collection: 'all'
-  });
-  const [activeSubArea, setActiveSubArea] = useState<SubArea>("articles");
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
-
+  const [viewMode, setViewMode] = useState<ViewMode>("map");
+  const [knowledgeNodes, setKnowledgeNodes] = useState<KnowledgeNode[]>([]);
 
   useEffect(() => {
+    // Load knowledge network data from JSON
+    setKnowledgeNodes(knowledgeData.nodes as KnowledgeNode[]);
+    
     if (!user) {
         setIsLoading(false);
         setIsLoadingPages(false);
         return;
     }
 
-    // This query now fetches all documents from the 'posts' collection where the 'area' is 'education'
     const postsQuery = query(
         collection(db, "posts"),
         where("area", "==", "education")
@@ -48,11 +46,7 @@ export default function EducationPage() {
 
     const unsubscribePosts = onSnapshot(postsQuery, async (snapshot) => {
         const fetchedPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        // This client-side filtering logic remains important for personalized feeds if needed,
-        // but for a general view, we can show all educational posts.
         const sortedPosts = fetchedPosts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
         setPosts(sortedPosts);
         setIsLoading(false);
     });
@@ -80,24 +74,6 @@ export default function EducationPage() {
     return () => unsubscribePosts();
   }, [user]);
 
-  const filteredPosts = posts.filter(post => post.subArea === activeSubArea);
-
-  const renderFeed = () => {
-    if (isLoading) return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin"/></div>
-    if (filteredPosts.length === 0) return (
-        <Card className="text-center py-16 bg-card/50 rounded-lg">
-            <h3 className="text-xl font-semibold">No Hay Contenido en esta Sección Todavía</h3>
-            <p className="text-muted-foreground mt-2">¡Sé el primero en compartir tu conocimiento!</p>
-        </Card>
-    )
-    return (
-        <div className="space-y-6">
-            {filteredPosts.map((post) => (
-                <FeedPost key={post.id} post={{...post}}/>
-            ))}
-        </div>
-    )
-  }
 
   const renderMyPages = () => {
       if (isLoadingPages) return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin"/></div>
@@ -118,7 +94,7 @@ export default function EducationPage() {
     <div className="space-y-8">
       <PageHeader
         title="Educación"
-        subtitle="Comparte conocimiento, tutoriales e investigaciones."
+        subtitle="Explora la red de conocimiento, comparte tutoriales e investigaciones."
         actionType="network"
         currentNetwork="education"
          actionButton={
@@ -126,39 +102,46 @@ export default function EducationPage() {
         }
       />
       
-       <Tabs defaultValue="publications" className="w-full">
+       <Tabs defaultValue="knowledge-network" className="w-full">
             <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 bg-card/60 rounded-xl h-auto">
-                <TabsTrigger value="publications">Publicaciones</TabsTrigger>
+                <TabsTrigger value="knowledge-network">Red de Conocimiento</TabsTrigger>
                 <TabsTrigger value="my-groups">Mis Grupos de Estudio</TabsTrigger>
                 <TabsTrigger value="ai-agent">Agente IA Educativo</TabsTrigger>
             </TabsList>
-            <TabsContent value="publications" className="mt-6 space-y-6">
-                 <Tabs defaultValue={activeSubArea} onValueChange={(value) => setActiveSubArea(value as SubArea)}>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <TabsList className="grid w-full grid-cols-2 bg-card/80 rounded-xl h-auto max-w-sm">
-                            <TabsTrigger value="articles">Artículos</TabsTrigger>
-                            <TabsTrigger value="classes">Clases</TabsTrigger>
-                        </TabsList>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline">
-                                    {viewMode === 'list' && <List className="mr-2 h-4 w-4"/>}
-                                    {viewMode === 'map' && <Map className="mr-2 h-4 w-4"/>}
-                                    {viewMode === 'network' && <Share2 className="mr-2 h-4 w-4"/>}
-                                    Vista: {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}
-                                    <ChevronDown className="ml-2 h-4 w-4"/>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="glass-card">
-                                <DropdownMenuItem onClick={() => setViewMode('list')}><List className="mr-2 h-4 w-4"/> Lista</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setViewMode('map')} disabled><Map className="mr-2 h-4 w-4"/> Mapa Conceptual</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setViewMode('network')} disabled><Share2 className="mr-2 h-4 w-4"/> Red 3D</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </Tabs>
-                <AdvancedFilter filters={filters} onFilterChange={setFilters} />
-                {renderFeed()}
+            <TabsContent value="knowledge-network" className="mt-6 space-y-6">
+                <Card className="glass-card">
+                    <CardHeader>
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                                <CardTitle>Explorar la Red de Conocimiento</CardTitle>
+                                <CardDescription>Navega por las categorías y temas para descubrir contenido.</CardDescription>
+                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline">
+                                        {viewMode === 'list' && <List className="mr-2 h-4 w-4"/>}
+                                        {viewMode === 'map' && <Map className="mr-2 h-4 w-4"/>}
+                                        {viewMode === 'network' && <Share2 className="mr-2 h-4 w-4"/>}
+                                        Vista: {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}
+                                        <ChevronDown className="ml-2 h-4 w-4"/>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="glass-card">
+                                    <DropdownMenuItem onClick={() => setViewMode('list')}><List className="mr-2 h-4 w-4"/> Lista</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setViewMode('map')}><Map className="mr-2 h-4 w-4"/> Mapa Conceptual</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setViewMode('network')}><Share2 className="mr-2 h-4 w-4"/> Red 3D</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                       <KnowledgeNetwork 
+                           nodes={knowledgeNodes} 
+                           viewMode={viewMode}
+                           posts={posts}
+                        />
+                    </CardContent>
+                </Card>
             </TabsContent>
             <TabsContent value="my-groups" className="mt-6">
                 {renderMyPages()}
@@ -173,5 +156,3 @@ export default function EducationPage() {
     </div>
   );
 }
-
-    
