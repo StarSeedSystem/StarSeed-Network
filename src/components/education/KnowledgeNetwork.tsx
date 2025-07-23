@@ -256,7 +256,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                             {activeNode && networkType === 'category' && relatedContent.topics.length > 0 && (
                                 <div className="space-y-2">
                                     <h4 className="font-semibold flex items-center gap-2"><FileText className="h-4 w-4"/> Temas en esta Categoría</h4>
-                                    <div className="space-y-1">
+                                    <div className="flex flex-wrap gap-2">
                                         {relatedContent.topics.map(topic => (
                                             <Button key={topic.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
                                                 {topic.name}
@@ -270,7 +270,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                             {activeNode && networkType !== 'category' && relatedContent.categories.length > 0 && (
                                 <div className="space-y-2">
                                     <h4 className="font-semibold flex items-center gap-2"><LinkIcon className="h-4 w-4"/> Vinculado en Categorías</h4>
-                                    <div className="space-y-1">
+                                    <div className="flex flex-wrap gap-2">
                                         {relatedContent.categories.map(cat => (
                                             <Button key={cat.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
                                                 {cat.name}
