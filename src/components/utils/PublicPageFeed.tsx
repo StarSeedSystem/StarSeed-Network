@@ -24,17 +24,6 @@ export function PublicPageFeed({ pageId }: PublicPageFeedProps) {
 
         const postsCollection = collection(db, "posts");
         
-        // This query requires a composite index on (destinations, createdAt)
-        // Since we cannot create it programmatically, we will fetch and sort on the client
-        const robustQuery = query(postsCollection, where("destinations", "array-contains", { id: pageId, name: "", type: "" }));
-        const q = query(
-            collection(db, "posts"),
-            where("destinations", "array-contains-any", [
-                {id: pageId},
-                {id: pageId, name: '', type: ''},
-            ])
-        );
-
         // A more robust but less performant query that doesn't need a composite index
         const allPostsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
         
@@ -75,7 +64,7 @@ export function PublicPageFeed({ pageId }: PublicPageFeedProps) {
                         comments: post.comments,
                         reposts: post.reposts,
                         likes: post.likes,
-                        destinations: post.destinations.map((d: any) => d.name),
+                        destinations: post.destinations,
                         blocks: post.blocks,
                         createdAt: post.createdAt
                     }} />

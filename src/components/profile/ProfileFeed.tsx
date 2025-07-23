@@ -134,7 +134,7 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
                         comments: post.comments,
                         reposts: post.reposts,
                         likes: post.likes,
-                        destinations: post.destinations.map((d: any) => d.name),
+                        destinations: post.destinations,
                         blocks: post.blocks,
                         createdAt: post.createdAt,
                     }} />

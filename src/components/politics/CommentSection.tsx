@@ -13,6 +13,7 @@ import { Separator } from "../ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { run } from "node:test";
 
 interface Comment {
     id: string;
@@ -28,12 +29,10 @@ interface Comment {
 
 interface CommentSectionProps {
     postId: string;
-    onCommentPosted: () => void;
-    onOptionProposed?: (optionText: string) => void;
     isPoll: boolean;
 }
 
-function CommentItem({ comment, postId, onReplySuccess }: { comment: Comment; postId: string; onReplySuccess: () => void; }) {
+function CommentItem({ comment, postId }: { comment: Comment; postId: string; }) {
     const [showReplyBox, setShowReplyBox] = useState(false);
     const [replyContent, setReplyContent] = useState("");
     const [isReplying, setIsReplying] = useState(false);
@@ -51,7 +50,15 @@ function CommentItem({ comment, postId, onReplySuccess }: { comment: Comment; po
                  parentId: comment.id,
                  likes: 0,
             });
-            onReplySuccess(); // This will trigger a re-count on the parent
+            // Update the comment count on the main post
+            await runTransaction(db, async (transaction) => {
+                const postRef = doc(db, "posts", postId);
+                const postDoc = await transaction.get(postRef);
+                if (!postDoc.exists()) throw "Post does not exist!";
+                const newCommentCount = (postDoc.data().comments || 0) + 1;
+                transaction.update(postRef, { comments: newCommentCount });
+            });
+
             toast({ title: "Respuesta publicada." });
             setReplyContent("");
             setShowReplyBox(false);
@@ -88,14 +95,14 @@ function CommentItem({ comment, postId, onReplySuccess }: { comment: Comment; po
                     </div>
                 )}
                 <div className="pl-6 mt-4 space-y-4 border-l-2 border-muted/20">
-                     {comment.replies?.map(reply => <CommentItem key={reply.id} comment={reply} postId={postId} onReplySuccess={onReplySuccess} />)}
+                     {comment.replies?.map(reply => <CommentItem key={reply.id} comment={reply} postId={postId} />)}
                 </div>
             </div>
         </div>
     );
 }
 
-export function CommentSection({ postId, onCommentPosted, onOptionProposed, isPoll }: CommentSectionProps) {
+export function CommentSection({ postId, isPoll }: CommentSectionProps) {
     const [comments, setComments] = useState<Comment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [newComment, setNewComment] = useState("");
@@ -152,15 +159,29 @@ export function CommentSection({ postId, onCommentPosted, onOptionProposed, isPo
                 }
                 const newCommentCount = (postDoc.data().comments || 0) + 1;
                 transaction.update(postRef, { comments: newCommentCount });
+
+                if (isOption) {
+                    const newOption = {
+                        text: newComment.trim(),
+                        votes: 1, // Start with one vote from the proposer
+                        proposer: { name: profile.name, uid: user.uid },
+                    };
+                    const blocks = postDoc.data().blocks || [];
+                    const pollIndex = blocks.findIndex((b: any) => b.type === 'poll');
+                    if (pollIndex !== -1) {
+                        blocks[pollIndex].options.push(newOption);
+                        // Also register the user's vote
+                        if (!blocks[pollIndex].voters) {
+                            blocks[pollIndex].voters = {};
+                        }
+                        blocks[pollIndex].voters[user.uid] = newOption.text;
+                        transaction.update(postRef, { blocks: blocks });
+                    }
+                }
             });
 
-            if (isOption && onOptionProposed) {
-                onOptionProposed(newComment);
-            }
-
-            onCommentPosted();
             setNewComment("");
-            toast({ title: isOption ? "Opción propuesta!" : "Comentario publicado!" });
+            toast({ title: isOption ? "¡Opción propuesta y voto registrado!" : "¡Comentario publicado!" });
 
         } catch (error) {
             console.error("Error adding comment:", error);
@@ -196,7 +217,7 @@ export function CommentSection({ postId, onCommentPosted, onOptionProposed, isPo
             {isLoading ? <div className="text-center py-4"><Loader2 className="h-6 w-6 animate-spin"/></div> : (
                 <div className="space-y-6">
                     {comments.length > 0 ? comments.map(comment => (
-                       <CommentItem key={comment.id} comment={comment} postId={postId} onReplySuccess={onCommentPosted} />
+                       <CommentItem key={comment.id} comment={comment} postId={postId} />
                     )) : <p className="text-muted-foreground text-center py-4">Sé el primero en comentar.</p>}
                 </div>
             )}

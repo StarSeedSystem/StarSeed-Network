@@ -9,7 +9,7 @@ import { MessageSquare, Repeat, Heart, Share, SendHorizonal, Dot } from "lucide-
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import { Textarea } from "../ui/textarea";
-import { PollData } from "../publish/PollBlock";
+import { PollData, PollOption } from "../publish/PollBlock";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
@@ -226,8 +226,6 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
             <div className="w-full pt-4 mt-4 border-t border-white/10">
                 <CommentSection 
                     postId={post.id}
-                    onCommentPosted={() => { /* Counts are now handled by transaction */ }}
-                    onOptionProposed={(newOptionText) => handleAddOptionFromComment(post.blocks!.findIndex(b => b.type === 'poll'), newOptionText)}
                     isPoll={!!pollBlockData}
                 />
             </div>
