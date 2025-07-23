@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from "react";
@@ -15,17 +16,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Check, ArrowLeft, PenSquare, Vote, Gavel, GraduationCap, Sparkles } from "lucide-react";
+import { Loader2, Check, ArrowLeft, PenSquare, Vote, Gavel, GraduationCap, Sparkles, Book, FileText } from "lucide-react";
 import { AudienceSelector, UserPage } from "@/components/publish/AudienceSelector";
 import { PollBlock, PollData } from "@/components/publish/PollBlock";
 import { FederatedEntitySettings } from "@/components/publish/FederatedEntitySettings";
 import { NewsSettings } from "@/components/publish/NewsSettings";
 import { LegislativeSettings, LegislativeData } from "@/components/publish/LegislativeSettings";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { EducationSettings, EducationData } from "./EducationSettings";
+import { KnowledgeNetwork, ViewMode } from "@/components/education/KnowledgeNetwork";
+import { KnowledgeNode } from "@/types/content-types";
+import knowledgeData from "@/data/knowledge-network.json";
+
 
 type Step = "area" | "context" | "canvas";
 type Area = "politics" | "education" | "culture";
-type Block = PollData;
+type EducationSubArea = 'class' | 'article';
+type Block = PollData | EducationData;
 
 export default function PublishPage() {
     const router = useRouter();
@@ -36,7 +43,10 @@ export default function PublishPage() {
     const [step, setStep] = useState<Step>("area");
     const [selectedArea, setSelectedArea] = useState<Area | null>(null);
     const [federationArea, setFederationArea] = useState<string | null>(null);
+    const [educationSubArea, setEducationSubArea] = useState<EducationSubArea | null>(null);
     const [availablePages, setAvailablePages] = useState<UserPage[]>([]);
+    const [knowledgeNodes, setKnowledgeNodes] = useState<KnowledgeNode[]>([]);
+    const [knowledgeViewMode, setKnowledgeViewMode] = useState<ViewMode>('list');
 
     // Content State
     const [title, setTitle] = useState("");
@@ -51,13 +61,14 @@ export default function PublishPage() {
     const isLegislative = useMemo(() => isFederationSelected && federationArea === 'legislative', [isFederationSelected, federationArea]);
 
     useEffect(() => {
+        setKnowledgeNodes(knowledgeData.nodes as KnowledgeNode[]);
+
         const fetchUserPages = async () => {
             if (!authUser || !profile) return;
 
             setIsLoading(true);
             const userPages: UserPage[] = [];
 
-            // Add user's personal profile
             userPages.push({
                 id: authUser.uid,
                 name: "Mi Perfil Personal",
@@ -97,17 +108,14 @@ export default function PublishPage() {
     const handleFederationAreaChange = useCallback((area: string | null) => {
         setFederationArea(area);
         
-        // Auto-manage the legislative poll block
         const isNowLegislative = destinations.some(d => d.type === 'federation') && area === 'legislative';
 
         setBlocks(prevBlocks => {
-            const hasLegislativeBlock = prevBlocks.some(b => b.isLegislative);
+            const hasLegislativeBlock = prevBlocks.some(b => b.type === 'poll' && b.isLegislative);
             if (isNowLegislative && !hasLegislativeBlock) {
-                // Add legislative block if it doesn't exist
                 return [...prevBlocks, { type: 'poll', question: '', options: [{ text: "A favor" }, { text: "En contra" }], isLegislative: true, legislativeData: {} }];
             } else if (!isNowLegislative && hasLegislativeBlock) {
-                // Remove legislative block if it exists and we're no longer in legislative context
-                return prevBlocks.filter(b => !b.isLegislative);
+                return prevBlocks.filter(b => b.type !== 'poll' || !b.isLegislative);
             }
             return prevBlocks;
         });
@@ -116,26 +124,24 @@ export default function PublishPage() {
 
     const handleAreaSelect = (area: Area) => {
         setSelectedArea(area);
+        if (area === 'education') {
+            const educationBlock: EducationData = { type: 'education', subArea: 'article', categories: '', prerequisites: '', missions: [] };
+            setBlocks([educationBlock]);
+        }
         setStep("context");
     };
     
     const handleNextToCanvas = () => {
+        if (selectedArea === 'education' && destinations.length === 0) {
+            return toast({ variant: "destructive", title: "Por favor, selecciona al menos una categoría de la red de conocimiento."});
+        }
+        if (selectedArea !== 'education' && destinations.length === 0) {
+            return toast({ variant: "destructive", title: "Por favor, selecciona al menos un destino para la publicación." });
+        }
         setStep("canvas");
     };
 
-    const resetState = () => {
-        setStep("area");
-        setSelectedArea(null);
-        setFederationArea(null);
-        setTitle("");
-        setContent("");
-        setBlocks([]);
-        setDestinations([]);
-        setIsNews(false);
-        setIsLoading(false);
-    }
-
-    const addBlock = useCallback((type: Block['type']) => {
+    const addBlock = useCallback((type: 'poll') => {
         if (type === 'poll') {
             setBlocks(prev => [...prev, { type: 'poll', question: '', options: [{ text: "" }, { text: "" }] }]);
         }
@@ -145,6 +151,9 @@ export default function PublishPage() {
         setBlocks(prev => {
             const newBlocks = [...prev];
             newBlocks[index] = data;
+            if (data.type === 'education') {
+                setEducationSubArea(data.subArea);
+            }
             return newBlocks;
         });
     }, []);
@@ -156,11 +165,13 @@ export default function PublishPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!authUser || !profile) return toast({ variant: "destructive", title: "Necesitas iniciar sesión para publicar." });
-        if (destinations.length === 0) return toast({ variant: "destructive", title: "Por favor, selecciona al menos un destino." });
+        if (destinations.length === 0) return toast({ variant: "destructive", title: "Por favor, selecciona al menos un destino o categoría." });
         if (!title.trim() || !content.trim()) return toast({ variant: "destructive", title: "Por favor, completa el título y el contenido." });
-        if (isLegislative && !blocks.some(b => b.isLegislative)) return toast({ variant: "destructive", title: "Las propuestas legislativas deben tener un bloque de votación." });
+        if (isLegislative && !blocks.some(b => b.type === 'poll' && b.isLegislative)) return toast({ variant: "destructive", title: "Las propuestas legislativas deben tener un bloque de votación." });
         
         setIsLoading(true);
+
+        const subArea = selectedArea === 'education' ? educationSubArea : federationArea;
 
         try {
             await addDoc(collection(db, "posts"), {
@@ -173,7 +184,7 @@ export default function PublishPage() {
                 blocks: blocks,
                 destinations: destinations.map(({ id, name, type }) => ({ id, name, type })),
                 area: selectedArea,
-                subArea: federationArea,
+                subArea: subArea,
                 isNews,
                 comments: 0,
                 reposts: 0,
@@ -181,7 +192,7 @@ export default function PublishPage() {
                 createdAt: serverTimestamp(),
             });
             toast({ title: "Éxito", description: "Tu publicación ha sido difundida en la red." });
-            router.push('/');
+            router.push(`/${selectedArea}`);
         } catch (error) {
             console.error("Error al publicar:", error);
             toast({ title: "Error", description: "No se pudo crear la publicación.", variant: "destructive" });
@@ -231,26 +242,43 @@ export default function PublishPage() {
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <div>
-                                <Label className="text-base font-semibold">Destino(s) de la Publicación</Label>
-                                <p className="text-sm text-muted-foreground mb-2">Selecciona las páginas donde quieres que aparezca esta publicación.</p>
-                                {isLoading ? (
-                                    <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin"/></div>
-                                ) : selectedArea && (
-                                    <AudienceSelector
-                                        availablePages={availablePages}
-                                        selectedArea={selectedArea}
-                                        selectedDestinations={destinations}
-                                        onSelectionChange={setDestinations}
-                                    />
-                                )}
-                            </div>
-                            {isFederationSelected && (
+                           {selectedArea === 'education' ? (
+                                <div>
+                                    <Label className="text-base font-semibold">Conectar a la Red de Conocimiento</Label>
+                                    <p className="text-sm text-muted-foreground mb-2">Selecciona las categorías y temas con los que se relaciona tu contenido.</p>
+                                    <Card className="p-4 bg-background/50">
+                                        <KnowledgeNetwork 
+                                            nodes={knowledgeNodes} 
+                                            posts={[]}
+                                            viewMode={knowledgeViewMode} 
+                                            selectionMode={true}
+                                            selectedDestinations={destinations}
+                                            onSelectionChange={setDestinations}
+                                        />
+                                    </Card>
+                                </div>
+                           ) : (
+                                <div>
+                                    <Label className="text-base font-semibold">Destino(s) de la Publicación</Label>
+                                    <p className="text-sm text-muted-foreground mb-2">Selecciona las páginas donde quieres que aparezca esta publicación.</p>
+                                    {isLoading ? (
+                                        <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin"/></div>
+                                    ) : selectedArea && (
+                                        <AudienceSelector
+                                            availablePages={availablePages}
+                                            selectedArea={selectedArea}
+                                            selectedDestinations={destinations}
+                                            onSelectionChange={setDestinations}
+                                        />
+                                    )}
+                                </div>
+                           )}
+                            {selectedArea === 'politics' && isFederationSelected && (
                                 <FederatedEntitySettings onAreaChange={handleFederationAreaChange} />
                             )}
                         </CardContent>
                          <div className="p-6 flex justify-end">
-                            <Button size="lg" onClick={handleNextToCanvas} disabled={destinations.length === 0 || (isFederationSelected && !federationArea)}>
+                            <Button size="lg" onClick={handleNextToCanvas}>
                                 Ir al Lienzo de Creación
                             </Button>
                          </div>
@@ -264,7 +292,6 @@ export default function PublishPage() {
                             <h2 className="text-xl font-headline font-semibold">Paso 3: Lienzo de Creación</h2>
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            {/* Columna Principal (Editor) */}
                             <div className="lg:col-span-2 space-y-6">
                                 <Card className="glass-card">
                                     <CardContent className="p-6 space-y-4">
@@ -281,18 +308,20 @@ export default function PublishPage() {
 
                                 {blocks.map((block, index) => {
                                     if (block.type === 'poll') {
-                                        return <PollBlock key={index} data={block} onChange={(data) => updateBlockData(index, data)} onRemove={() => removeBlock(index)} isLegislative={block.isLegislative} />
+                                        return <PollBlock key={index} data={block} onChange={(data) => updateBlockData(index, data as PollData)} onRemove={() => removeBlock(index)} isLegislative={block.isLegislative} />
+                                    }
+                                    if (block.type === 'education') {
+                                        return <EducationSettings key={index} data={block} onChange={(data) => updateBlockData(index, data as EducationData)} />
                                     }
                                     return null;
                                 })}
                             </div>
 
-                            {/* Columna Derecha (Herramientas y Configuración) */}
                             <div className="space-y-6">
                                 <Card className="glass-card">
                                     <CardHeader><CardTitle>Herramientas</CardTitle></CardHeader>
                                     <CardContent className="space-y-2">
-                                        {!isLegislative && (
+                                        {selectedArea !== 'education' && !isLegislative && (
                                             <Button variant="outline" className="w-full justify-start" onClick={() => addBlock('poll')}>
                                                 <Vote className="mr-2 h-4 w-4"/> Añadir Votación/Encuesta
                                             </Button>
@@ -303,12 +332,14 @@ export default function PublishPage() {
                                     </CardContent>
                                 </Card>
                                 
-                                <Card className="glass-card">
-                                     <CardHeader><CardTitle>Configuración</CardTitle></CardHeader>
-                                     <CardContent>
-                                         <NewsSettings isNews={isNews} onIsNewsChange={setIsNews} />
-                                     </CardContent>
-                                </Card>
+                                {selectedArea === 'politics' && (
+                                    <Card className="glass-card">
+                                        <CardHeader><CardTitle>Configuración Política</CardTitle></CardHeader>
+                                        <CardContent>
+                                            <NewsSettings isNews={isNews} onIsNewsChange={setIsNews} />
+                                        </CardContent>
+                                    </Card>
+                                )}
                                 
                                 <Button size="lg" type="submit" className="w-full shadow-lg shadow-primary/30" disabled={isLoading}>
                                     {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Check className="mr-2 h-5 w-5" />}

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from "react";
@@ -123,5 +124,7 @@ export function EducationSettings({ data, onChange }: EducationSettingsProps) {
     </Card>
   );
 }
+
+    
 
     
