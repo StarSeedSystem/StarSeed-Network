@@ -7,7 +7,7 @@ import { collection, onSnapshot, query, where, getDocs, DocumentData } from "fir
 import { db } from "@/data/firebase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BrainCircuit, BookOpen, PlusCircle, Loader2, List, Map, Share2, ChevronDown, FileText } from "lucide-react";
+import { BrainCircuit, BookOpen, PlusCircle, Loader2, List, Map, Share2, ChevronDown, FileText, Folder, Network, Layers } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { FeedPost } from "@/components/dashboard/FeedPost";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -27,13 +27,23 @@ export default function EducationPage() {
   const [isLoadingPages, setIsLoadingPages] = useState(true);
   const { user } = useUser();
   const [viewMode, setViewMode] = useState<ViewMode>("list");
-  const [knowledgeNodes, setKnowledgeNodes] = useState<KnowledgeNode[]>([]);
-  const [activeTab, setActiveTab] = useState("knowledge-network");
+  
+  const [allNodes, setAllNodes] = useState<KnowledgeNode[]>([]);
+  const [categoryNodes, setCategoryNodes] = useState<KnowledgeNode[]>([]);
+  const [topicNodes, setTopicNodes] = useState<KnowledgeNode[]>([]);
+
+  const [activeTab, setActiveTab] = useState("categories-network");
   const [articleFilter, setArticleFilter] = useState<"all" | "class" | "article">("all");
 
   useEffect(() => {
-    // Load knowledge network data from JSON
-    setKnowledgeNodes(knowledgeData.nodes as KnowledgeNode[]);
+    // Load and process knowledge network data from JSON
+    const allNodesData = knowledgeData.nodes as KnowledgeNode[];
+    setAllNodes(allNodesData);
+
+    const categories = allNodesData.filter(node => node.type === 'category');
+    const topicsAndConcepts = allNodesData.filter(node => node.type === 'topic' || node.type === 'concept');
+    setCategoryNodes(categories);
+    setTopicNodes(topicsAndConcepts);
     
     if (!user) {
         setIsLoading(false);
@@ -110,47 +120,50 @@ export default function EducationPage() {
       />
       
        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-1 md:grid-cols-4 bg-card/60 rounded-xl h-auto">
-                <TabsTrigger value="knowledge-network">Red de Conocimiento</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-1 md:grid-cols-5 bg-card/60 rounded-xl h-auto">
+                <TabsTrigger value="categories-network"><Folder className="mr-2 h-4 w-4"/>Red de Categorías</TabsTrigger>
+                <TabsTrigger value="topics-network"><FileText className="mr-2 h-4 w-4"/>Red de Temas</TabsTrigger>
                 <TabsTrigger value="publications">Publicaciones</TabsTrigger>
                 <TabsTrigger value="my-groups">Mis Grupos de Estudio</TabsTrigger>
                 <TabsTrigger value="ai-agent">Agente IA Educativo</TabsTrigger>
             </TabsList>
-            <TabsContent value="knowledge-network" className="mt-6 space-y-6">
+            
+            <TabsContent value="categories-network" className="mt-6 space-y-6">
                 <Card className="glass-card">
                     <CardHeader>
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                            <div>
-                                <CardTitle>Explorar la Red de Conocimiento</CardTitle>
-                                <CardDescription>Navega por las categorías y temas para descubrir contenido.</CardDescription>
-                            </div>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline">
-                                        {viewMode === 'list' && <List className="mr-2 h-4 w-4"/>}
-                                        {viewMode === 'map' && <Map className="mr-2 h-4 w-4"/>}
-                                        {viewMode === 'network' && <Share2 className="mr-2 h-4 w-4"/>}
-                                        Vista: {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}
-                                        <ChevronDown className="ml-2 h-4 w-4"/>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="glass-card">
-                                    <DropdownMenuItem onClick={() => setViewMode('list')}><List className="mr-2 h-4 w-4"/> Lista</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setViewMode('map')}><Map className="mr-2 h-4 w-4"/> Mapa Conceptual</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setViewMode('network')}><Share2 className="mr-2 h-4 w-4"/> Red 3D</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
+                         <CardTitle>Explorar la Red de Categorías</CardTitle>
+                         <CardDescription>Navega por las categorías principales para descubrir temas y contenido relacionado.</CardDescription>
                     </CardHeader>
                     <CardContent>
                        <KnowledgeNetwork 
-                           nodes={knowledgeNodes} 
-                           viewMode={viewMode}
+                           nodes={categoryNodes}
+                           allNodes={allNodes}
                            posts={posts}
+                           viewMode={viewMode}
+                           networkType="category"
                         />
                     </CardContent>
                 </Card>
             </TabsContent>
+            
+            <TabsContent value="topics-network" className="mt-6 space-y-6">
+                 <Card className="glass-card">
+                    <CardHeader>
+                        <CardTitle>Explorar la Red de Temas</CardTitle>
+                        <CardDescription>Busca temas específicos y descubre en qué categorías se encuentran.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <KnowledgeNetwork 
+                           nodes={topicNodes} 
+                           allNodes={allNodes}
+                           posts={posts}
+                           viewMode={viewMode}
+                           networkType="topic"
+                        />
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
             <TabsContent value="publications" className="mt-6 space-y-4">
                 <Tabs value={articleFilter} onValueChange={(v) => setArticleFilter(v as any)} className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
@@ -182,3 +195,5 @@ export default function EducationPage() {
     </div>
   );
 }
+
+    

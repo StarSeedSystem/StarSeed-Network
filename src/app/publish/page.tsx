@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Check, ArrowLeft, PenSquare, Vote, Gavel, GraduationCap, Sparkles, Book, FileText } from "lucide-react";
+import { Loader2, Check, ArrowLeft, PenSquare, Vote, Gavel, GraduationCap, Sparkles, Book, FileText, Folder, Layers } from "lucide-react";
 import { AudienceSelector, UserPage } from "@/components/publish/AudienceSelector";
 import { PollBlock, PollData } from "@/components/publish/PollBlock";
 import { FederatedEntitySettings } from "@/components/publish/FederatedEntitySettings";
@@ -27,6 +27,7 @@ import { EducationSettings, EducationData } from "@/components/publish/Education
 import { KnowledgeNetwork, ViewMode } from "@/components/education/KnowledgeNetwork";
 import { KnowledgeNode } from "@/types/content-types";
 import knowledgeData from "@/data/knowledge-network.json";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 
 type Step = "area" | "context" | "canvas";
@@ -45,7 +46,11 @@ export default function PublishPage() {
     const [federationArea, setFederationArea] = useState<string | null>(null);
     const [educationSubArea, setEducationSubArea] = useState<EducationSubArea | null>(null);
     const [availablePages, setAvailablePages] = useState<UserPage[]>([]);
-    const [knowledgeNodes, setKnowledgeNodes] = useState<KnowledgeNode[]>([]);
+    
+    // Knowledge Network State
+    const [allNodes, setAllNodes] = useState<KnowledgeNode[]>([]);
+    const [categoryNodes, setCategoryNodes] = useState<KnowledgeNode[]>([]);
+    const [topicNodes, setTopicNodes] = useState<KnowledgeNode[]>([]);
     const [knowledgeViewMode, setKnowledgeViewMode] = useState<ViewMode>('list');
 
     // Content State
@@ -61,7 +66,10 @@ export default function PublishPage() {
     const isLegislative = useMemo(() => isFederationSelected && federationArea === 'legislative', [isFederationSelected, federationArea]);
 
     useEffect(() => {
-        setKnowledgeNodes(knowledgeData.nodes as KnowledgeNode[]);
+        const allNodesData = knowledgeData.nodes as KnowledgeNode[];
+        setAllNodes(allNodesData);
+        setCategoryNodes(allNodesData.filter(node => node.type === 'category'));
+        setTopicNodes(allNodesData.filter(node => node.type === 'topic' || node.type === 'concept'));
 
         const fetchUserPages = async () => {
             if (!authUser || !profile) return;
@@ -133,7 +141,7 @@ export default function PublishPage() {
     
     const handleNextToCanvas = () => {
         if (selectedArea === 'education' && destinations.length === 0) {
-            return toast({ variant: "destructive", title: "Por favor, selecciona al menos una categoría de la red de conocimiento."});
+            return toast({ variant: "destructive", title: "Por favor, selecciona al menos una categoría o tema."});
         }
         if (selectedArea !== 'education' && destinations.length === 0) {
             return toast({ variant: "destructive", title: "Por favor, selecciona al menos un destino para la publicación." });
@@ -246,16 +254,36 @@ export default function PublishPage() {
                                 <div>
                                     <Label className="text-base font-semibold">Conectar a la Red de Conocimiento</Label>
                                     <p className="text-sm text-muted-foreground mb-2">Selecciona las categorías y temas con los que se relaciona tu contenido.</p>
-                                    <Card className="p-4 bg-background/50">
-                                        <KnowledgeNetwork 
-                                            nodes={knowledgeNodes} 
-                                            posts={[]}
-                                            viewMode={knowledgeViewMode} 
-                                            selectionMode={true}
-                                            selectedDestinations={destinations}
-                                            onSelectionChange={setDestinations}
-                                        />
-                                    </Card>
+                                    <Tabs defaultValue="categories">
+                                        <TabsList className="grid w-full grid-cols-2">
+                                            <TabsTrigger value="categories"><Folder className="mr-2 h-4 w-4"/>Categorías</TabsTrigger>
+                                            <TabsTrigger value="topics"><FileText className="mr-2 h-4 w-4"/>Temas</TabsTrigger>
+                                        </TabsList>
+                                        <TabsContent value="categories" className="mt-4">
+                                            <KnowledgeNetwork 
+                                                nodes={categoryNodes}
+                                                allNodes={allNodes}
+                                                posts={[]}
+                                                viewMode={knowledgeViewMode} 
+                                                networkType="category"
+                                                selectionMode={true}
+                                                selectedDestinations={destinations}
+                                                onSelectionChange={setDestinations}
+                                            />
+                                        </TabsContent>
+                                        <TabsContent value="topics" className="mt-4">
+                                            <KnowledgeNetwork 
+                                                nodes={topicNodes}
+                                                allNodes={allNodes}
+                                                posts={[]}
+                                                viewMode={knowledgeViewMode} 
+                                                networkType="topic"
+                                                selectionMode={true}
+                                                selectedDestinations={destinations}
+                                                onSelectionChange={setDestinations}
+                                            />
+                                        </TabsContent>
+                                    </Tabs>
                                 </div>
                            ) : (
                                 <div>
@@ -362,5 +390,7 @@ export default function PublishPage() {
         </div>
     );
 }
+
+    
 
     

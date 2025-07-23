@@ -6,20 +6,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { ChevronsRight, Search, FileText, BookOpen, Share2, Folder, ChevronRight, Lightbulb } from 'lucide-react';
+import { ChevronsRight, Search, FileText, BookOpen, Share2, Folder, ChevronRight, Lightbulb, Link as LinkIcon } from 'lucide-react';
 import { KnowledgeNode, UserPage } from '@/types/content-types';
 import { DocumentData } from 'firebase/firestore';
 import { FeedPost } from '../dashboard/FeedPost';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Badge } from '../ui/badge';
+import { Separator } from '../ui/separator';
 
 export type ViewMode = "list" | "map" | "network";
+export type NetworkType = "category" | "topic";
 
 interface KnowledgeNetworkProps {
-    nodes: KnowledgeNode[];
+    nodes: KnowledgeNode[]; // Initial nodes to display (either categories or topics)
+    allNodes: KnowledgeNode[]; // All nodes for finding relationships
     posts: DocumentData[];
     viewMode: ViewMode;
+    networkType: NetworkType;
     selectionMode?: boolean;
     selectedDestinations?: UserPage[];
     onSelectionChange?: (selected: UserPage[]) => void;
@@ -28,22 +32,38 @@ interface KnowledgeNetworkProps {
 const findNodeById = (nodes: KnowledgeNode[], id: string): KnowledgeNode | null => {
     for (const node of nodes) {
         if (node.id === id) return node;
+        const found = node.children ? findNodeById(node.children, id) : null;
+        if (found) return found;
+    }
+    return null;
+};
+
+// This function needs to be robust for nested structures
+const findNodeInTree = (nodes: KnowledgeNode[], nodeId: string): KnowledgeNode | null => {
+    for (const node of nodes) {
+        if (node.id === nodeId) {
+            return node;
+        }
         if (node.children) {
-            const found = findNodeById(node.children, id);
-            if (found) return found;
+            const foundInChildren = findNodeInTree(node.children, nodeId);
+            if (foundInChildren) {
+                return foundInChildren;
+            }
         }
     }
     return null;
 };
 
-const getPathToNode = (nodes: KnowledgeNode[], nodeId: string, parentId?: string): KnowledgeNode[] => {
+
+const getPathToNode = (nodes: KnowledgeNode[], nodeId: string, currentParentId?: string): KnowledgeNode[] => {
     const path: KnowledgeNode[] = [];
     
     function findPath(currentNodes: KnowledgeNode[], currentPath: KnowledgeNode[]): boolean {
         for (const node of currentNodes) {
             const newPath = [...currentPath, node];
             if (node.id === nodeId) {
-                if (!parentId || (node.parentIds && node.parentIds.includes(parentId))) {
+                // If we are looking for a specific path, ensure the parent matches
+                if (!currentParentId || (currentPath.length > 0 && currentPath[currentPath.length - 1].id === currentParentId)) {
                      path.push(...newPath);
                      return true;
                 }
@@ -60,7 +80,7 @@ const getPathToNode = (nodes: KnowledgeNode[], nodeId: string, parentId?: string
 };
 
 
-const ListView = ({ nodes, posts, selectionMode, selectedDestinations, onSelectionChange }: Omit<KnowledgeNetworkProps, 'viewMode'>) => {
+const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selectedDestinations, onSelectionChange }: Omit<KnowledgeNetworkProps, 'viewMode'>) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activePath, setActivePath] = useState<KnowledgeNode[]>([]);
     
@@ -68,27 +88,38 @@ const ListView = ({ nodes, posts, selectionMode, selectedDestinations, onSelecti
 
     const displayedNodes = useMemo(() => {
         if (searchTerm) {
-            const allNodes: KnowledgeNode[] = [];
+            const flatNodes: KnowledgeNode[] = [];
             const dive = (nodesToSearch: KnowledgeNode[]) => {
                 for (const node of nodesToSearch) {
-                    allNodes.push(node);
+                    if (node.type === networkType || (networkType === 'topic' && node.type === 'concept')) {
+                        flatNodes.push(node);
+                    }
                     if (node.children) dive(node.children);
                 }
             }
-            dive(nodes);
-            return allNodes.filter(node => node.name.toLowerCase().includes(searchTerm.toLowerCase()));
+            dive(allNodes); // Search all nodes
+            return flatNodes.filter(node => node.name.toLowerCase().includes(searchTerm.toLowerCase()));
         }
-        return activeNode?.children || nodes;
-    }, [nodes, activeNode, searchTerm]);
+        // In category view, show children. In topic view, show all topics.
+        if (networkType === 'category') {
+             return activeNode?.children?.filter(c => c.type === 'category') || nodes;
+        }
+        return nodes;
+
+    }, [nodes, allNodes, activeNode, searchTerm, networkType]);
 
     const handleNodeClick = (node: KnowledgeNode) => {
         if (searchTerm) {
-            const currentParentId = activePath.length > 1 ? activePath[activePath.length - 2]?.id : undefined;
-            const pathToNode = getPathToNode(nodes, node.id, currentParentId);
+            // When clicking from search results, construct the full path to that node
+            const pathToNode = getPathToNode(allNodes, node.id);
             setActivePath(pathToNode.length > 0 ? pathToNode : [node]);
             setSearchTerm('');
         } else {
-             setActivePath([...activePath, node]);
+            if (networkType === 'category') {
+                 setActivePath([...activePath, node]);
+            } else { // topic network
+                setActivePath([node]); // Only ever show one level deep for topics
+            }
         }
     };
     
@@ -107,18 +138,32 @@ const ListView = ({ nodes, posts, selectionMode, selectedDestinations, onSelecti
         }
     };
     
-    const postsForNode = activeNode ? posts.filter(post => post.destinations?.some((d: any) => d.id === activeNode.id)) : [];
-
-    const otherLocations = useMemo(() => {
-        if (!activeNode || !activeNode.parentIds || activeNode.parentIds.length <= 1) return [];
-
-        const currentParentId = activePath.length > 1 ? activePath[activePath.length - 2].id : null;
+    const relatedContent = useMemo(() => {
+        if (!activeNode) return { posts: [], topics: [], categories: [] };
         
-        return activeNode.parentIds
-            .filter(parentId => parentId !== currentParentId)
-            .map(parentId => findNodeById(nodes, parentId))
-            .filter((n): n is KnowledgeNode => n !== null);
-    }, [activeNode, activePath, nodes]);
+        const postsForNode = posts.filter(post => post.destinations?.some((d: any) => d.id === activeNode.id));
+
+        if (activeNode.type === 'category') {
+            const topics: KnowledgeNode[] = [];
+            const findTopics = (nodesToSearch: KnowledgeNode[]) => {
+                 for (const node of nodesToSearch) {
+                    if (node.type === 'topic' || node.type === 'concept') {
+                        topics.push(node);
+                    }
+                    if (node.children) findTopics(node.children);
+                }
+            }
+            if(activeNode.children) findTopics(activeNode.children);
+            return { posts: postsForNode, topics: topics, categories: [] };
+        } else { // topic or concept
+            const categories = (activeNode.parentIds || [])
+                .map(parentId => findNodeInTree(allNodes, parentId))
+                .filter((n): n is KnowledgeNode => n !== null && n.type === 'category');
+            return { posts: postsForNode, topics: [], categories: categories };
+        }
+
+    }, [activeNode, posts, allNodes]);
+
     
     const getNodeIcon = (node: KnowledgeNode) => {
         switch(node.type) {
@@ -145,7 +190,7 @@ const ListView = ({ nodes, posts, selectionMode, selectedDestinations, onSelecti
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input 
-                        placeholder="Buscar en toda la red..." 
+                        placeholder={`Buscar en ${networkType === 'category' ? 'categorías' : 'temas'}...`} 
                         className="pl-9"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -181,29 +226,58 @@ const ListView = ({ nodes, posts, selectionMode, selectedDestinations, onSelecti
                                 </div>
                             )
                         })}
+                         {displayedNodes.length === 0 && !searchTerm && (
+                             <div className="p-4 text-center text-muted-foreground text-sm">
+                                No hay más sub-nodos aquí.
+                            </div>
+                        )}
                     </div>
                 </ScrollArea>
             </div>
             <div className="md:col-span-2">
                 <Card className="h-full glass-card">
                     <CardHeader>
-                        <CardTitle>{activeNode ? activeNode.name : "Red de Conocimiento"}</CardTitle>
-                        <CardDescription>{activeNode ? activeNode.description : "Haz clic en una categoría para explorarla."}</CardDescription>
-                         {otherLocations.length > 0 && (
-                            <div className="text-xs text-muted-foreground pt-2">
-                                <h4 className="font-semibold flex items-center gap-2"><Share2 className="h-3 w-3"/>Ubicaciones Adicionales</h4>
-                                <div className="flex gap-2 flex-wrap">
-                                    {otherLocations.map(loc => <code key={loc.id} className="p-1 bg-secondary rounded-sm">{loc.name}</code>)}
-                                </div>
-                            </div>
-                        )}
+                        <CardTitle>{activeNode ? activeNode.name : (networkType === 'category' ? "Red de Categorías" : "Red de Temas")}</CardTitle>
+                        <CardDescription>{activeNode ? activeNode.description : "Haz clic en un ítem para explorarlo."}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ScrollArea className="h-[50vh]">
+                        <ScrollArea className="h-[50vh] pr-3">
+                           <div className="space-y-6">
+                            {/* Topics in this Category OR Categories this Topic belongs to */}
+                            {activeNode && networkType === 'category' && relatedContent.topics.length > 0 && (
+                                <div className="space-y-2">
+                                    <h4 className="font-semibold flex items-center gap-2"><FileText className="h-4 w-4"/> Temas en esta Categoría</h4>
+                                    <div className="space-y-1">
+                                        {relatedContent.topics.map(topic => (
+                                            <Button key={topic.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
+                                                {topic.name}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                    <Separator />
+                                </div>
+                            )}
+
+                            {activeNode && networkType !== 'category' && relatedContent.categories.length > 0 && (
+                                <div className="space-y-2">
+                                    <h4 className="font-semibold flex items-center gap-2"><LinkIcon className="h-4 w-4"/> Vinculado en Categorías</h4>
+                                    <div className="space-y-1">
+                                        {relatedContent.categories.map(cat => (
+                                            <Button key={cat.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
+                                                {cat.name}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                     <Separator />
+                                </div>
+                            )}
+
+                            {/* Posts */}
                             {activeNode && (
-                                postsForNode.length > 0 ? (
+                                relatedContent.posts.length > 0 ? (
                                     <div className="space-y-4">
-                                        {postsForNode.map(post => <FeedPost key={post.id} post={post as any}/>)}
+                                        <h4 className="font-semibold flex items-center gap-2"><BookOpen className="h-4 w-4"/> Publicaciones Relacionadas</h4>
+                                        {relatedContent.posts.map(post => <FeedPost key={post.id} post={post as any}/>)}
                                     </div>
                                 ) : (
                                     <div className="text-center text-muted-foreground py-10">
@@ -213,6 +287,7 @@ const ListView = ({ nodes, posts, selectionMode, selectedDestinations, onSelecti
                                     </div>
                                 )
                             )}
+                           </div>
                         </ScrollArea>
                     </CardContent>
                 </Card>
@@ -240,3 +315,5 @@ export const KnowledgeNetwork = (props: KnowledgeNetworkProps) => {
             return <ListView {...props} />;
     }
 };
+
+    
