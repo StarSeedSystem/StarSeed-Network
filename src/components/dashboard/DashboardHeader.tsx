@@ -12,10 +12,10 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ isEditing, onEditToggle, onAddWidget }: DashboardHeaderProps) {
     return (
-        <div className="flex items-center justify-end">
+        <div className="flex flex-wrap items-center justify-end gap-2">
             <div>
                 {isEditing ? (
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                          <Button variant="outline" onClick={onAddWidget}>
                             <PlusCircle className="mr-2 h-4 w-4" /> Añadir Widget
                         </Button>

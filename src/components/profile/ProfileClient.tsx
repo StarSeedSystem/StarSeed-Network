@@ -115,7 +115,7 @@ export function ProfileClient() {
       },
       async () => {
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        const fieldToUpdate = path === 'avatars' ? 'avatarUrl' : 'banners';
+        const fieldToUpdate = path === 'avatars' ? 'avatarUrl' : 'bannerUrl';
         await handleUpdateProfile({ [fieldToUpdate]: downloadURL });
         
         toast({ title: `${path === 'avatars' ? 'Avatar' : 'Banner'} actualizado!` });
@@ -256,7 +256,7 @@ export function ProfileClient() {
                   <div className="flex justify-between items-center flex-wrap gap-2">
                       <div>
                           <h1 className="text-3xl font-bold font-headline">{profile.name}</h1>
-                          <p className="text-muted-foreground">{profile.handle}</p>
+                          <p className="text-muted-foreground">@{profile.handle}</p>
                       </div>
                       <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
                           <DialogTrigger asChild><Button variant="outline"><Edit className="mr-2 h-4 w-4" /> Editar Perfil</Button></DialogTrigger>
@@ -280,7 +280,7 @@ export function ProfileClient() {
       
       <div className="px-4 sm:px-8">
         <Tabs defaultValue="publications" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 bg-card/60 rounded-xl">
+            <TabsList className="grid w-full grid-cols-4 bg-card/60 rounded-xl h-auto">
               <TabsTrigger value="publications" className="rounded-lg"><PenSquare className="mr-2 h-4 w-4"/>Publicaciones</TabsTrigger>
               <TabsTrigger value="collections" className="rounded-lg"><Folder className="mr-2 h-4 w-4"/>Colecciones</TabsTrigger>
               <TabsTrigger value="badges" className="rounded-lg"><Award className="mr-2 h-4 w-4"/>Insignias</TabsTrigger>

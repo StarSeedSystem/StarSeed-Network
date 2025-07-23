@@ -96,14 +96,13 @@ export function DashboardClient() {
                 onAddWidget={() => setIsLibraryOpen(true)}
             />
             {isClient ? (
-                <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6 auto-rows-fr">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-6 auto-rows-fr">
                     {visibleLayout.map(item => (
                         <div
                             key={item.i}
                             className={cn(
-                                "transition-all duration-300 col-span-full", // Default to full width on mobile
-                                `md:col-span-${Math.min(item.w * 2, 6)}`, // Adjust for medium screens
-                                `lg:col-span-${item.w}` // Use defined width on large screens
+                                "transition-all duration-300 col-span-1 sm:col-span-2 md:col-span-12", // Default to full width on mobile
+                                `md:col-span-${item.w}`
                             )}
                             style={{
                                 gridRow: `span ${item.h}`,

@@ -353,9 +353,9 @@ function MainContent({ children }: { children: React.ReactNode }) {
         )}>
            
             <main className="flex-1 overflow-y-auto">
-                 <div className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
+                 <div className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8 h-full flex flex-col">
                      <AppHeader />
-                      <div className="py-8">
+                      <div className="py-8 flex-1">
                         {pageInfo && !isSpecialPage && (
                             <div className="mb-6 md:hidden">
                                 <div className="flex items-center gap-3">

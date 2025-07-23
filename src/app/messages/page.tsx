@@ -151,7 +151,7 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-theme(spacing.16)-2*theme(spacing.8))] flex flex-col md:flex-row glass-card rounded-2xl overflow-hidden">
+    <div className="h-full flex flex-col md:flex-row glass-card rounded-2xl overflow-hidden">
       {/* Conversations List */}
       <div className="w-full md:w-1/3 lg:w-1/4 border-b md:border-b-0 md:border-r border-white/10 flex flex-col">
         <div className="p-4">

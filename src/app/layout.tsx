@@ -32,7 +32,7 @@ export default function RootLayout({
         Adding suppressHydrationWarning to the body tag specifically to prevent issues
         with browser extensions that might inject attributes into the body.
       */}
-      <body className={cn("min-h-screen bg-background font-body antialiased overflow-hidden")} suppressHydrationWarning={true}>
+      <body className={cn("min-h-screen bg-background font-body antialiased")} suppressHydrationWarning={true}>
         <UserProvider>
           <AppLayout>{children}</AppLayout>
         </UserProvider>
