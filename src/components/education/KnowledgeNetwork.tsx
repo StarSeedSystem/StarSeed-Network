@@ -63,6 +63,8 @@ const getPathToNode = (nodes: KnowledgeNode[], nodeId: string, currentParentId?:
         for (const node of currentNodes) {
             const newPath = [...currentPath, node];
             if (node.id === nodeId) {
+                // If a parent is specified, ensure it matches before declaring a found path.
+                // This helps differentiate nodes that appear multiple times in the tree.
                 if (!currentParentId || (currentPath.length > 0 && currentPath[currentPath.length - 1].id === currentParentId)) {
                      path.push(...newPath);
                      return true;
@@ -89,6 +91,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
 
     const displayedNodes = useMemo(() => {
         if (searchTerm) {
+            // Flatten the tree to search all nodes regardless of type
             const flatNodes: KnowledgeNode[] = [];
             const dive = (nodesToSearch: KnowledgeNode[]) => {
                 for (const node of nodesToSearch) {
@@ -106,15 +109,16 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
         if (activeNode) {
             return activeNode.children || [];
         }
-        return nodes;
+        return nodes; // Return top-level nodes (categories or topics)
 
     }, [nodes, allNodes, activeNode, searchTerm, networkType]);
 
     const handleNodeClick = (node: KnowledgeNode) => {
         if (searchTerm) {
+            // When clicking from search results, find the full path to that node.
             const pathToNode = getPathToNode(allNodes, node.id);
             setActivePath(pathToNode.length > 0 ? pathToNode : [node]);
-            setSearchTerm('');
+            setSearchTerm(''); // Clear search to return to browsing
         } else {
             setActivePath([...activePath, node]);
         }
@@ -152,7 +156,8 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
             }
             if(activeNode.children) findTopics(activeNode.children);
             return { posts: postsForNode, topics: topics, categories: [] };
-        } else { 
+        } else { // It's a topic or concept
+            // Find all categories that list this node as a child
             const categories = (activeNode.parentIds || [])
                 .map(parentId => findNodeInTree(allNodes, parentId))
                 .filter((n): n is KnowledgeNode => n !== null && n.type === 'category');
@@ -267,7 +272,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
 
                         {activeNode && networkType !== 'category' && relatedContent.categories.length > 0 && (
                             <div className="space-y-2">
-                                <div className="flex items-center gap-2"><Share2 className="h-4 w-4"/><h4 className="font-semibold flex-1 min-w-0">Vinculado en Categorías</h4></div>
+                                <div className="flex items-center gap-2 flex-wrap"><Share2 className="h-4 w-4 shrink-0"/><h4 className="font-semibold flex-1 min-w-0">Vinculado en Categorías</h4></div>
                                 <div className="flex flex-wrap gap-2">
                                     {relatedContent.categories.map(cat => (
                                         <Button key={cat.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
@@ -331,5 +336,3 @@ export const KnowledgeNetwork = (props: KnowledgeNetworkProps) => {
             return <ListView {...props} />;
     }
 };
-
-    
