@@ -1,32 +1,58 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // Users can only read and write to their own user document.
-    // Public profiles are handled by allowing anyone to read.
+
+    // Helper function to check if a user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the user is the owner of a document
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Allow public read for most collections
+    match /{collection}/{docId} where collection in ['communities', 'federated_entities', 'political_parties', 'study_groups', 'chat_groups', 'events', 'proposals', 'posts', 'tutorials'] {
+      allow read: if true;
+    }
+
+    // Users can only be created by authenticated users (for their own UID)
+    // and can only be updated by the owner.
     match /users/{userId} {
-      allow read;
-      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow read: if true;
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isAuthenticated() && isOwner(userId);
+      allow delete: if false; // Disallow deleting user profiles
     }
 
-    // Public collections that anyone can read.
-    match /{collection}/{docId} where collection in ['communities', 'federated_entities', 'political_parties', 'study_groups', 'chat_groups', 'events', 'proposals', 'posts', 'tutorials', 'cultural_posts'] {
-      allow read;
-      allow create: if request.auth != null;
-      // Updates are more complex (joining, liking, voting). 
-      // We'll allow any authenticated user to update for now, 
-      // with more granular logic handled client-side or in cloud functions.
-      allow update: if request.auth != null;
-    }
-    
-    // Comments on posts or proposals
-    match /{collection}/{docId}/comments/{commentId} where collection in ['posts', 'proposals'] {
-        allow read;
-        allow create: if request.auth != null;
-        allow update: if request.auth != null; // For liking comments, etc.
+    // Posts and Proposals can be created by any authenticated user.
+    // They can only be updated by their original author.
+    match /{collection}/{docId} where collection in ['posts', 'proposals', 'tutorials', 'cultural_posts'] {
+      allow create: if isAuthenticated();
+      // Allow updates (e.g., for likes, comments) by any authenticated user
+      // More granular control can be added here if needed
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated() && isOwner(resource.data.authorId);
     }
 
+    // Comments can be created by any authenticated user.
+    // They can be deleted by their author or the author of the parent post/proposal.
+    match /{parentCollection}/{parentId}/comments/{commentId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+        allow update, delete: if isAuthenticated() && isOwner(resource.data.author.uid);
+    }
+
+    // Public pages (communities, etc.) can be created by any authenticated user.
+    // Updates should be restricted (e.g., to members with specific roles, which is a future implementation).
+    // For now, allow any authenticated member to update.
+     match /{collection}/{docId} where collection in ['communities', 'federated_entities', 'political_parties', 'study_groups', 'chat_groups', 'events'] {
+        allow create: if isAuthenticated();
+        // Allow any authenticated user to update (e.g. for joining/leaving)
+        allow update: if isAuthenticated();
+        allow delete: if isAuthenticated() && isOwner(resource.data.creatorId);
+    }
   }
 }
