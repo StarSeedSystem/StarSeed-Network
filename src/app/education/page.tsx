@@ -12,11 +12,16 @@ import { Search, PlusCircle, Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { FeedPost } from "@/components/dashboard/FeedPost";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AdvancedFilter, FilterState } from "@/components/politics/AdvancedFilter";
 
 export default function EducationPage() {
   const [posts, setPosts] = useState<DocumentData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useUser();
+   const [filters, setFilters] = useState<FilterState>({
+    entity: 'all', status: 'all', tags: '', saved: false, collection: 'all'
+  });
 
   useEffect(() => {
     if (!user) {
@@ -54,43 +59,16 @@ export default function EducationPage() {
 
     return () => unsubscribePosts();
   }, [user]);
-  
-  return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Educación"
-        subtitle="Comparte conocimiento, tutoriales e investigaciones."
-        actionType="network"
-        currentNetwork="education"
-      />
-      
-       <Card className="glass-card p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-grow">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Buscar tutoriales y recursos..." className="pl-9 h-12 text-base" />
-                </div>
-                <Button size="lg" disabled> 
-                    Búsqueda Inteligente (Próximamente)
-                </Button>
-            </div>
-      </Card>
-      
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-headline">Recursos Educativos</h2>
-        <Button asChild>
-          <Link href="/publish">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Añadir Contenido
-          </Link>
-        </Button>
-      </div>
-      
-      {isLoading ? (
-        <div className="flex justify-center items-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : posts.length > 0 ? (
+
+  const renderFeed = () => {
+    if (isLoading) return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin"/></div>
+    if (posts.length === 0) return (
+        <Card className="text-center py-16 bg-card/50 rounded-lg">
+            <h3 className="text-xl font-semibold">No Hay Contenido Educativo Todavía</h3>
+            <p className="text-muted-foreground mt-2">¡Sé el primero en compartir tu conocimiento!</p>
+        </Card>
+    )
+    return (
         <div className="space-y-6">
             {posts.map((post) => (
                 <FeedPost key={post.id} post={{
@@ -110,12 +88,37 @@ export default function EducationPage() {
                 }}/>
             ))}
         </div>
-      ) : (
-        <Card className="text-center py-16 bg-card/50 rounded-lg">
-            <h3 className="text-xl font-semibold">No Hay Contenido Educativo Todavía</h3>
-            <p className="text-muted-foreground mt-2">¡Sé el primero en compartir tu conocimiento!</p>
-        </Card>
-      )}
+    )
+  }
+  
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        title="Educación"
+        subtitle="Comparte conocimiento, tutoriales e investigaciones."
+        actionType="network"
+        currentNetwork="education"
+         actionButton={
+            <Button asChild><Link href="/publish"><PlusCircle className="mr-2 h-4 w-4" />Añadir Contenido</Link></Button>
+        }
+      />
+      
+       <Tabs defaultValue="publications" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-card/60 rounded-xl h-auto">
+                <TabsTrigger value="publications">Publicaciones</TabsTrigger>
+                <TabsTrigger value="pages">Mis Grupos de Estudio</TabsTrigger>
+            </TabsList>
+            <TabsContent value="publications" className="mt-6 space-y-6">
+                <AdvancedFilter filters={filters} onFilterChange={setFilters} />
+                {renderFeed()}
+            </TabsContent>
+            <TabsContent value="pages" className="mt-6">
+                 <Card className="text-center py-16 bg-card/50 rounded-lg">
+                    <h3 className="text-xl font-semibold">Función en Construcción</h3>
+                    <p className="text-muted-foreground mt-2">Aquí verás los grupos de estudio en los que participas.</p>
+                </Card> 
+            </TabsContent>
+        </Tabs>
     </div>
   );
 }

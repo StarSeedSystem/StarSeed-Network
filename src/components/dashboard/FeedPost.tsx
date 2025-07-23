@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Repeat, Heart, Share, SendHorizonal, Dot } from "lucide-react";
+import { MessageSquare, Repeat, Heart, Share, SendHorizonal, Dot, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import { Textarea } from "../ui/textarea";
@@ -19,6 +19,7 @@ import { VotingSystem } from "../politics/VotingSystem";
 import { doc, runTransaction, arrayUnion, updateDoc, increment, onSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { Skeleton } from "../ui/skeleton";
+import { SaveToCollectionDialog } from "../utils/SaveToCollectionDialog";
 
 export interface FeedPostType {
   id: string;
@@ -211,6 +212,7 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
                 <span>{timeAgo}</span>
             </div>
           </div>
+           <SaveToCollectionDialog itemId={post.id} pageName={post.title} />
         </div>
       </CardHeader>
       <CardContent className="flex-grow space-y-4">

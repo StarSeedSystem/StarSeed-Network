@@ -12,6 +12,7 @@ import { useUser } from "@/context/UserContext";
 import { FeedPost } from "@/components/dashboard/FeedPost";
 import { AdvancedFilter, FilterState } from "@/components/politics/AdvancedFilter";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function PoliticsPage() {
   const [posts, setPosts] = useState<DocumentData[]>([]);
@@ -78,6 +79,37 @@ export default function PoliticsPage() {
     });
   }, [posts, filters]);
 
+  const renderFeed = () => {
+      if (isLoading) return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin"/></div>
+      if (filteredData.length === 0) return (
+          <Card className="text-center py-16 bg-card/50 rounded-lg">
+              <h3 className="text-xl font-semibold">No hay actividad política que mostrar.</h3>
+              <p className="text-muted-foreground mt-2">Únete a entidades políticas o crea una nueva propuesta.</p>
+          </Card> 
+      )
+      return (
+           <div className="space-y-6">
+              {filteredData.map(post => (
+                    <FeedPost key={post.id} post={{
+                      id: post.id,
+                      authorName: post.authorName,
+                      handle: post.handle,
+                      avatarUrl: post.avatarUrl,
+                      avatarHint: "user avatar",
+                      title: post.title,
+                      content: post.content,
+                      comments: post.comments,
+                      reposts: post.reposts,
+                      likes: post.likes,
+                      destinations: post.destinations,
+                      blocks: post.blocks,
+                      createdAt: post.createdAt,
+                  }}/>
+              ))}
+          </div>
+      )
+  }
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -90,35 +122,29 @@ export default function PoliticsPage() {
         }
       />
 
-      <AdvancedFilter filters={filters} onFilterChange={setFilters} />
-      
-      <div className="space-y-6">
-        {isLoading ? ( <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin"/></div>
-        ) : filteredData.length > 0 ? (
-            filteredData.map(post => (
-                 <FeedPost key={post.id} post={{
-                    id: post.id,
-                    authorName: post.authorName,
-                    handle: post.handle,
-                    avatarUrl: post.avatarUrl,
-                    avatarHint: "user avatar",
-                    title: post.title,
-                    content: post.content,
-                    comments: post.comments,
-                    reposts: post.reposts,
-                    likes: post.likes,
-                    destinations: post.destinations,
-                    blocks: post.blocks,
-                    createdAt: post.createdAt,
-                }}/>
-            ))
-        ) : ( 
-            <Card className="text-center py-16 bg-card/50 rounded-lg">
-                <h3 className="text-xl font-semibold">No hay actividad política que mostrar.</h3>
-                <p className="text-muted-foreground mt-2">Únete a entidades políticas o crea una nueva propuesta.</p>
-            </Card> 
-        )}
-      </div>
+       <Tabs defaultValue="proposals" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-card/60 rounded-xl h-auto">
+                <TabsTrigger value="proposals">Propuestas Legislativas</TabsTrigger>
+                <TabsTrigger value="parties">Partidos Políticos</TabsTrigger>
+                <TabsTrigger value="replicated_vote">Voto Replicado</TabsTrigger>
+            </TabsList>
+            <TabsContent value="proposals" className="mt-6 space-y-6">
+                <AdvancedFilter filters={filters} onFilterChange={setFilters} />
+                {renderFeed()}
+            </TabsContent>
+            <TabsContent value="parties" className="mt-6">
+                 <Card className="text-center py-16 bg-card/50 rounded-lg">
+                    <h3 className="text-xl font-semibold">Función en Construcción</h3>
+                    <p className="text-muted-foreground mt-2">Aquí verás los partidos políticos a los que sigues.</p>
+                </Card> 
+            </TabsContent>
+            <TabsContent value="replicated_vote" className="mt-6">
+                 <Card className="text-center py-16 bg-card/50 rounded-lg">
+                    <h3 className="text-xl font-semibold">Función en Construcción</h3>
+                    <p className="text-muted-foreground mt-2">Aquí podrás configurar y ver tu voto replicado.</p>
+                </Card> 
+            </TabsContent>
+        </Tabs>
     </div>
   );
 }
