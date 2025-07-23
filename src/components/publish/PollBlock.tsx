@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Vote, PlusCircle, X, ThumbsUp } from "lucide-react";
 import { LegislativeSettings, LegislativeData } from "./LegislativeSettings";
+import { useUser } from "@/context/UserContext";
 
 export interface PollOption {
   text: string;
@@ -24,7 +25,7 @@ export interface PollData {
   options: PollOption[];
   isLegislative?: boolean;
   legislativeData?: LegislativeData;
-  userVote?: number; // To track user's vote on the client
+  voters?: { [uid: string]: string }; // Tracks who voted for which option text
 }
 
 interface PollBlockProps {
@@ -35,6 +36,8 @@ interface PollBlockProps {
 }
 
 export function PollBlock({ data, onChange, onRemove, isLegislative = false }: PollBlockProps) {
+  const { user, profile } = useUser();
+  
   const handleQuestionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange({ ...data, question: e.target.value });
   };
@@ -46,7 +49,11 @@ export function PollBlock({ data, onChange, onRemove, isLegislative = false }: P
   };
 
   const addOption = () => {
-    onChange({ ...data, options: [...data.options, { text: "" }] });
+    const newOption: PollOption = {
+      text: "",
+      proposer: user && profile ? { uid: user.uid, name: profile.name } : undefined
+    }
+    onChange({ ...data, options: [...data.options, newOption] });
   };
 
   const removeOption = (index: number) => {

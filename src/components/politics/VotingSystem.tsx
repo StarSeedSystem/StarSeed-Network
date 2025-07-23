@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -15,43 +15,43 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { PollData } from "../publish/PollBlock";
+import { PollData, PollOption } from "../publish/PollBlock";
 import { Button } from "../ui/button";
 import { ThumbsUp, PieChart as PieChartIcon, BarChart2, Users, MessageSquare } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Separator } from "../ui/separator";
 import Link from "next/link";
 import { CommentSection } from "./CommentSection";
+import { useUser } from "@/context/UserContext";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "@/data/firebase";
 
 interface VotingSystemProps {
   poll: PollData;
+  postId: string;
   onVote: (optionIndex: number) => void;
 }
 
 const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088FE", "#00C49F"];
 
-export function VotingSystem({ poll, onVote }: VotingSystemProps) {
+export function VotingSystem({ poll, postId, onVote }: VotingSystemProps) {
+  const { user } = useUser();
   const [chartType, setChartType] = useState<"bar" | "pie">("bar");
   const [showVoters, setShowVoters] = useState(false);
   const [activeOptionDebate, setActiveOptionDebate] = useState<string | null>(null);
+  
+  const userVote = user && poll.voters ? poll.voters[user.uid] : null;
 
   const chartData = poll.options.map((option) => ({
     name: option.text,
     votes: option.votes || 0,
-    proposer: option.proposer?.name || 'Comunidad'
+    proposer: option.proposer?.name || 'Autor Original'
   }));
 
   const totalVotes = chartData.reduce((acc, entry) => acc + entry.votes, 0);
 
   const sortedData = [...chartData].sort((a, b) => b.votes - a.votes);
   
-  // Dummy data for voters list
-  const votersList = [
-      { name: "Helios", avatar: "https://placehold.co/100x100.png", avatarHint: "sun god", vote: poll.options[0]?.text, comment: "Totalmente de acuerdo con esta dirección." },
-      { name: "GaiaPrime", avatar: "https://placehold.co/100x100.png", avatarHint: "glowing goddess", vote: poll.options[0]?.text, comment: "Es crucial para el futuro de la red." },
-      { name: "CyberSec-DAO", avatar: "https://placehold.co/100x100.png", avatarHint: "cybernetic eye", vote: poll.options[1]?.text, comment: null },
-  ]
-
   const handleToggleDebate = (optionText: string) => {
       setActiveOptionDebate(prev => prev === optionText ? null : optionText);
   }
@@ -94,15 +94,15 @@ export function VotingSystem({ poll, onVote }: VotingSystemProps) {
         {/* Options and Voting Section */}
         <div className="space-y-3">
              {poll.options.map((option, index) => {
-                 const isVotedOption = poll.userVote === index;
+                 const isVotedOption = userVote === option.text;
                  return (
                      <div key={index} className="p-3 rounded-lg bg-background/50">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="font-medium">{option.text}</p>
-                                <p className="text-xs text-muted-foreground">Propuesto por: {option.proposer?.name || "Comunidad"}</p>
+                                <p className="text-xs text-muted-foreground">Propuesto por: {option.proposer?.name || "Autor Original"}</p>
                             </div>
-                            <Button variant={isVotedOption ? "secondary" : "outline"} size="sm" onClick={() => onVote(index)} disabled={poll.userVote !== undefined}>
+                            <Button variant={isVotedOption ? "secondary" : "outline"} size="sm" onClick={() => onVote(index)} disabled={!!userVote}>
                                 <ThumbsUp className="mr-2 h-4 w-4" />
                                 {isVotedOption ? "Votado" : "Votar"} ({option.votes || 0})
                             </Button>
@@ -115,7 +115,8 @@ export function VotingSystem({ poll, onVote }: VotingSystemProps) {
                         </div>
                         {activeOptionDebate === option.text && (
                             <div className="border-t border-dashed mt-2 pt-2">
-                                <CommentSection postId={`${option.text}-${index}`} onCommentPosted={()=>{}} isPoll={false} />
+                                {/* This comment section would need a different logic to scope to the option */}
+                                <p className="text-xs text-muted-foreground text-center">El debate por opción es una característica futura.</p>
                             </div>
                         )}
                      </div>
@@ -132,26 +133,12 @@ export function VotingSystem({ poll, onVote }: VotingSystemProps) {
         <div>
             <Button variant="outline" className="w-full" onClick={() => setShowVoters(!showVoters)}>
                 <Users className="mr-2 h-4 w-4"/>
-                {showVoters ? "Ocultar Lista de Votantes" : "Ver Lista de Votantes"} ({votersList.length})
+                {showVoters ? "Ocultar Lista de Votantes" : "Ver Lista de Votantes"} ({Object.keys(poll.voters || {}).length})
             </Button>
             {showVoters && (
                 <div className="mt-4 space-y-3">
-                    {votersList.map((voter, index) => (
-                        <div key={index} className="flex items-start gap-3 p-2 rounded-lg bg-background/50">
-                            <Avatar className="h-9 w-9">
-                                <AvatarImage src={voter.avatar} alt={voter.name} data-ai-hint={voter.avatarHint}/>
-                                <AvatarFallback>{voter.name.substring(0,2)}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                                <p className="font-semibold text-sm">{voter.name}</p>
-                                <p className="text-xs">Votó por: <span className="font-medium text-primary">{voter.vote}</span></p>
-                                {voter.comment && (
-                                     <blockquote className="mt-1 pl-2 text-xs italic border-l-2 border-muted-foreground/30 text-muted-foreground">
-                                        "{voter.comment}" - <Link href="#" className="underline hover:text-primary">ver comentario</Link>
-                                    </blockquote>
-                                )}
-                            </div>
-                        </div>
+                    {Object.entries(poll.voters || {}).map(([uid, vote]) => (
+                        <VoterInfo key={uid} uid={uid} vote={vote as string} />
                     ))}
                 </div>
             )}
@@ -160,3 +147,33 @@ export function VotingSystem({ poll, onVote }: VotingSystemProps) {
     </Card>
   );
 }
+
+
+function VoterInfo({ uid, vote }: { uid: string, vote: string }) {
+    const [profile, setProfile] = useState<any>(null);
+
+    useEffect(() => {
+        const unsub = onSnapshot(doc(db, "users", uid), (doc) => {
+            if (doc.exists()) {
+                setProfile(doc.data());
+            }
+        });
+        return unsub;
+    }, [uid]);
+
+    if (!profile) return <div className="p-2 text-xs">Cargando votante...</div>;
+
+    return (
+        <div className="flex items-start gap-3 p-2 rounded-lg bg-background/50">
+            <Avatar className="h-9 w-9">
+                <AvatarImage src={profile.avatarUrl} alt={profile.name} data-ai-hint="user avatar"/>
+                <AvatarFallback>{profile.name?.substring(0,2)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+                <p className="font-semibold text-sm">{profile.name}</p>
+                <p className="text-xs">Votó por: <span className="font-medium text-primary">{vote}</span></p>
+            </div>
+        </div>
+    );
+}
+

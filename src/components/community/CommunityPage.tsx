@@ -87,7 +87,7 @@ export function CommunityPage({ slug }: CommunityPageProps) {
             await updateDoc(docRef, { members: arrayUnion(authUser.uid) });
             toast({ title: "Joined Community", description: `Welcome to ${community.name}!` });
         }
-        setIsMember(!isMember);
+        // No need to setIsMember, onSnapshot will handle the UI update
       } catch (error: any) {
         console.error("Error joining/leaving community:", error);
         toast({ title: "Error", description: error.message, variant: "destructive"});

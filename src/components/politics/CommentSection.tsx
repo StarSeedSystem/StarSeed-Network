@@ -22,6 +22,8 @@ interface Comment {
     parentId?: string | null;
     likes?: number;
     replies?: Comment[];
+    isOptionProposal?: boolean;
+    isProcessed?: boolean;
 }
 
 interface CommentSectionProps {
@@ -42,15 +44,14 @@ function CommentItem({ comment, postId, onReplySuccess }: { comment: Comment; po
         if (!replyContent.trim() || !user || !profile) return;
         setIsReplying(true);
         try {
-            // Simulate adding a reply without writing to DB
-            console.log("Simulating reply:", {
+            await addDoc(collection(db, "posts", postId, "comments"), {
                  author: { name: profile.name, avatar: profile.avatarUrl, uid: user.uid },
                  content: replyContent,
-                 timestamp: new Date(),
+                 timestamp: serverTimestamp(),
                  parentId: comment.id,
                  likes: 0,
             });
-            onReplySuccess();
+            onReplySuccess(); // This will trigger a re-count on the parent
             toast({ title: "Respuesta publicada." });
             setReplyContent("");
             setShowReplyBox(false);
@@ -116,52 +117,59 @@ export function CommentSection({ postId, onCommentPosted, onOptionProposed, isPo
             setComments(nestedComments);
             setIsLoading(false);
         }, (error) => {
-            // If rules deny reading, we just show an empty list.
-            if (error.code === 'permission-denied') {
-                setComments([]);
-            } else {
-                console.error("Error fetching comments:", error);
-            }
+            console.error("Error fetching comments:", error);
             setIsLoading(false);
         });
 
         return () => unsubscribe();
     }, [postId]);
-
-    const handleAddComment = async () => {
+    
+    const handleCommentSubmission = async (isOption: boolean) => {
         if (!newComment.trim() || !user || !profile) {
             toast({ title: "Debes iniciar sesión y escribir un comentario.", variant: "destructive" });
             return;
         }
 
         setIsPosting(true);
-        
-        // Simulate adding the comment to the local state to bypass permission issues
-        const optimisticComment: Comment = {
-            id: `temp-${Date.now()}`,
-            author: { name: profile.name, avatar: profile.avatarUrl || '', uid: user.uid },
-            content: newComment,
-            timestamp: new Date(),
-            parentId: null,
-            likes: 0,
-            replies: []
-        };
-        
-        setComments(prev => [optimisticComment, ...prev]);
+        try {
+            const commentData: any = {
+                author: { name: profile.name, avatar: profile.avatarUrl || '', uid: user.uid },
+                content: newComment,
+                timestamp: serverTimestamp(),
+                parentId: null,
+                likes: 0,
+                isOptionProposal: isOption,
+                isProcessed: false,
+            };
 
-        onCommentPosted();
-        setNewComment("");
-        setIsPosting(false);
-        toast({ title: "Comentario publicado (simulado)." });
+            await addDoc(collection(db, "posts", postId, "comments"), commentData);
+
+            await runTransaction(db, async (transaction) => {
+                const postRef = doc(db, "posts", postId);
+                const postDoc = await transaction.get(postRef);
+                if (!postDoc.exists()) {
+                    throw "Post does not exist!";
+                }
+                const newCommentCount = (postDoc.data().comments || 0) + 1;
+                transaction.update(postRef, { comments: newCommentCount });
+            });
+
+            if (isOption && onOptionProposed) {
+                onOptionProposed(newComment);
+            }
+
+            onCommentPosted();
+            setNewComment("");
+            toast({ title: isOption ? "Opción propuesta!" : "Comentario publicado!" });
+
+        } catch (error) {
+            console.error("Error adding comment:", error);
+            toast({ title: "Error al publicar", variant: "destructive" });
+        } finally {
+            setIsPosting(false);
+        }
     };
 
-    const handleProposeOption = () => {
-        if(!newComment.trim()) return;
-        if(onOptionProposed) {
-            onOptionProposed(newComment);
-            setNewComment("");
-        }
-    }
 
     return (
         <div className="space-y-6">
@@ -171,11 +179,11 @@ export function CommentSection({ postId, onCommentPosted, onOptionProposed, isPo
                     <Textarea placeholder="Aporta tu perspectiva al debate..." value={newComment} onChange={(e) => setNewComment(e.target.value)} disabled={!user || isPosting}/>
                     <div className="flex justify-end items-center gap-2">
                          {isPoll && (
-                             <Button variant="outline" onClick={handleProposeOption} disabled={!newComment.trim() || !user || isPosting}>
+                             <Button variant="outline" onClick={() => handleCommentSubmission(true)} disabled={!newComment.trim() || !user || isPosting}>
                                 Proponer como Opción de Voto
                             </Button>
                          )}
-                        <Button onClick={handleAddComment} disabled={!newComment.trim() || !user || isPosting}>
+                        <Button onClick={() => handleCommentSubmission(false)} disabled={!newComment.trim() || !user || isPosting}>
                             {isPosting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} 
                             Publicar Comentario
                         </Button>

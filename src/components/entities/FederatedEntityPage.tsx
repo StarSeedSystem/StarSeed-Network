@@ -81,7 +81,7 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
             await updateDoc(docRef, { members: arrayUnion(authUser.uid) });
             toast({ title: "Joined Entity", description: `You are now a member of ${entity.name}.` });
         }
-        setIsMember(!isMember);
+        // No need to setIsMember, onSnapshot will handle the UI update
       } catch (error: any) {
         console.error("Error joining/leaving entity:", error);
         toast({ title: "Error", description: error.message, variant: "destructive" });

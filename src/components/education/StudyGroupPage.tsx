@@ -80,7 +80,7 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
             await updateDoc(docRef, { members: arrayUnion(authUser.uid) });
             toast({ title: "Joined Group", description: `You are now a member of ${group.name}.` });
         }
-        setIsMember(!isMember);
+        // No need to setIsMember, onSnapshot will handle the UI update
       } catch (error: any) {
         console.error("Error joining/leaving group:", error);
         toast({ title: "Error", description: error.message, variant: "destructive"});

@@ -81,7 +81,7 @@ export function PartyPage({ slug }: PartyPageProps) {
             await updateDoc(docRef, { members: arrayUnion(authUser.uid) });
             toast({ title: "Joined Party", description: `You are now a member of ${party.name}.` });
         }
-        setIsMember(!isMember);
+        // No need to setIsMember, onSnapshot will handle the UI update
       } catch (error: any) {
         console.error("Error joining/leaving party:", error);
         toast({ title: "Error", description: error.message, variant: "destructive"});
