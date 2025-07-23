@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { ChevronsRight, Search, FileText, BookOpen, Share2, Folder, ChevronRight, Lightbulb, Link as LinkIcon } from 'lucide-react';
+import { ChevronsRight, Search, FileText, BookOpen, Share2, Folder, ChevronRight, Lightbulb, Link as LinkIcon, ArrowLeft } from 'lucide-react';
 import { KnowledgeNode, UserPage } from '@/types/content-types';
 import { DocumentData } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { KnowledgePostItem } from './KnowledgePostItem';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 export type ViewMode = "list" | "map" | "network";
@@ -62,7 +63,6 @@ const getPathToNode = (nodes: KnowledgeNode[], nodeId: string, currentParentId?:
         for (const node of currentNodes) {
             const newPath = [...currentPath, node];
             if (node.id === nodeId) {
-                // If we are looking for a specific path, ensure the parent matches
                 if (!currentParentId || (currentPath.length > 0 && currentPath[currentPath.length - 1].id === currentParentId)) {
                      path.push(...newPath);
                      return true;
@@ -83,6 +83,7 @@ const getPathToNode = (nodes: KnowledgeNode[], nodeId: string, currentParentId?:
 const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selectedDestinations, onSelectionChange }: Omit<KnowledgeNetworkProps, 'viewMode'>) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activePath, setActivePath] = useState<KnowledgeNode[]>([]);
+    const isMobile = useIsMobile();
     
     const activeNode = activePath.length > 0 ? activePath[activePath.length - 1] : null;
 
@@ -91,7 +92,6 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
             const flatNodes: KnowledgeNode[] = [];
             const dive = (nodesToSearch: KnowledgeNode[]) => {
                 for (const node of nodesToSearch) {
-                    // In category network, only search for categories. In topic network, search for topics and concepts.
                     if (networkType === 'category' && node.type === 'category') {
                         flatNodes.push(node);
                     } else if (networkType === 'topic' && (node.type === 'topic' || node.type === 'concept')) {
@@ -103,13 +103,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
             dive(allNodes); // Search all nodes
             return flatNodes.filter(node => node.name.toLowerCase().includes(searchTerm.toLowerCase()));
         }
-        // If there's an active node, show its children. Otherwise, show the root nodes for the current network type.
         if (activeNode) {
-            if (networkType === 'category') {
-                 // In category view, children can be categories or topics.
-                 return activeNode.children || [];
-            }
-             // In topic view, children can be sub-topics or concepts.
             return activeNode.children || [];
         }
         return nodes;
@@ -118,7 +112,6 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
 
     const handleNodeClick = (node: KnowledgeNode) => {
         if (searchTerm) {
-            // When clicking from search results, construct the full path to that node
             const pathToNode = getPathToNode(allNodes, node.id);
             setActivePath(pathToNode.length > 0 ? pathToNode : [node]);
             setSearchTerm('');
@@ -159,7 +152,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
             }
             if(activeNode.children) findTopics(activeNode.children);
             return { posts: postsForNode, topics: topics, categories: [] };
-        } else { // topic or concept
+        } else { 
             const categories = (activeNode.parentIds || [])
                 .map(parentId => findNodeInTree(allNodes, parentId))
                 .filter((n): n is KnowledgeNode => n !== null && n.type === 'category');
@@ -186,119 +179,135 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
             default: return "";
         }
     }
+    
+    const listComponent = (
+        <div className="md:col-span-1 flex flex-col gap-4">
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                    placeholder={`Buscar en ${networkType === 'category' ? 'categorías' : 'temas'}...`} 
+                    className="pl-9"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
+                 <Button variant="link" className="p-0 h-auto" onClick={() => setActivePath([])}>Raíz</Button>
+                 {activePath.map((node, index) => (
+                     <React.Fragment key={`${node.id}-${index}`}>
+                        <ChevronRight className="h-4 w-4" />
+                        <Button variant="link" className="p-0 h-auto" onClick={() => handleBreadcrumbClick(index)}>{node.name}</Button>
+                     </React.Fragment>
+                 ))}
+            </div>
+            <ScrollArea className="border rounded-lg h-full min-h-[40vh] md:min-h-0">
+                <div className="p-2 space-y-1">
+                    {displayedNodes.map(node => {
+                        const isSelected = selectedDestinations?.some(d => d.id === node.id);
+                        return (
+                            <div key={`${node.id}-${(node.parentIds || []).join('-')}`} className={cn("w-full text-left p-2 rounded-md text-sm hover:bg-muted flex items-center justify-between", selectionMode && isSelected && 'bg-primary/20 ring-1 ring-primary')}>
+                               <button onClick={() => handleNodeClick(node)} className="flex-grow text-left">
+                                    <div className="flex items-center gap-2">
+                                        {getNodeIcon(node)}
+                                        <span>{node.name}</span>
+                                        <Badge variant="outline" className="text-xs">{getNodeTypeLabel(node)}</Badge>
+                                    </div>
+                                </button>
+                                {selectionMode && (
+                                     <Button variant={isSelected ? "secondary" : "outline"} size="sm" onClick={() => handleToggleSelection(node)}>
+                                        {isSelected ? 'Quitar' : 'Añadir'}
+                                    </Button>
+                                )}
+                            </div>
+                        )
+                    })}
+                     {displayedNodes.length === 0 && !searchTerm && (
+                         <div className="p-4 text-center text-muted-foreground text-sm">
+                            No hay más sub-nodos aquí.
+                        </div>
+                    )}
+                     {displayedNodes.length === 0 && searchTerm && (
+                         <div className="p-4 text-center text-muted-foreground text-sm">
+                            No se encontraron resultados.
+                        </div>
+                    )}
+                </div>
+            </ScrollArea>
+        </div>
+    );
 
+    const detailComponent = (
+         <div className="md:col-span-2">
+            <Card className="h-full glass-card">
+                <CardHeader>
+                    {isMobile && activeNode && (
+                        <Button variant="ghost" onClick={() => setActivePath([])} className="mb-2 justify-start p-0 h-auto">
+                            <ArrowLeft className="mr-2 h-4 w-4" /> Volver a la lista
+                        </Button>
+                    )}
+                    <CardTitle>{activeNode ? activeNode.name : (networkType === 'category' ? "Red de Categorías" : "Red de Temas")}</CardTitle>
+                    <CardDescription>{activeNode ? activeNode.description : "Haz clic en un ítem para explorarlo."}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-full max-h-[60vh]">
+                       <div className="space-y-6">
+                        {activeNode && networkType === 'category' && relatedContent.topics.length > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2"><FileText className="h-4 w-4"/><h4 className="font-semibold flex-1 min-w-0">Temas en esta Categoría</h4></div>
+                                <div className="flex flex-wrap gap-2">
+                                    {relatedContent.topics.map(topic => (
+                                        <Button key={topic.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
+                                            {topic.name}
+                                        </Button>
+                                    ))}
+                                </div>
+                                <Separator />
+                            </div>
+                        )}
+
+                        {activeNode && networkType !== 'category' && relatedContent.categories.length > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2"><Share2 className="h-4 w-4"/><h4 className="font-semibold flex-1 min-w-0">Vinculado en Categorías</h4></div>
+                                <div className="flex flex-wrap gap-2">
+                                    {relatedContent.categories.map(cat => (
+                                        <Button key={cat.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
+                                            {cat.name}
+                                        </Button>
+                                    ))}
+                                </div>
+                                 <Separator />
+                            </div>
+                        )}
+
+                        {activeNode && (
+                            relatedContent.posts.length > 0 ? (
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2"><BookOpen className="h-4 w-4"/><h4 className="font-semibold flex-1 min-w-0">Publicaciones Relacionadas</h4></div>
+                                    {relatedContent.posts.map(post => <KnowledgePostItem key={post.id} post={post as any}/>)}
+                                </div>
+                            ) : (
+                                <div className="text-center text-muted-foreground py-10">
+                                    <FileText className="mx-auto h-12 w-12" />
+                                    <h3 className="mt-4 text-lg font-medium">No hay publicaciones</h3>
+                                    <p className="mt-1 text-sm">Sé el primero en contribuir a {activeNode.name}.</p>
+                                </div>
+                            )
+                        )}
+                       </div>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
+        </div>
+    );
+
+    if (isMobile) {
+        return activeNode ? detailComponent : listComponent;
+    }
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 min-h-[60vh]">
-            <div className="md:col-span-1 flex flex-col gap-4">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                        placeholder={`Buscar en ${networkType === 'category' ? 'categorías' : 'temas'}...`} 
-                        className="pl-9"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
-                     <Button variant="link" className="p-0 h-auto" onClick={() => setActivePath([])}>Raíz</Button>
-                     {activePath.map((node, index) => (
-                         <React.Fragment key={`${node.id}-${index}`}>
-                            <ChevronRight className="h-4 w-4" />
-                            <Button variant="link" className="p-0 h-auto" onClick={() => handleBreadcrumbClick(index)}>{node.name}</Button>
-                         </React.Fragment>
-                     ))}
-                </div>
-                <ScrollArea className="border rounded-lg h-full">
-                    <div className="p-2 space-y-1">
-                        {displayedNodes.map(node => {
-                            const isSelected = selectedDestinations?.some(d => d.id === node.id);
-                            return (
-                                <div key={node.id} className={cn("w-full text-left p-2 rounded-md text-sm hover:bg-muted flex items-center justify-between", selectionMode && isSelected && 'bg-primary/20 ring-1 ring-primary')}>
-                                   <button onClick={() => handleNodeClick(node)} className="flex-grow text-left">
-                                        <div className="flex items-center gap-2">
-                                            {getNodeIcon(node)}
-                                            <span>{node.name}</span>
-                                            <Badge variant="outline" className="text-xs">{getNodeTypeLabel(node)}</Badge>
-                                        </div>
-                                    </button>
-                                    {selectionMode && (
-                                         <Button variant={isSelected ? "secondary" : "outline"} size="sm" onClick={() => handleToggleSelection(node)}>
-                                            {isSelected ? 'Quitar' : 'Añadir'}
-                                        </Button>
-                                    )}
-                                </div>
-                            )
-                        })}
-                         {displayedNodes.length === 0 && !searchTerm && (
-                             <div className="p-4 text-center text-muted-foreground text-sm">
-                                No hay más sub-nodos aquí.
-                            </div>
-                        )}
-                         {displayedNodes.length === 0 && searchTerm && (
-                             <div className="p-4 text-center text-muted-foreground text-sm">
-                                No se encontraron resultados.
-                            </div>
-                        )}
-                    </div>
-                </ScrollArea>
-            </div>
-            <div className="md:col-span-2">
-                <Card className="h-full glass-card">
-                    <CardHeader>
-                        <CardTitle>{activeNode ? activeNode.name : (networkType === 'category' ? "Red de Categorías" : "Red de Temas")}</CardTitle>
-                        <CardDescription>{activeNode ? activeNode.description : "Haz clic en un ítem para explorarlo."}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <ScrollArea className="h-[50vh]">
-                           <div className="space-y-6">
-                            {activeNode && networkType === 'category' && relatedContent.topics.length > 0 && (
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2"><FileText className="h-4 w-4"/><h4 className="font-semibold">Temas en esta Categoría</h4></div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {relatedContent.topics.map(topic => (
-                                            <Button key={topic.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
-                                                {topic.name}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                    <Separator />
-                                </div>
-                            )}
-
-                            {activeNode && networkType !== 'category' && relatedContent.categories.length > 0 && (
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2"><LinkIcon className="h-4 w-4"/><h4 className="font-semibold">Vinculado en Categorías</h4></div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {relatedContent.categories.map(cat => (
-                                            <Button key={cat.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
-                                                {cat.name}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                     <Separator />
-                                </div>
-                            )}
-
-                            {activeNode && (
-                                relatedContent.posts.length > 0 ? (
-                                    <div className="space-y-4">
-                                        <div className="flex items-center gap-2"><BookOpen className="h-4 w-4"/><h4 className="font-semibold">Publicaciones Relacionadas</h4></div>
-                                        {relatedContent.posts.map(post => <KnowledgePostItem key={post.id} post={post as any}/>)}
-                                    </div>
-                                ) : (
-                                    <div className="text-center text-muted-foreground py-10">
-                                        <FileText className="mx-auto h-12 w-12" />
-                                        <h3 className="mt-4 text-lg font-medium">No hay publicaciones</h3>
-                                        <p className="mt-1 text-sm">Sé el primero en contribuir a {activeNode.name}.</p>
-                                    </div>
-                                )
-                            )}
-                           </div>
-                        </ScrollArea>
-                    </CardContent>
-                </Card>
-            </div>
+            {listComponent}
+            {detailComponent}
         </div>
     );
 };
