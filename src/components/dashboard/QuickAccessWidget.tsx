@@ -29,7 +29,7 @@ const quickAccessLinks = [
 
 export function QuickAccessWidget() {
   return (
-    <Card className="glass-card rounded-2xl h-full">
+    <Card className="glass-card rounded-2xl h-full flex flex-col">
       <CardHeader>
         <CardTitle className="font-headline flex items-center gap-2">
             <Network className="text-primary" />
@@ -37,8 +37,8 @@ export function QuickAccessWidget() {
         </CardTitle>
         <CardDescription>Acceso directo a las áreas principales.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
+      <CardContent className="flex-grow flex flex-col">
+        <div className="space-y-3 flex flex-col flex-grow justify-around">
             {quickAccessLinks.map((link) => (
                 <Button key={link.href} variant="outline" className="w-full justify-start h-auto py-3" asChild>
                     <Link href={link.href}>
