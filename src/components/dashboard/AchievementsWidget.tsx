@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Star, Zap, BrainCircuit, Users, Award } from "lucide-react";
+import { ScrollArea } from "../ui/scroll-area";
 
 const achievements = [
   { icon: Star, label: "Nexus Pioneer", description: "Joined within the first cycle." },
@@ -12,14 +13,14 @@ const achievements = [
 
 export function AchievementsWidget() {
   return (
-    <Card className="glass-card rounded-2xl">
+    <Card className="glass-card rounded-2xl h-full flex flex-col">
       <CardHeader>
         <CardTitle className="font-headline">Achievements</CardTitle>
         <CardDescription>Badges earned throughout your journey.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow">
         <TooltipProvider>
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-x-4 gap-y-6">
             {achievements.map((ach, index) => (
                 <Tooltip key={index}>
                     <TooltipTrigger asChild>

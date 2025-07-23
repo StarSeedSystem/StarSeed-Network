@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PlaySquare, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "../ui/progress";
+import { ScrollArea } from "../ui/scroll-area";
 
 const projects = [
     {
@@ -22,7 +23,7 @@ const projects = [
 
 export function ProjectsWidget() {
   return (
-    <Card className="glass-card rounded-2xl h-full">
+    <Card className="glass-card rounded-2xl h-full flex flex-col">
       <CardHeader>
         <CardTitle className="font-headline flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -35,24 +36,26 @@ export function ProjectsWidget() {
         </CardTitle>
         <CardDescription>Seguimiento de los proyectos aprobados por la comunidad.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-            {projects.map((proj, index) => (
-                <div key={index}>
-                    <div className="flex justify-between items-center mb-1">
-                        <p className="font-semibold">{proj.title}</p>
-                        <div className="flex items-center gap-2 text-sm">
-                           {proj.status === "Completado" && <CheckCircle className="h-4 w-4 text-sea-green"/>}
-                           <span className={proj.status === "Completado" ? "text-sea-green" : "text-electric-lime"}>
-                            {proj.status}
-                           </span>
+      <CardContent className="flex-grow flex flex-col">
+        <ScrollArea className="flex-grow">
+            <div className="space-y-6">
+                {projects.map((proj, index) => (
+                    <div key={index}>
+                        <div className="flex justify-between items-center mb-1">
+                            <p className="font-semibold">{proj.title}</p>
+                            <div className="flex items-center gap-2 text-sm shrink-0 ml-2">
+                              {proj.status === "Completado" && <CheckCircle className="h-4 w-4 text-sea-green"/>}
+                              <span className={proj.status === "Completado" ? "text-sea-green" : "text-electric-lime"}>
+                                {proj.status}
+                              </span>
+                            </div>
                         </div>
+                        <Progress value={proj.progress} />
+                        <p className="text-xs text-muted-foreground mt-1">{proj.entity}</p>
                     </div>
-                    <Progress value={proj.progress} />
-                     <p className="text-xs text-muted-foreground mt-1">{proj.entity}</p>
-                </div>
-            ))}
-        </div>
+                ))}
+            </div>
+        </ScrollArea>
       </CardContent>
     </Card>
   );
