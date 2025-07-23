@@ -96,11 +96,15 @@ export default function CollectionPage() {
                 if (foundCollection.pageIds && foundCollection.pageIds.length > 0) {
                     const pagesData: AnyRecommendedPage[] = [];
                     for (const collectionName of collectionsToFetch) {
-                        const q = query(collection(db, collectionName.name), where('id', 'in', foundCollection.pageIds));
-                        const querySnapshot = await getDocs(q);
-                        querySnapshot.forEach(doc => {
-                            pagesData.push({ ...doc.data(), type: doc.data().type || collectionName.type } as AnyRecommendedPage);
-                        });
+                        // Firestore 'in' query can have at most 30 items in the array.
+                        // For larger collections, we might need to batch this.
+                        if (foundCollection.pageIds.length > 0) {
+                            const q = query(collection(db, collectionName.name), where('id', 'in', foundCollection.pageIds));
+                            const querySnapshot = await getDocs(q);
+                            querySnapshot.forEach(doc => {
+                                pagesData.push({ ...doc.data(), type: doc.data().type || collectionName.type } as AnyRecommendedPage);
+                            });
+                        }
                     }
                     setPages(pagesData);
                 }
@@ -108,8 +112,8 @@ export default function CollectionPage() {
                 // Fetch Items (Posts, Library Items etc.)
                 const itemIds = foundCollection.itemIds || [];
                 if (itemIds.length > 0) {
-                    // Fetch Posts
-                    const postsQuery = query(collection(db, "posts"), where('id', 'in', itemIds));
+                    // Fetch Posts from 'posts' collection using the itemIds
+                    const postsQuery = query(collection(db, "posts"), where('__name__', 'in', itemIds));
                     const postsSnapshot = await getDocs(postsQuery);
                     const postsData = postsSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
                     setPosts(postsData);
@@ -221,4 +225,3 @@ export default function CollectionPage() {
         </div>
     );
 }
-
