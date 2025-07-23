@@ -24,12 +24,12 @@ export interface LayoutItem {
 
 // Define default layout for widgets
 const defaultLayout: LayoutItem[] = [
-  { i: 'quickAccess', x: 0, y: 0, w: 3, h: 2 },
-  { i: 'myPages', x: 3, y: 0, w: 9, h: 4 },
-  { i: 'achievements', x: 0, y: 2, w: 3, h: 2 },
-  { i: 'politicalSummary', x: 0, y: 4, w: 6, h: 2 },
-  { i: 'projects', x: 6, y: 4, w: 6, h: 2 },
-  { i: 'learningPath', x: 0, y: 6, w: 12, h: 2 },
+  { i: 'quickAccess', x: 0, y: 0, w: 4, h: 2 },
+  { i: 'myPages', x: 4, y: 0, w: 8, h: 4 },
+  { i: 'politicalSummary', x: 0, y: 2, w: 4, h: 2 },
+  { i: 'projects', x: 0, y: 4, w: 6, h: 2 },
+  { i: 'learningPath', x: 6, y: 4, w: 6, h: 2 },
+  { i: 'achievements', x: 0, y: 6, w: 12, h: 2 },
 ];
 
 const defaultWidgets = allWidgets.filter(w => defaultLayout.some(l => l.i === w.id));
@@ -77,7 +77,7 @@ export function DashboardClient() {
         
         const newWidgets = [...widgets, widget];
         const y = Math.max(0, ...layout.map(l => l.y + l.h));
-        const newLayoutItem: LayoutItem = { i: widget.id, x: 0, y: y, w: 3, h: 2 };
+        const newLayoutItem: LayoutItem = { i: widget.id, x: 0, y: y, w: 4, h: 2 };
         const newLayout = [...layout, newLayoutItem];
         
         saveDashboard(newWidgets, newLayout);
@@ -107,7 +107,7 @@ export function DashboardClient() {
                             key={item.i}
                             className={cn(
                                 "col-span-full",
-                                `md:col-span-${item.w}`
+                                `lg:col-span-${item.w}`
                             )}
                             style={{
                                 gridRow: `span ${item.h}`,
