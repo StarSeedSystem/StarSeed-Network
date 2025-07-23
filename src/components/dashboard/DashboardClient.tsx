@@ -80,11 +80,13 @@ export function DashboardClient() {
     
     // Renders the component for a given widget ID
     const renderWidget = (widgetId: string) => {
-        const widget = widgets.find(w => w.id === widgetId);
+        const widget = allWidgets.find(w => w.id === widgetId);
         if (!widget) return null;
         const Component = widget.component;
         return <Component />;
     };
+    
+    const visibleLayout = layout.filter(l => widgets.some(w => w.id === l.i));
 
     return (
         <div className="space-y-8">
@@ -94,8 +96,8 @@ export function DashboardClient() {
                 onAddWidget={() => setIsLibraryOpen(true)}
             />
             {isClient ? (
-                <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6 auto-rows-[100px]">
-                    {layout.map(item => (
+                <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6 auto-rows-fr">
+                    {visibleLayout.map(item => (
                         <div
                             key={item.i}
                             className={cn(
