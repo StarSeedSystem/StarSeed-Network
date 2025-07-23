@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { BrainCircuit, Edit, MoreVertical, Paperclip, Search, Send, Smile, User, Video } from "lucide-react";
+import { BrainCircuit, Edit, MoreVertical, Paperclip, Search, Send, Smile, User, Video, PanelLeft, Pin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const conversationsData = [
@@ -111,6 +111,7 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState(conversationsData);
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
   const [newMessage, setNewMessage] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
     // Set the first conversation as active by default
@@ -153,7 +154,11 @@ export default function MessagesPage() {
   return (
     <div className="flex flex-col md:flex-row glass-card rounded-2xl overflow-hidden min-h-[calc(100vh-10rem)]">
       {/* Conversations List */}
-      <div className="w-full md:w-1/3 lg:w-1/4 border-b md:border-b-0 md:border-r border-white/10 flex flex-col shrink-0">
+      <div className={cn(
+        "w-full md:w-1/3 lg:w-1/4 border-b md:border-b-0 md:border-r border-white/10 flex flex-col shrink-0 transition-all duration-300",
+        "md:flex",
+        isSidebarOpen ? "flex" : "hidden"
+      )}>
         <div className="p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-headline font-bold">Mensajes</h2>
@@ -173,8 +178,13 @@ export default function MessagesPage() {
               <Button
                 key={conv.id}
                 variant={activeConversationId === conv.id ? "secondary" : "ghost"}
-                className="w-full h-auto justify-start p-2 rounded-lg"
-                onClick={() => setActiveConversationId(conv.id)}
+                className="w-full h-auto justify-start p-2 rounded-lg group"
+                onClick={() => {
+                    setActiveConversationId(conv.id);
+                    if (window.innerWidth < 768) { // md breakpoint
+                        setIsSidebarOpen(false);
+                    }
+                }}
               >
                 <div className="flex items-center gap-3 w-full">
                   <div className="relative shrink-0">
@@ -190,7 +200,12 @@ export default function MessagesPage() {
                   </div>
                   <div className="flex flex-col items-end text-xs text-muted-foreground h-full shrink-0">
                     <p>{conv.time}</p>
-                    {conv.unread > 0 && <Badge className="mt-1 bg-primary text-primary-foreground">{conv.unread}</Badge>}
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Pin className="h-3 w-3" />
+                      </Button>
+                      {conv.unread > 0 && <Badge className="bg-primary text-primary-foreground">{conv.unread}</Badge>}
+                    </div>
                   </div>
                 </div>
               </Button>
@@ -200,10 +215,17 @@ export default function MessagesPage() {
       </div>
 
       {/* Active Chat */}
-      <div className="w-full md:w-1/2 flex flex-col bg-background/30 grow">
+      <div className={cn(
+        "w-full flex flex-col bg-background/30 grow",
+        "md:flex",
+        !isSidebarOpen ? "flex" : "hidden"
+      )}>
         {activeConversation ? (
           <>
             <div className="flex items-center p-4 border-b border-white/10 shrink-0">
+               <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={() => setIsSidebarOpen(true)}>
+                  <PanelLeft className="h-5 w-5" />
+              </Button>
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={activeConversation.avatar} alt={activeConversation.name} data-ai-hint={activeConversation.avatarHint} />

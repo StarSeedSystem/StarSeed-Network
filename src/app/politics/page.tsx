@@ -141,7 +141,7 @@ export default function PoliticsPage() {
       />
 
        <Tabs defaultValue="publications" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-card/60 rounded-xl h-auto">
+            <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 bg-card/60 rounded-xl h-auto">
                 <TabsTrigger value="publications">Publicaciones</TabsTrigger>
                 <TabsTrigger value="pages">Mis Páginas Políticas</TabsTrigger>
                 <TabsTrigger value="replicated_vote">Voto Replicado</TabsTrigger>

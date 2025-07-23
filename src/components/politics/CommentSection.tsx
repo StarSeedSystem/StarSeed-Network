@@ -200,7 +200,7 @@ export function CommentSection({ postId, isPoll }: CommentSectionProps) {
                 <Avatar className="h-10 w-10"><AvatarImage src={profile?.avatarUrl || ''} /><AvatarFallback>{profile?.name?.substring(0,2) || 'U'}</AvatarFallback></Avatar>
                 <div className="flex-1 space-y-3">
                     <Textarea placeholder="Aporta tu perspectiva al debate..." value={newComment} onChange={(e) => setNewComment(e.target.value)} disabled={!user || isPosting}/>
-                    <div className="flex justify-end items-center gap-2">
+                    <div className="flex flex-col sm:flex-row justify-end items-center gap-2">
                          {isPoll && (
                              <Button variant="outline" onClick={() => handleCommentSubmission(true)} disabled={!newComment.trim() || !user || isPosting}>
                                 Proponer como Opción de Voto

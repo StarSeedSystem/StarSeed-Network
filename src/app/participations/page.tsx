@@ -29,6 +29,7 @@ import { collection, query, where, onSnapshot, getDocs, DocumentData } from "fir
 import { db } from "@/data/firebase";
 import { getEntityPath } from "@/lib/utils";
 import { ConnectionCard } from "@/components/participations/ConnectionCard";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 
 const activeParticipations = {
@@ -159,11 +160,17 @@ export default function ConnectionsHubPage() {
 
   return (
     <div className="space-y-8">
+      <PageHeader 
+          title="Hub de Conexiones"
+          subtitle="Explora, crea y gestiona tus participaciones en la red."
+      />
       <Card className="glass-card p-4">
-        <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input placeholder="Busca perfiles, páginas, comunidades, partidos..." className="pl-12 h-14 text-lg bg-background/50" />
-            <Button size="lg" className="absolute right-2 top-1/2 -translate-y-1/2">Buscar en el Nexo</Button>
+        <div className="relative flex flex-col sm:flex-row gap-2">
+            <div className="relative grow">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input placeholder="Busca perfiles, páginas, comunidades, partidos..." className="pl-12 h-14 text-lg bg-background/50" />
+            </div>
+            <Button size="lg" className="shrink-0 w-full sm:w-auto">Buscar en el Nexo</Button>
         </div>
       </Card>
 

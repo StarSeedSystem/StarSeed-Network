@@ -153,7 +153,7 @@ export function CommunityPage({ slug }: CommunityPageProps) {
 
         <div className="px-4 sm:px-8">
             <Tabs defaultValue="dashboard" className="w-full">
-                <TabsList className="grid w-full grid-cols-5 bg-card/60 rounded-xl h-auto">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 bg-card/60 rounded-xl h-auto">
                     <TabsTrigger value="dashboard" className="rounded-lg py-2 text-base"><LayoutDashboard className="mr-2 h-4 w-4"/>Dashboard</TabsTrigger>
                     <TabsTrigger value="publications" className="rounded-lg py-2 text-base"><PenSquare className="mr-2 h-4 w-4"/>Publicaciones</TabsTrigger>
                     <TabsTrigger value="agent" className="rounded-lg py-2 text-base"><BrainCircuit className="mr-2 h-4 w-4"/>Agente IA</TabsTrigger>
