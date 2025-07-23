@@ -3,13 +3,13 @@
 
 import { useState, useEffect } from "react";
 import { notFound, useParams } from "next/navigation";
-import { collectionGroup, query, where, getDocs, doc, getDoc, DocumentData } from "firebase/firestore";
+import { collection, collectionGroup, query, where, getDocs, doc, getDoc, DocumentData } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { Loader2, Folder, Globe, Lock, ArrowLeft } from "lucide-react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BackButton } from "@/components/utils/BackButton";
 import { AnyRecommendedPage } from "@/types/content-types";
-import { ConnectionCard } from "@/components/participations/page";
+import { ConnectionCard } from "@/components/participations/ConnectionCard";
 import { LibraryGrid, LibraryItem } from "@/components/profile/LibraryGrid";
 
 // Hardcoded library items for now
@@ -178,4 +178,3 @@ export default function CollectionPage() {
         </div>
     );
 }
-
