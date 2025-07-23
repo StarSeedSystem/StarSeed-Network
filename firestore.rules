@@ -1,9 +1,9 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
   
-    // Función para verificar si un usuario está autenticado
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -21,7 +21,7 @@ service cloud.firestore {
       allow read: if true;
     }
 
-    // --- REGLAS PARA PUBLICACIONES Y SUS COMENTARIOS ---
+    // --- REGLAS PARA PUBLICACIONES Y COMENTARIOS ---
     match /posts/{postId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
@@ -43,44 +43,45 @@ service cloud.firestore {
       }
     }
     
-    // --- REGLAS PARA PÁGINAS PÚBLICAS Y CONTENIDO ---
-    // Lectura pública, escritura solo para usuarios autenticados.
-    
-    match /communities/{docId} {
-      allow read: if true;
-      allow create, update, delete: if isAuthenticated();
-    }
-    
-    match /federated_entities/{docId} {
-      allow read: if true;
-      allow create, update, delete: if isAuthenticated();
-    }
-
-    match /political_parties/{docId} {
-      allow read: if true;
-      allow create, update, delete: if isAuthenticated();
-    }
-    
-    match /study_groups/{docId} {
-      allow read: if true;
-      allow create, update, delete: if isAuthenticated();
+    // --- REGLAS PARA PÁGINAS PÚBLICAS Y SU CONTENIDO ANIDADO ---
+    function publicPageRules() {
+      return {
+        // Cualquiera puede leer la página principal
+        allow read: if true,
+        // Solo usuarios autenticados pueden crear o unirse (actualizar 'members')
+        allow create, update, delete: if isAuthenticated(),
+        
+        // --- BIBLIOTECA Y COLECCIONES PÚBLICAS ---
+        // Cualquiera autenticado puede contribuir a la biblioteca o a las colecciones de la página.
+        match /libraryItems/{itemId} {
+          allow read: if true,
+          allow create, update, delete: if isAuthenticated()
+        },
+        match /collections/{collectionId} {
+          allow read: if true,
+          allow create, update, delete: if isAuthenticated()
+        }
+      };
     }
 
+    match /communities/{docId} { rules: publicPageRules(); }
+    match /federated_entities/{docId} { rules: publicPageRules(); }
+    match /political_parties/{docId} { rules: publicPageRules(); }
+    match /study_groups/{docId} { rules: publicPageRules(); }
+
+    // --- OTRAS COLECCIONES DE NIVEL SUPERIOR ---
     match /chat_groups/{docId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
     }
-
     match /events/{docId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
     }
-
     match /tutorials/{docId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
     }
-
     match /cultural_posts/{docId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();

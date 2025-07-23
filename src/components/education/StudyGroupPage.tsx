@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { PenSquare, Users, Settings, BookOpen, Loader2, PlusCircle, Bookmark } from "lucide-react";
+import { PenSquare, Users, Settings, BookOpen, Loader2, PlusCircle, Bookmark, Library, Folder } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
@@ -142,17 +142,24 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
 
         <div className="px-4 sm:px-8">
             <Tabs defaultValue="publications" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 bg-card/60 rounded-xl">
+                <TabsList className="grid w-full grid-cols-5 bg-card/60 rounded-xl">
+                    <TabsTrigger value="publications" className="rounded-lg py-2 text-base"><PenSquare className="mr-2 h-4 w-4"/>Recursos</TabsTrigger>
                     <TabsTrigger value="discussions" className="rounded-lg py-2 text-base"><BookOpen className="mr-2 h-4 w-4"/>Debates</TabsTrigger>
-                     <TabsTrigger value="publications" className="rounded-lg py-2 text-base"><PenSquare className="mr-2 h-4 w-4"/>Recursos</TabsTrigger>
+                    <TabsTrigger value="library" className="rounded-lg py-2 text-base"><Library className="mr-2 h-4 w-4"/>Biblioteca</TabsTrigger>
+                    <TabsTrigger value="collections" className="rounded-lg py-2 text-base"><Folder className="mr-2 h-4 w-4"/>Colecciones</TabsTrigger>
                     <TabsTrigger value="members" className="rounded-lg py-2 text-base"><Users className="mr-2 h-4 w-4"/>Miembros ({memberCount})</TabsTrigger>
-                    <TabsTrigger value="settings" className="rounded-lg py-2 text-base" disabled>Ajustes</TabsTrigger>
                 </TabsList>
                 <TabsContent value="publications" className="mt-6">
                     <PublicPageFeed pageId={group.id} />
                 </TabsContent>
                 <TabsContent value="discussions" className="mt-6">
                     <div className="text-center text-muted-foreground py-8">La zona de debate aparecerá aquí.</div>
+                </TabsContent>
+                <TabsContent value="library" className="mt-6">
+                     <div className="text-center text-muted-foreground py-8">La biblioteca pública del grupo de estudio aparecerá aquí.</div>
+                </TabsContent>
+                 <TabsContent value="collections" className="mt-6">
+                     <div className="text-center text-muted-foreground py-8">Las colecciones públicas del grupo de estudio aparecerán aquí.</div>
                 </TabsContent>
                 <TabsContent value="members" className="mt-6">
                     <div className="text-center text-muted-foreground py-8">La lista de miembros aparecerá aquí.</div>
