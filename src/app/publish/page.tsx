@@ -23,7 +23,7 @@ import { FederatedEntitySettings } from "@/components/publish/FederatedEntitySet
 import { NewsSettings } from "@/components/publish/NewsSettings";
 import { LegislativeSettings, LegislativeData } from "@/components/publish/LegislativeSettings";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { EducationSettings, EducationData } from "./EducationSettings";
+import { EducationSettings, EducationData } from "@/components/publish/EducationSettings";
 import { KnowledgeNetwork, ViewMode } from "@/components/education/KnowledgeNetwork";
 import { KnowledgeNode } from "@/types/content-types";
 import knowledgeData from "@/data/knowledge-network.json";
@@ -362,3 +362,5 @@ export default function PublishPage() {
         </div>
     );
 }
+
+    
