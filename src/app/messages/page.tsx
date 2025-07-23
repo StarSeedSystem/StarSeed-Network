@@ -151,7 +151,7 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="h-full flex flex-col md:flex-row glass-card rounded-2xl overflow-hidden min-h-[calc(100vh-10rem)]">
+    <div className="flex flex-col md:flex-row glass-card rounded-2xl overflow-hidden min-h-[calc(100vh-10rem)]">
       {/* Conversations List */}
       <div className="w-full md:w-1/3 lg:w-1/4 border-b md:border-b-0 md:border-r border-white/10 flex flex-col shrink-0">
         <div className="p-4">
@@ -177,7 +177,7 @@ export default function MessagesPage() {
                 onClick={() => setActiveConversationId(conv.id)}
               >
                 <div className="flex items-center gap-3 w-full">
-                  <div className="relative">
+                  <div className="relative shrink-0">
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={conv.avatar} alt={conv.name} data-ai-hint={conv.avatarHint} />
                       <AvatarFallback>{conv.name.substring(0, 2)}</AvatarFallback>
@@ -188,7 +188,7 @@ export default function MessagesPage() {
                     <p className="font-semibold">{conv.name}</p>
                     <p className="text-sm text-muted-foreground truncate">{conv.lastMessage}</p>
                   </div>
-                  <div className="flex flex-col items-end text-xs text-muted-foreground h-full">
+                  <div className="flex flex-col items-end text-xs text-muted-foreground h-full shrink-0">
                     <p>{conv.time}</p>
                     {conv.unread > 0 && <Badge className="mt-1 bg-primary text-primary-foreground">{conv.unread}</Badge>}
                   </div>
@@ -224,7 +224,7 @@ export default function MessagesPage() {
                 {activeConversation.messages.map((msg) => (
                   <div key={msg.id} className={cn("flex items-end gap-3", msg.isOwn && "justify-end")}>
                     {!msg.isOwn && (
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="h-8 w-8 shrink-0">
                         <AvatarImage src={msg.avatar} alt={msg.author} data-ai-hint={msg.avatarHint} />
                         <AvatarFallback>{msg.author.substring(0, 2)}</AvatarFallback>
                       </Avatar>
@@ -233,7 +233,7 @@ export default function MessagesPage() {
                       <p className="text-sm">{msg.text}</p>
                     </div>
                     {msg.isOwn && (
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="h-8 w-8 shrink-0">
                         <AvatarImage src={msg.avatar} alt={msg.author} data-ai-hint={msg.avatarHint} />
                         <AvatarFallback>{msg.author.substring(0, 2)}</AvatarFallback>
                       </Avatar>
@@ -259,7 +259,7 @@ export default function MessagesPage() {
             </form>
           </>
         ) : (
-          <div className="flex flex-1 items-center justify-center">
+          <div className="flex flex-1 items-center justify-center p-4 text-center">
             <p className="text-muted-foreground">Selecciona una conversación para empezar a chatear.</p>
           </div>
         )}

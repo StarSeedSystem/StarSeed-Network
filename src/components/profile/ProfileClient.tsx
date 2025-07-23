@@ -218,7 +218,7 @@ export function ProfileClient() {
         </Dialog>
       </div>
 
-      <div className="relative px-4 sm:px-8 pb-4 -mt-16 md:-mt-24">
+      <div className="relative px-0 sm:px-8 pb-4 -mt-16 md:-mt-24">
           <div className="flex flex-col sm:flex-row items-start gap-6">
               <div className="group relative shrink-0">
                 <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-background ring-4 ring-primary">
@@ -278,7 +278,7 @@ export function ProfileClient() {
           </div>
       </div>
       
-      <div className="px-4 sm:px-8">
+      <div className="px-0 sm:px-8">
         <Tabs defaultValue="publications" className="w-full">
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-card/60 rounded-xl h-auto">
               <TabsTrigger value="publications" className="rounded-lg"><PenSquare className="mr-2 h-4 w-4"/>Publicaciones</TabsTrigger>

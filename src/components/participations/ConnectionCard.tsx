@@ -32,19 +32,19 @@ export const ConnectionCard = ({ item }: { item: AnyRecommendedPage }) => {
     const itemImageHint = 'avatarHint' in item ? item.avatarHint : item.imageHint;
 
     return (
-        <Card className="glass-card flex items-center p-4 gap-4">
-            <Avatar className="h-16 w-16 border-2 border-primary/30">
+        <Card className="glass-card flex flex-col sm:flex-row items-center p-4 gap-4">
+            <Avatar className="h-16 w-16 border-2 border-primary/30 shrink-0">
                 <AvatarImage src={itemImage} alt={item.name} data-ai-hint={itemImageHint} />
                 <AvatarFallback>{item.name.substring(0,2)}</AvatarFallback>
             </Avatar>
-            <div className="flex-grow">
-                <div className="flex items-center gap-2">
+            <div className="flex-grow text-center sm:text-left">
+                <div className="flex flex-col sm:flex-row items-center gap-2 justify-center sm:justify-start">
                     <h3 className="font-headline text-lg font-semibold">{item.name}</h3>
                     <Badge variant="secondary">{getEntityTypeLabel(item.type)}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
             </div>
-            <Button asChild variant="outline" className="ml-auto self-start">
+            <Button asChild variant="outline" className="ml-auto self-center sm:self-start shrink-0">
                 <Link href={href}>Ver Página</Link>
             </Button>
         </Card>

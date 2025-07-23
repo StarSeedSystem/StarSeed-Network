@@ -22,10 +22,10 @@ export default function AgentPage() {
 
   return (
     <div className="flex flex-col md:flex-row gap-6 h-full min-h-[calc(100vh-10rem)]">
-      <div className="w-full md:w-1/3 lg:w-1/4 h-auto md:h-full shrink-0">
+      <div className="w-full md:w-1/3 lg:w-1/4 shrink-0">
         <AgentSidebar activeContextId={activeContext.id} onContextChange={setActiveContext} />
       </div>
-      <div className="flex-grow min-h-0 h-full">
+      <div className="flex-grow min-h-0">
         <AgentChat 
           key={activeContext.id} // Re-mount chat when context changes
           title={activeContext.title}

@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -15,7 +15,6 @@ import {
   SidebarMenuButton,
   SidebarMenuSub,
   SidebarMenuSubButton,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -45,17 +44,14 @@ import {
   Info,
   Clapperboard,
   Bot,
-  ArrowLeft,
   Bell,
   Store,
-  LayoutTemplate,
   Folder,
   BrainCircuit,
   PanelLeft,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/context/UserContext";
@@ -262,8 +258,8 @@ function AppHeader() {
             <div className="flex items-center gap-4">
                 {isMobile && <Button variant="ghost" size="icon" onClick={toggleSidebar}><PanelLeft className="h-5 w-5"/></Button>}
             </div>
-            <div>
-                 {/* Right-aligned content, e.g., action buttons, can go here */}
+            <div className="flex-1">
+                 {/* Can add breadcrumbs or page titles here in the future */}
             </div>
         </header>
     );
@@ -275,7 +271,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
 
     return (
         <div className={cn(
-            "flex flex-col flex-1 transition-[margin-left] duration-300 ease-in-out",
+            "flex flex-col flex-1 transition-all duration-300 ease-in-out",
             !isMobile && (state === 'expanded' ? "ml-[18rem]" : "ml-[4.5rem]")
         )}>
             <AppHeader />
@@ -301,7 +297,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className="relative flex h-screen overflow-hidden">
+      <div className="relative flex min-h-screen">
         <AppSidebar />
         <MainContent>{children}</MainContent>
       </div>

@@ -125,7 +125,7 @@ export default function NotificationsPage() {
                                 </blockquote>
                             )}
                         </div>
-                        <div className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{n.timestamp}</div>
+                        <div className="text-xs text-muted-foreground whitespace-nowrap shrink-0">{n.timestamp}</div>
                     </div>
                 ))}
             </div>
