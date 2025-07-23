@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { collection, onSnapshot, query, where, getDocs, DocumentData } from "firebase/firestore";
 import { db } from "@/data/firebase";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BrainCircuit, BookOpen, PlusCircle, Loader2, List, Map, Share2, ChevronDown } from "lucide-react";
 import { useUser } from "@/context/UserContext";
@@ -26,7 +26,7 @@ export default function EducationPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingPages, setIsLoadingPages] = useState(true);
   const { user } = useUser();
-  const [viewMode, setViewMode] = useState<ViewMode>("map");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [knowledgeNodes, setKnowledgeNodes] = useState<KnowledgeNode[]>([]);
 
   useEffect(() => {
