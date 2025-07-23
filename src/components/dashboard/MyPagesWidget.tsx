@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useUser } from '@/context/UserContext';
 import { db } from '@/data/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, onSnapshot } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,7 +27,6 @@ export function MyPagesWidget() {
         { name: "political_parties", type: 'political_party' },
         { name: "study_groups", type: 'study_group' },
         { name: "chat_groups", type: 'chat_group' },
-        { name: "events", type: 'event' },
     ] as const;
 
     useEffect(() => {
@@ -44,9 +43,18 @@ export function MyPagesWidget() {
                 const q = query(collection(db, c.name), where('members', 'array-contains', user.uid));
                 const querySnapshot = await getDocs(q);
                 querySnapshot.forEach((doc) => {
-                    userPages.push({ ...doc.data(), type: c.type } as AnyRecommendedPage);
+                    // Ensure the document ID is part of the object
+                    userPages.push({ id: doc.id, ...doc.data(), type: c.type } as AnyRecommendedPage);
                 });
             }
+            
+            // Fetch events separately as they use 'attendees' field
+            const eventsQuery = query(collection(db, "events"), where('attendees', 'array-contains', user.uid));
+            const eventsSnapshot = await getDocs(eventsQuery);
+            eventsSnapshot.forEach((doc) => {
+                 userPages.push({ id: doc.id, ...doc.data(), type: 'event' } as AnyRecommendedPage);
+            });
+
             setPages(userPages);
             setIsLoading(false);
         };
