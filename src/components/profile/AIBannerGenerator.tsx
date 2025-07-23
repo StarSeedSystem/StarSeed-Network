@@ -78,21 +78,22 @@ export function AIBannerGenerator({
 
       <div className="space-y-2">
         <Label htmlFor="banner-desc">Describe your desired banner</Label>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
             <Input
             id="banner-desc"
             placeholder="e.g., a serene alien jungle at twilight"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             disabled={isPending}
+            className="flex-grow"
             />
-            <Button onClick={handleGenerate} disabled={isPending} type="button">
+            <Button onClick={handleGenerate} disabled={isPending} type="button" className="shrink-0">
                 {isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                 <Wand2 className="h-4 w-4" />
                 )}
-                <span className="sr-only">Generate</span>
+                <span className="ml-2 sm:hidden md:inline">Generate</span>
             </Button>
         </div>
       </div>

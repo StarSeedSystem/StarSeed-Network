@@ -122,16 +122,16 @@ export function SaveToCollectionDialog({ pageId, itemId, pageName }: SaveToColle
                 <div className="space-y-4">
                     <div>
                         <Label htmlFor="collection-select" className="flex items-center gap-2"><Folder className="h-4 w-4"/>Añadir a Colección Existente</Label>
-                         <div className="flex gap-2 mt-2">
+                         <div className="flex flex-col sm:flex-row gap-2 mt-2">
                              <Select onValueChange={setSelectedCollection}>
-                                <SelectTrigger id="collection-select">
+                                <SelectTrigger id="collection-select" className="flex-grow">
                                     <SelectValue placeholder="Seleccionar colección..." />
                                 </SelectTrigger>
                                 <SelectContent className="glass-card">
                                     {collections.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
-                            <Button onClick={handleSave} disabled={!selectedCollection || isCreating}>
+                            <Button onClick={handleSave} disabled={!selectedCollection || isCreating} className="shrink-0">
                                 {isCreating && <Loader2 className="animate-spin mr-2"/>}
                                 Guardar
                             </Button>
@@ -147,7 +147,7 @@ export function SaveToCollectionDialog({ pageId, itemId, pageName }: SaveToColle
                             value={newCollectionName}
                             onChange={(e) => setNewCollectionName(e.target.value)}
                          />
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                              <Select onValueChange={(v: "public" | "private") => setNewCollectionPrivacy(v)} defaultValue="private">
                                 <SelectTrigger>
                                     <SelectValue placeholder="Privacidad..."/>
@@ -157,7 +157,7 @@ export function SaveToCollectionDialog({ pageId, itemId, pageName }: SaveToColle
                                     <SelectItem value="public"><div className="flex items-center gap-2"><Globe className="h-4 w-4"/>Pública</div></SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Button onClick={handleCreateAndSave} disabled={!newCollectionName.trim() || isCreating}>
+                            <Button onClick={handleCreateAndSave} disabled={!newCollectionName.trim() || isCreating} className="flex-grow">
                                  {isCreating && <Loader2 className="animate-spin mr-2"/>}
                                 Crear y Guardar
                             </Button>

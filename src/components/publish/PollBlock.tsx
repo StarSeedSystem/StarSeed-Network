@@ -91,8 +91,8 @@ export function PollBlock({ data, onChange, onRemove, isLegislative = false }: P
           <p className="text-xs text-muted-foreground">Define las opciones iniciales. Los usuarios podrán proponer más desde los comentarios.</p>
           {data.options.map((option, index) => (
             <div key={index} className="flex items-center gap-2">
-              <Input placeholder={`Opción ${index + 1}`} value={option.text} onChange={(e) => handleOptionChange(index, e.target.value)} />
-              <Button variant="ghost" size="icon" onClick={() => removeOption(index)}>
+              <Input placeholder={`Opción ${index + 1}`} value={option.text} onChange={(e) => handleOptionChange(index, e.target.value)} className="flex-grow" />
+              <Button variant="ghost" size="icon" onClick={() => removeOption(index)} className="shrink-0">
                 <X className="h-4 w-4" />
               </Button>
             </div>

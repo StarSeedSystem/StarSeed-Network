@@ -266,21 +266,32 @@ function AppHeader() {
 }
 
 function MainContent({ children }: { children: React.ReactNode }) {
-    const { state, isMobile } = useSidebar();
-
     return (
-        <div className={cn(
-            "flex flex-col flex-1 transition-all duration-300 ease-in-out",
-            !isMobile && (state === 'expanded' ? "ml-[18rem]" : "ml-[4.5rem]")
-        )}>
-            <AppHeader />
-            <main className="flex-1 overflow-y-auto">
-                 <div className="mx-auto w-full max-w-7xl p-4 md:p-6 lg:p-8">
-                    {children}
-                 </div>
-            </main>
-        </div>
+        <main className="flex-1 overflow-y-auto">
+            <div className="mx-auto w-full max-w-7xl p-4 md:p-6 lg:p-8">
+            {children}
+            </div>
+        </main>
     );
+}
+
+function AppLayoutClient({ children }: { children: React.ReactNode }) {
+  const { state, isMobile } = useSidebar();
+  
+  return (
+    <div className="relative flex min-h-screen">
+      <AppSidebar />
+      <div
+        className={cn(
+          "flex flex-col flex-1 min-w-0 transition-all duration-300 ease-in-out",
+          !isMobile && (state === 'expanded' ? "ml-[18rem]" : "ml-[4.5rem]")
+        )}
+      >
+        <AppHeader />
+        <MainContent>{children}</MainContent>
+      </div>
+    </div>
+  );
 }
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -293,13 +304,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-
+  
   return (
     <SidebarProvider>
-      <div className="relative flex min-h-screen">
-        <AppSidebar />
-        <MainContent>{children}</MainContent>
-      </div>
+      <AppLayoutClient>{children}</AppLayoutClient>
     </SidebarProvider>
   );
 }
