@@ -138,7 +138,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
         
         const postsForNode = posts.filter(post => post.destinations?.some((d: any) => d.id === activeNode.id));
 
-        if (activeNode.type === 'category') {
+        if (activeNode.type === 'category' || activeNode.type === 'topic') {
             const topics: KnowledgeNode[] = [];
             const findTopics = (nodesToSearch: KnowledgeNode[]) => {
                  for (const node of nodesToSearch) {
@@ -149,8 +149,13 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                 }
             }
             if(activeNode.children) findTopics(activeNode.children);
-            return { posts: postsForNode, topics: topics, categories: [] };
-        } else {
+            
+            const categories = (activeNode.parentIds || [])
+                .map(parentId => findNodeInTree(allNodes, parentId))
+                .filter((n): n is KnowledgeNode => n !== null && n.type === 'category');
+
+            return { posts: postsForNode, topics: topics, categories: categories };
+        } else { // It's a concept
             const categories = (activeNode.parentIds || [])
                 .map(parentId => findNodeInTree(allNodes, parentId))
                 .filter((n): n is KnowledgeNode => n !== null && n.type === 'category');
@@ -249,9 +254,9 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                 <CardContent>
                   <ScrollArea className="h-full max-h-[60vh]">
                        <div className="space-y-6">
-                        {activeNode && networkType === 'category' && relatedContent.topics.length > 0 && (
+                        {activeNode && relatedContent.topics.length > 0 && (
                             <div className="space-y-2">
-                                <div className="flex items-center gap-2"><FileText className="h-4 w-4"/><h4 className="font-semibold flex-1 min-w-0">Temas en esta Categoría</h4></div>
+                                <div className="flex items-center gap-2 flex-wrap"><FileText className="h-4 w-4"/><h4 className="font-semibold flex-1 min-w-0">Temas en esta Categoría</h4></div>
                                 <div className="flex flex-wrap gap-2">
                                     {relatedContent.topics.map(topic => (
                                         <Button key={topic.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
@@ -263,7 +268,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                             </div>
                         )}
 
-                        {activeNode && networkType !== 'category' && relatedContent.categories.length > 0 && (
+                        {activeNode && relatedContent.categories.length > 0 && (
                              <div className="space-y-2">
                                 <div className="flex items-center gap-2 flex-wrap"><Share2 className="h-4 w-4 shrink-0"/><h4 className="font-semibold flex-1 min-w-0">Vinculado en Categorías</h4></div>
                                 <div className="flex flex-wrap gap-2">
