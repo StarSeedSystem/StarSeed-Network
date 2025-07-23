@@ -43,12 +43,10 @@ export function MyPagesWidget() {
                 const q = query(collection(db, c.name), where('members', 'array-contains', user.uid));
                 const querySnapshot = await getDocs(q);
                 querySnapshot.forEach((doc) => {
-                    // Ensure the document ID is part of the object
                     userPages.push({ id: doc.id, ...doc.data(), type: c.type } as AnyRecommendedPage);
                 });
             }
             
-            // Fetch events separately as they use 'attendees' field
             const eventsQuery = query(collection(db, "events"), where('attendees', 'array-contains', user.uid));
             const eventsSnapshot = await getDocs(eventsQuery);
             eventsSnapshot.forEach((doc) => {
@@ -63,13 +61,11 @@ export function MyPagesWidget() {
     }, [user]);
 
     const filteredPages = useMemo(() => {
-        // Here you would implement the actual filtering logic based on the 'filter' state.
-        // For now, we'll just return the pages as is.
         return pages;
     }, [pages, filter]);
 
     return (
-        <Card className="glass-card rounded-2xl h-full">
+        <Card className="glass-card rounded-2xl h-full flex flex-col">
             <CardHeader className='flex-row items-center justify-between'>
                 <div>
                     <CardTitle className="font-headline">Mis Páginas</CardTitle>
@@ -95,8 +91,8 @@ export function MyPagesWidget() {
                     </DropdownMenuContent>
                 </DropdownMenu>
             </CardHeader>
-            <CardContent>
-                <ScrollArea className="h-[450px] pr-3">
+            <CardContent className="flex-grow">
+                <ScrollArea className="h-full pr-3">
                     <div className="space-y-3">
                         {isLoading ? (
                             <div className="flex justify-center items-center h-full">
@@ -104,7 +100,7 @@ export function MyPagesWidget() {
                             </div>
                         ) : filteredPages.length > 0 ? (
                              filteredPages.map(page => (
-                                <Link href={getEntityPath(page.type, page.slug)} key={page.id} passHref>
+                                <Link key={page.id} href={getEntityPath(page.type, page.slug)} passHref>
                                     <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer">
                                         <Avatar className='h-10 w-10'>
                                             <AvatarImage src={'avatar' in page ? page.avatar : page.image} data-ai-hint={'avatarHint' in page ? page.avatarHint : page.imageHint} />

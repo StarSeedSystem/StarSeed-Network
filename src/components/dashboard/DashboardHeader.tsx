@@ -2,24 +2,25 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Edit, Save, X } from "lucide-react";
+import { Edit, Save, X, PlusCircle } from "lucide-react";
 
 interface DashboardHeaderProps {
     isEditing: boolean;
     onEditToggle: (isEditing: boolean) => void;
+    onAddWidget: () => void;
 }
 
-export function DashboardHeader({ isEditing, onEditToggle }: DashboardHeaderProps) {
+export function DashboardHeader({ isEditing, onEditToggle, onAddWidget }: DashboardHeaderProps) {
     return (
         <div className="flex items-center justify-end">
             <div>
                 {isEditing ? (
                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => onEditToggle(false)}>
-                            <X className="mr-2 h-4 w-4" /> Cancelar
+                         <Button variant="outline" onClick={onAddWidget}>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Añadir Widget
                         </Button>
-                        <Button onClick={() => onEditToggle(false)}>
-                            <Save className="mr-2 h-4 w-4" /> Guardar Cambios
+                        <Button variant="outline" onClick={() => onEditToggle(false)}>
+                            <X className="mr-2 h-4 w-4" /> Salir del modo edición
                         </Button>
                     </div>
                 ) : (

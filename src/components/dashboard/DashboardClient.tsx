@@ -1,49 +1,124 @@
 
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { AchievementsWidget } from "@/components/dashboard/AchievementsWidget";
-import { TutorialsWidget } from "@/components/dashboard/TutorialsWidget";
-import { ProjectsWidget } from "@/components/dashboard/ProjectsWidget";
-import { LearningPathWidget } from "@/components/dashboard/LearningPathWidget";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { MyPagesWidget } from "./MyPagesWidget";
-import { QuickAccessWidget } from "./QuickAccessWidget";
+import { WidgetLibrary, allWidgets, Widget } from "./WidgetLibrary";
+import { WidgetWrapper } from "./WidgetWrapper";
+import { Dialog, DialogContent } from "../ui/dialog";
 
+export interface LayoutItem {
+  i: string; // Corresponds to widget id
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+const WIDGET_COLS = 12;
+
+// Define default layout for widgets
+const defaultLayout: LayoutItem[] = [
+  { i: 'quickAccess', x: 0, y: 0, w: 3, h: 2 },
+  { i: 'myPages', x: 3, y: 0, w: 6, h: 4 },
+  { i: 'projects', x: 9, y: 0, w: 3, h: 3 },
+  { i: 'learningPath', x: 9, y: 3, w: 3, h: 2 },
+  { i: 'achievements', x: 0, y: 2, w: 3, h: 2 },
+];
+
+const defaultWidgets = allWidgets.filter(w => defaultLayout.some(l => l.i === w.id));
 
 export function DashboardClient() {
     const [isEditing, setIsEditing] = useState(false);
+    const [widgets, setWidgets] = useState<Widget[]>([]);
+    const [layout, setLayout] = useState<LayoutItem[]>([]);
+    const [isClient, setIsClient] = useState(false);
+    const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
-    const widgetClasses = cn(
-        "transition-all duration-300 rounded-2xl",
-        isEditing && "ring-2 ring-dashed ring-primary/50"
-    );
+    useEffect(() => {
+        setIsClient(true);
+        const savedWidgets = localStorage.getItem('dashboard_widgets');
+        const savedLayout = localStorage.getItem('dashboard_layout');
+        if (savedWidgets && savedLayout) {
+            setWidgets(JSON.parse(savedWidgets));
+            setLayout(JSON.parse(savedLayout));
+        } else {
+            setWidgets(defaultWidgets);
+            setLayout(defaultLayout);
+        }
+    }, []);
+
+    const saveDashboard = (newWidgets: Widget[], newLayout: LayoutItem[]) => {
+        localStorage.setItem('dashboard_widgets', JSON.stringify(newWidgets));
+        localStorage.setItem('dashboard_layout', JSON.stringify(newLayout));
+        setWidgets(newWidgets);
+        setLayout(newLayout);
+    };
+
+    const handleRemoveWidget = (widgetId: string) => {
+        const newWidgets = widgets.filter(w => w.id !== widgetId);
+        const newLayout = layout.filter(l => l.i !== widgetId);
+        saveDashboard(newWidgets, newLayout);
+    };
+
+    const handleAddWidget = (widget: Widget) => {
+        if (widgets.some(w => w.id === widget.id)) return; // Avoid duplicates
+        
+        const newWidgets = [...widgets, widget];
+        // Position new widget at the bottom
+        const y = Math.max(0, ...layout.map(l => l.y + l.h));
+        const newLayoutItem: LayoutItem = { i: widget.id, x: 0, y: y, w: 3, h: 2 };
+        const newLayout = [...layout, newLayoutItem];
+        
+        saveDashboard(newWidgets, newLayout);
+        setIsLibraryOpen(false);
+    };
+    
+    // Renders the component for a given widget ID
+    const renderWidget = (widgetId: string) => {
+        const widget = widgets.find(w => w.id === widgetId);
+        if (!widget) return null;
+        const Component = widget.component;
+        return <Component />;
+    };
 
     return (
         <div className="space-y-8">
-            <DashboardHeader isEditing={isEditing} onEditToggle={setIsEditing} />
-            <div className="flex flex-col lg:flex-row gap-8">
-                {/* Columna Izquierda */}
-                <div className="w-full lg:w-1/4 space-y-8">
-                    <div className={widgetClasses}><QuickAccessWidget /></div>
-                    <div className={widgetClasses}><AchievementsWidget /></div>
-                    <div className={widgetClasses}><TutorialsWidget /></div>
+            <DashboardHeader 
+                isEditing={isEditing} 
+                onEditToggle={setIsEditing}
+                onAddWidget={() => setIsLibraryOpen(true)}
+            />
+            {isClient ? (
+                <div className="grid grid-cols-12 gap-6 auto-rows-[100px]">
+                    {layout.map(item => (
+                        <div
+                            key={item.i}
+                            className="transition-all duration-300"
+                            style={{
+                                gridColumn: `span ${item.w}`,
+                                gridRow: `span ${item.h}`,
+                            }}
+                        >
+                           <WidgetWrapper 
+                             isEditing={isEditing} 
+                             onRemove={() => handleRemoveWidget(item.i)}
+                           >
+                              {renderWidget(item.i)}
+                           </WidgetWrapper>
+                        </div>
+                    ))}
                 </div>
+            ) : (
+                <p>Loading Dashboard...</p>
+            )}
 
-                {/* Columna Central (Principal) */}
-                <div className="w-full lg:w-1/2 space-y-8">
-                    <div className={widgetClasses}>
-                        <MyPagesWidget />
-                    </div>
-                </div>
-
-                {/* Columna Derecha */}
-                <div className="w-full lg:w-1/4 space-y-8">
-                     <div className={widgetClasses}><ProjectsWidget /></div>
-                     <div className={widgetClasses}><LearningPathWidget /></div>
-                </div>
-            </div>
+            <Dialog open={isLibraryOpen} onOpenChange={setIsLibraryOpen}>
+                <DialogContent className="glass-card sm:max-w-[600px]">
+                     <WidgetLibrary onSelectWidget={handleAddWidget} />
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

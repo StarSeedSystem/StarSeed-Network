@@ -1,7 +1,14 @@
 
 
+"use client";
+
 import { ProfileClient } from "@/components/profile/ProfileClient";
 import type { LibraryItem, LibraryFolder } from "@/components/profile/LibraryGrid";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Folder, LayoutDashboard } from "lucide-react";
+import { WidgetLibrary } from "@/components/dashboard/WidgetLibrary";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
 
 // Placeholder data for generated content. In a real app, this would come from a database.
 const initialLibraryItems: LibraryItem[] = [
@@ -53,10 +60,35 @@ const initialFolders: LibraryFolder[] = [
 export default function MyLibraryPage() {
   return (
     <div className="space-y-8">
-      <ProfileClient 
-        initialLibraryItems={initialLibraryItems} 
-        initialFolders={initialFolders}
-        viewMode="libraryOnly" />
+        <Tabs defaultValue="files" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-card/60 rounded-xl h-auto">
+                <TabsTrigger value="files" className="rounded-lg py-2 text-base">
+                    <Folder className="mr-2 h-5 w-5" />
+                    Mis Archivos y Creaciones
+                </TabsTrigger>
+                <TabsTrigger value="widgets" className="rounded-lg py-2 text-base">
+                    <LayoutDashboard className="mr-2 h-5 w-5" />
+                    Biblioteca de Widgets
+                </TabsTrigger>
+            </TabsList>
+            <TabsContent value="files" className="mt-6">
+                 <ProfileClient 
+                    initialLibraryItems={initialLibraryItems} 
+                    initialFolders={initialFolders}
+                    viewMode="libraryOnly" />
+            </TabsContent>
+            <TabsContent value="widgets" className="mt-6">
+                <Card className="glass-card">
+                    <CardHeader>
+                        <CardTitle>Biblioteca de Widgets del Dashboard</CardTitle>
+                        <CardDescription>Explora, añade y gestiona los widgets para personalizar tu dashboard.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <WidgetLibrary onSelectWidget={() => {}} />
+                    </CardContent>
+                </Card>
+            </TabsContent>
+      </Tabs>
     </div>
   );
 }
