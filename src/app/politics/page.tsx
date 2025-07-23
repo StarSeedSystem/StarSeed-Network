@@ -122,7 +122,7 @@ export default function PoliticsPage() {
       )
       return (
            <div className="space-y-4">
-              {myPages.map(page => <ConnectionCard key={page.id} item={page} />)}
+              {myPages.map(page => <ConnectionCard key={`${page.type}-${page.id}`} item={page} />)}
           </div>
       )
   }
