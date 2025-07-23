@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { PenSquare, Users, Settings, Loader2, Bookmark, Library, Folder } from "lucide-react";
+import { PenSquare, Users, Settings, Loader2, Bookmark, Library, Folder, LayoutDashboard, BrainCircuit } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext"; 
 import { useToast } from "@/hooks/use-toast"; 
@@ -17,6 +17,8 @@ import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } fro
 import { db } from "@/data/firebase";
 import { PublicPageFeed } from "../utils/PublicPageFeed";
 import { SaveToCollectionDialog } from "../utils/SaveToCollectionDialog";
+import { PublicPageDashboard } from "../utils/PublicPageDashboard";
+import { PublicPageAgent } from "../utils/PublicPageAgent";
 
 interface CommunityPageProps {
   slug: string;
@@ -150,22 +152,25 @@ export function CommunityPage({ slug }: CommunityPageProps) {
         </div>
 
         <div className="px-4 sm:px-8">
-            <Tabs defaultValue="publications" className="w-full">
+            <Tabs defaultValue="dashboard" className="w-full">
                 <TabsList className="grid w-full grid-cols-5 bg-card/60 rounded-xl h-auto">
+                    <TabsTrigger value="dashboard" className="rounded-lg py-2 text-base"><LayoutDashboard className="mr-2 h-4 w-4"/>Dashboard</TabsTrigger>
                     <TabsTrigger value="publications" className="rounded-lg py-2 text-base"><PenSquare className="mr-2 h-4 w-4"/>Publicaciones</TabsTrigger>
+                    <TabsTrigger value="agent" className="rounded-lg py-2 text-base"><BrainCircuit className="mr-2 h-4 w-4"/>Agente IA</TabsTrigger>
                     <TabsTrigger value="library" className="rounded-lg py-2 text-base"><Library className="mr-2 h-4 w-4"/>Biblioteca</TabsTrigger>
-                    <TabsTrigger value="collections" className="rounded-lg py-2 text-base"><Folder className="mr-2 h-4 w-4"/>Colecciones</TabsTrigger>
                     <TabsTrigger value="members" className="rounded-lg py-2 text-base"><Users className="mr-2 h-4 w-4"/>Miembros ({memberCount})</TabsTrigger>
-                    <TabsTrigger value="settings" className="rounded-lg py-2 text-base" disabled>Configuración</TabsTrigger>
                 </TabsList>
+                <TabsContent value="dashboard" className="mt-6">
+                    <PublicPageDashboard pageType="community" />
+                </TabsContent>
                 <TabsContent value="publications" className="mt-6">
                     <PublicPageFeed pageId={community.id} />
                 </TabsContent>
+                <TabsContent value="agent" className="mt-6">
+                    <PublicPageAgent pageName={community.name} />
+                </TabsContent>
                 <TabsContent value="library" className="mt-6">
                      <div className="text-center text-muted-foreground py-8">La biblioteca pública de la comunidad aparecerá aquí.</div>
-                </TabsContent>
-                 <TabsContent value="collections" className="mt-6">
-                     <div className="text-center text-muted-foreground py-8">Las colecciones públicas de la comunidad aparecerán aquí.</div>
                 </TabsContent>
                 <TabsContent value="members" className="mt-6">
                      <div className="text-center text-muted-foreground py-8">La lista de miembros aparecerá aquí.</div>
