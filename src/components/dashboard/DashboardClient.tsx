@@ -7,6 +7,11 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { WidgetLibrary, allWidgets, Widget } from "./WidgetLibrary";
 import { WidgetWrapper } from "./WidgetWrapper";
 import { Dialog, DialogContent } from "../ui/dialog";
+import { QuickAccessWidget } from "./QuickAccessWidget";
+import { MyPagesWidget } from "./MyPagesWidget";
+import { ProjectsWidget } from "./ProjectsWidget";
+import { LearningPathWidget } from "./LearningPathWidget";
+import { AchievementsWidget } from "./AchievementsWidget";
 
 export interface LayoutItem {
   i: string; // Corresponds to widget id
@@ -21,9 +26,7 @@ const WIDGET_COLS = 12;
 // Define default layout for widgets
 const defaultLayout: LayoutItem[] = [
   { i: 'quickAccess', x: 0, y: 0, w: 3, h: 2 },
-  { i: 'myPages', x: 3, y: 0, w: 6, h: 4 },
-  { i: 'projects', x: 9, y: 0, w: 3, h: 3 },
-  { i: 'learningPath', x: 9, y: 3, w: 3, h: 2 },
+  { i: 'myPages', x: 3, y: 0, w: 9, h: 4 },
   { i: 'achievements', x: 0, y: 2, w: 3, h: 2 },
 ];
 
@@ -91,13 +94,16 @@ export function DashboardClient() {
                 onAddWidget={() => setIsLibraryOpen(true)}
             />
             {isClient ? (
-                <div className="grid grid-cols-12 gap-6 auto-rows-[100px]">
+                <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6 auto-rows-[100px]">
                     {layout.map(item => (
                         <div
                             key={item.i}
-                            className="transition-all duration-300"
+                            className={cn(
+                                "transition-all duration-300 col-span-full", // Default to full width on mobile
+                                `md:col-span-${Math.min(item.w * 2, 6)}`, // Adjust for medium screens
+                                `lg:col-span-${item.w}` // Use defined width on large screens
+                            )}
                             style={{
-                                gridColumn: `span ${item.w}`,
                                 gridRow: `span ${item.h}`,
                             }}
                         >
