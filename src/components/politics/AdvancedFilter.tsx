@@ -53,8 +53,7 @@ export function AdvancedFilter({ filters, onFilterChange }: AdvancedFilterProps)
                                     </SelectTrigger>
                                     <SelectContent className="glass-card">
                                         <SelectItem value="all">Todas mis entidades</SelectItem>
-                                        <SelectItem value="global">E.F. Global</SelectItem>
-                                        <SelectItem value="local-central">E.F. Localidad Central</SelectItem>
+                                        <SelectItem value="consejo-etica-digital" disabled>Consejo de Ética Digital</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

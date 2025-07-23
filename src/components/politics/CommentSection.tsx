@@ -13,7 +13,7 @@ import { Separator } from "../ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { run } from "node:test";
+import { PollData } from "../publish/PollBlock";
 
 interface Comment {
     id: string;
@@ -161,20 +161,22 @@ export function CommentSection({ postId, isPoll }: CommentSectionProps) {
                 transaction.update(postRef, { comments: newCommentCount });
 
                 if (isOption) {
-                    const newOption = {
-                        text: newComment.trim(),
-                        votes: 1, // Start with one vote from the proposer
-                        proposer: { name: profile.name, uid: user.uid },
-                    };
                     const blocks = postDoc.data().blocks || [];
                     const pollIndex = blocks.findIndex((b: any) => b.type === 'poll');
                     if (pollIndex !== -1) {
-                        blocks[pollIndex].options.push(newOption);
-                        // Also register the user's vote
-                        if (!blocks[pollIndex].voters) {
-                            blocks[pollIndex].voters = {};
-                        }
-                        blocks[pollIndex].voters[user.uid] = newOption.text;
+                        const newOption = {
+                            text: newComment.trim(),
+                            votes: 1, // Start with one vote from the proposer
+                            proposer: { name: profile.name, uid: user.uid },
+                        };
+                        const pollData: PollData = blocks[pollIndex];
+                        pollData.options.push(newOption);
+                        
+                        // Also register the user's vote for the new option
+                        if (!pollData.voters) pollData.voters = {};
+                        pollData.voters[user.uid] = newOption.text;
+                        
+                        blocks[pollIndex] = pollData;
                         transaction.update(postRef, { blocks: blocks });
                     }
                 }

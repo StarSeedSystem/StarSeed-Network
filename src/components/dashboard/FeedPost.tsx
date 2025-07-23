@@ -22,9 +22,9 @@ import { Skeleton } from "../ui/skeleton";
 
 export interface FeedPostType {
   id: string;
-  author: string;
+  authorName: string;
   handle: string;
-  avatar: string;
+  avatarUrl: string;
   avatarHint: string;
   title: string;
   content: string;
