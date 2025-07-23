@@ -18,7 +18,7 @@ export function KnowledgePostItem({ post }: { post: FeedPostType }) {
     : "ahora";
 
     return (
-        <Card className="bg-background/50">
+        <Card className="bg-background/50 hover:bg-background/80 transition-colors">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-x-4 gap-y-2 p-3">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                     <Avatar className="h-10 w-10 shrink-0">
@@ -33,7 +33,7 @@ export function KnowledgePostItem({ post }: { post: FeedPostType }) {
                     </div>
                 </div>
                  <Button variant="outline" size="sm" asChild className="shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
-                    <Link href={`/publish/${post.id}`}>
+                    <Link href={`/post/${post.id}`}>
                         Ver Publicación <ArrowRight className="h-4 w-4 ml-2" />
                     </Link>
                 </Button>
@@ -42,7 +42,3 @@ export function KnowledgePostItem({ post }: { post: FeedPostType }) {
     )
 
 }
-
-    
-
-    
