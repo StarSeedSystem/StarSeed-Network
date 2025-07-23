@@ -253,8 +253,8 @@ function AppSidebar() {
 
 function MainContent({ children }: { children: React.ReactNode }) {
     return (
-        <main className="flex-1 overflow-y-auto pt-8">
-            <div className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
+        <main className="flex-1 overflow-y-auto pt-8 pb-8">
+            <div className="mx-auto w-full max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8">
             {children}
             </div>
         </main>

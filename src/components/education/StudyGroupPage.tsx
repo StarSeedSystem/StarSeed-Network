@@ -142,7 +142,7 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
             </div>
         </div>
 
-        <div className="px-4 sm:px-8">
+        <div className="px-0 sm:px-8">
             <Tabs defaultValue="dashboard" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 bg-card/60 rounded-xl h-auto">
                     <TabsTrigger value="dashboard" className="rounded-lg py-2 text-base"><LayoutDashboard className="mr-2 h-4 w-4"/>Dashboard</TabsTrigger>
