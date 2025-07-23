@@ -1,3 +1,4 @@
+
 // src/components/participations/ConnectionCard.tsx
 
 "use client";
@@ -9,6 +10,19 @@ import { Users } from "lucide-react";
 import type { AnyEntity, AnyRecommendedPage, Event } from "@/types/content-types";
 import { getEntityPath } from "@/lib/utils";
 import Link from "next/link";
+import { Badge } from "../ui/badge";
+
+const getEntityTypeLabel = (type: AnyRecommendedPage['type']) => {
+    switch (type) {
+        case 'community': return 'Comunidad';
+        case 'federation': return 'E. Federada';
+        case 'study_group': return 'Grupo de Estudio';
+        case 'chat_group': return 'Grupo de Chat';
+        case 'political_party': return 'Partido Político';
+        case 'event': return 'Evento';
+        default: return 'Página';
+    }
+}
 
 export const ConnectionCard = ({ item }: { item: AnyRecommendedPage }) => {
     const href = getEntityPath(item.type, item.slug);
@@ -24,20 +38,13 @@ export const ConnectionCard = ({ item }: { item: AnyRecommendedPage }) => {
                 <AvatarFallback>{item.name.substring(0,2)}</AvatarFallback>
             </Avatar>
             <div className="flex-grow">
-                <h3 className="font-headline text-lg font-semibold">{item.name}</h3>
-                 {isEvent ? (
-                     <p className="text-sm font-semibold flex items-center mt-1">
-                        <Users className="h-4 w-4 mr-2 text-primary" />
-                        {memberCount.toLocaleString()} Asistentes
-                    </p>
-                 ) : (
-                    <p className="text-sm font-semibold flex items-center mt-1">
-                        <Users className="h-4 w-4 mr-2 text-primary" />
-                        {memberCount.toLocaleString()} Miembros
-                    </p>
-                 )}
+                <div className="flex items-center gap-2">
+                    <h3 className="font-headline text-lg font-semibold">{item.name}</h3>
+                    <Badge variant="secondary">{getEntityTypeLabel(item.type)}</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
             </div>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="ml-auto self-start">
                 <Link href={href}>Ver Página</Link>
             </Button>
         </Card>
