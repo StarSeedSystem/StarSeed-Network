@@ -21,8 +21,8 @@ export default function AgentPage() {
   });
 
   return (
-    <div className="h-[calc(100vh-theme(spacing.16)-2*theme(spacing.8))] flex gap-6">
-      <div className="w-1/3 lg:w-1/4 h-full">
+    <div className="h-[calc(100vh-theme(spacing.16)-2*theme(spacing.8))] flex flex-col md:flex-row gap-6">
+      <div className="w-full md:w-1/3 lg:w-1/4 h-full md:h-auto">
         <AgentSidebar activeContextId={activeContext.id} onContextChange={setActiveContext} />
       </div>
       <div className="flex-grow min-h-0 h-full">

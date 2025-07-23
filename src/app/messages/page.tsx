@@ -151,9 +151,9 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-theme(spacing.16)-2*theme(spacing.8))] flex glass-card rounded-2xl overflow-hidden">
+    <div className="h-[calc(100vh-theme(spacing.16)-2*theme(spacing.8))] flex flex-col md:flex-row glass-card rounded-2xl overflow-hidden">
       {/* Conversations List */}
-      <div className="w-1/4 border-r border-white/10 flex flex-col">
+      <div className="w-full md:w-1/3 lg:w-1/4 border-b md:border-b-0 md:border-r border-white/10 flex flex-col">
         <div className="p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-headline font-bold">Mensajes</h2>
@@ -200,7 +200,7 @@ export default function MessagesPage() {
       </div>
 
       {/* Active Chat */}
-      <div className="w-1/2 flex flex-col bg-background/30">
+      <div className="w-full md:w-1/2 flex flex-col bg-background/30">
         {activeConversation ? (
           <>
             <div className="flex items-center p-4 border-b border-white/10">
@@ -266,7 +266,7 @@ export default function MessagesPage() {
       </div>
 
       {/* Contact Info */}
-      <div className="w-1/4 border-l border-white/10 flex flex-col">
+      <div className="w-full md:w-1/3 lg:w-1/4 border-t md:border-t-0 md:border-l border-white/10 flex-col hidden lg:flex">
         {activeConversation ? (
           <ScrollArea className="flex-1">
             <div className="flex flex-col items-center text-center p-6">

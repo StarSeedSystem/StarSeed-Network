@@ -60,7 +60,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { useUser } from "@/context/UserContext";
 
-const authRoutes = ["/login", "/signup"];
+const authRoutes = ["/login", "/signup", "/migrate"];
 
 // Context for Header
 type HeaderContextType = {
@@ -287,7 +287,7 @@ function AppHeader() {
     const { headerInfo } = useHeader();
     const pathname = usePathname();
 
-    const isSpecialPage = viewModePages.includes(pathname) || /^\/(community|politics\/proposal|event|party|study-group|federated-entity|chat-group)\//.test(pathname);
+    const isSpecialPage = viewModePages.includes(pathname) || /^\/(collection|community|politics\/proposal|event|party|study-group|federated-entity|chat-group)\//.test(pathname);
 
     
     // A mapping from path prefixes to their header info
@@ -315,7 +315,7 @@ function AppHeader() {
     const currentHeader = headerInfo || pageHeaders[pathname] || null;
 
     return (
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-xl md:px-6 justify-between">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-xl md:px-0 justify-between">
             <div className="flex items-center gap-4">
                 {isMobile && <Button variant="ghost" size="icon" onClick={toggleSidebar}><PanelLeft className="h-5 w-5"/></Button>}
                 {currentHeader && !isSpecialPage && (
@@ -343,35 +343,40 @@ function MainContent({ children }: { children: React.ReactNode }) {
     const { headerInfo } = useHeader();
     const pathname = usePathname();
 
-    const isSpecialPage = viewModePages.includes(pathname) || /^\/(community|politics\/proposal|event|party|study-group|federated-entity|chat-group)\//.test(pathname);
+    const isSpecialPage = viewModePages.includes(pathname) || /^\/(collection|community|politics\/proposal|event|party|study-group|federated-entity|chat-group)\//.test(pathname);
     const pageInfo = pageHeaders[pathname];
 
     return (
         <div className={cn(
-            "flex flex-col flex-1 transition-[margin-left] duration-300 ease-in-out",
+            "flex flex-col flex-1 transition-[margin-left] duration-300 ease-in-out h-screen",
             !isMobile && (state === 'expanded' ? "ml-[18rem]" : "ml-[4.5rem]")
         )}>
-            <AppHeader />
-            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-                 {pageInfo && !isSpecialPage && (
-                    <div className="mb-6 md:hidden">
-                        <div className="flex items-center gap-3">
-                            {pageInfo.icon}
-                            <h1 className="text-3xl font-bold font-headline">{pageInfo.title}</h1>
-                        </div>
-                        <p className="text-lg text-muted-foreground mt-2">{pageInfo.subtitle}</p>
-                    </div>
-                 )}
-                 {headerInfo && (
-                     <div className="mb-6">
-                         <div className="flex items-center gap-3">
-                             {headerInfo.icon}
-                             <h1 className="text-3xl font-bold font-headline">{headerInfo.title}</h1>
-                         </div>
-                         <p className="text-lg text-muted-foreground mt-2">{headerInfo.subtitle}</p>
-                     </div>
-                 )}
-                {children}
+           
+            <main className="flex-1 overflow-y-auto">
+                 <div className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
+                     <AppHeader />
+                      <div className="py-8">
+                        {pageInfo && !isSpecialPage && (
+                            <div className="mb-6 md:hidden">
+                                <div className="flex items-center gap-3">
+                                    {pageInfo.icon}
+                                    <h1 className="text-3xl font-bold font-headline">{pageInfo.title}</h1>
+                                </div>
+                                <p className="text-lg text-muted-foreground mt-2">{pageInfo.subtitle}</p>
+                            </div>
+                        )}
+                        {headerInfo && (
+                            <div className="mb-6">
+                                <div className="flex items-center gap-3">
+                                    {headerInfo.icon}
+                                    <h1 className="text-3xl font-bold font-headline">{headerInfo.title}</h1>
+                                </div>
+                                <p className="text-lg text-muted-foreground mt-2">{headerInfo.subtitle}</p>
+                            </div>
+                        )}
+                        {children}
+                      </div>
+                 </div>
             </main>
         </div>
     );
@@ -420,5 +425,3 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
-
-    
