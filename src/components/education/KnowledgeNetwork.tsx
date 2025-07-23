@@ -9,11 +9,12 @@ import { Button } from '@/components/ui/button';
 import { ChevronsRight, Search, FileText, BookOpen, Share2, Folder, ChevronRight, Lightbulb, Link as LinkIcon } from 'lucide-react';
 import { KnowledgeNode, UserPage } from '@/types/content-types';
 import { DocumentData } from 'firebase/firestore';
-import { FeedPost } from '../dashboard/FeedPost';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
+import { KnowledgePostItem } from './KnowledgePostItem';
+
 
 export type ViewMode = "list" | "map" | "network";
 export type NetworkType = "category" | "topic";
@@ -249,7 +250,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                         <CardDescription>{activeNode ? activeNode.description : "Haz clic en un ítem para explorarlo."}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ScrollArea className="h-[50vh] pr-2">
+                        <ScrollArea className="h-[50vh]">
                            <div className="space-y-6">
                             {/* Topics in this Category OR Categories this Topic belongs to */}
                             {activeNode && networkType === 'category' && relatedContent.topics.length > 0 && (
@@ -285,7 +286,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                                 relatedContent.posts.length > 0 ? (
                                     <div className="space-y-4">
                                         <h4 className="font-semibold flex items-center gap-2"><BookOpen className="h-4 w-4"/> Publicaciones Relacionadas</h4>
-                                        {relatedContent.posts.map(post => <FeedPost key={post.id} post={post as any}/>)}
+                                        {relatedContent.posts.map(post => <KnowledgePostItem key={post.id} post={post as any}/>)}
                                     </div>
                                 ) : (
                                     <div className="text-center text-muted-foreground py-10">
@@ -323,3 +324,5 @@ export const KnowledgeNetwork = (props: KnowledgeNetworkProps) => {
             return <ListView {...props} />;
     }
 };
+
+    
