@@ -9,11 +9,13 @@ import { MessageSquare, Repeat, Heart, Share, SendHorizonal, Dot } from "lucide-
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import { Textarea } from "../ui/textarea";
-import { PollBlockDisplay, PollData } from "../publish/PollBlock";
+import { PollData } from "../publish/PollBlock";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/UserContext";
+import { CommentSection } from "../politics/CommentSection";
+import { VotingSystem } from "../politics/VotingSystem";
 
 export interface FeedPostType {
   id: string;
@@ -36,7 +38,6 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
   const [isLiked, setIsLiked] = useState(false);
   const [isReposted, setIsReposted] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const [newComment, setNewComment] = useState("");
   const { toast } = useToast();
   const { user } = useUser();
 
@@ -55,28 +56,19 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
     }));
     setIsReposted(!isReposted);
   };
-
-  const handleAddComment = () => {
-      if (newComment.trim()) {
-        setPost(prev => ({ ...prev, comments: prev.comments + 1 }));
-        setNewComment("");
-      }
-  }
-
+  
   const handleVote = (blockIndex: number, optionIndex: number) => {
       if (!user) return toast({ variant: "destructive", title: "Necesitas iniciar sesión para votar." });
       
       const newBlocks = [...post.blocks!];
       const pollBlock = newBlocks[blockIndex] as PollData;
 
-      // In a real app, we'd check against a 'voters' list in the DB
-      // For now, this is a client-side simulation
       if (pollBlock.userVote !== undefined) {
           return toast({ variant: "destructive", title: "Ya has votado en esta encuesta." });
       }
 
       pollBlock.options[optionIndex].votes = (pollBlock.options[optionIndex].votes || 0) + 1;
-      pollBlock.userVote = optionIndex; // Mark that the user has voted
+      pollBlock.userVote = optionIndex; 
 
       setPost(prev => ({ ...prev, blocks: newBlocks }));
       toast({ title: "¡Voto registrado!"});
@@ -90,10 +82,9 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
     
     pollBlock.options.push({
         text: newOptionText,
-        votes: 1, // The proposer's vote is counted
+        votes: 1, 
+        proposer: { name: user.displayName || 'Anonymous', uid: user.uid },
     });
-
-    // In a real app, this would also add the proposer to the voters list.
     
     setPost(prev => ({ ...prev, blocks: newBlocks }));
     toast({ title: "Opción propuesta y añadida a la votación."});
@@ -102,6 +93,8 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
   const timeAgo = post.createdAt?.seconds 
     ? formatDistanceToNow(new Date(post.createdAt.seconds * 1000), { addSuffix: true, locale: es })
     : "ahora";
+
+  const pollBlockData = post.blocks?.find(b => b.type === 'poll') as PollData | undefined;
 
   return (
     <Card className="glass-card rounded-2xl overflow-hidden flex flex-col">
@@ -125,12 +118,13 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
         <h3 className="text-xl font-headline font-semibold">{post.title}</h3>
         <p className="text-foreground/90 whitespace-pre-wrap">{post.content}</p>
         
-        {post.blocks && post.blocks.map((block, index) => {
-            if (block.type === 'poll') {
-                return <PollBlockDisplay key={index} data={block} onVote={(optionIndex) => handleVote(index, optionIndex)} />;
-            }
-            return null;
-        })}
+        {pollBlockData && (
+          <VotingSystem 
+            poll={pollBlockData} 
+            onVote={(optionIndex) => handleVote(post.blocks!.findIndex(b => b.type === 'poll'), optionIndex)} 
+          />
+        )}
+
       </CardContent>
       <CardFooter className="flex flex-col items-start gap-4">
         {post.destinations && post.destinations.length > 0 && (
@@ -139,7 +133,7 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
                 <span>Publicado en:</span>
                 {post.destinations.map(dest => {
                     const destName = typeof dest === 'string' ? dest : dest.name;
-                    const destId = typeof dest === 'string' ? destName : dest.id;
+                    const destId = typeof dest === 'string' ? destName : dest.id || destName;
                     return <Badge variant="secondary" key={destId} className="font-normal">{destName}</Badge>
                 })}
             </div>
@@ -169,32 +163,13 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
             </Button>
         </div>
          {showComments && (
-            <div className="w-full pt-4 mt-4 border-t border-white/10 space-y-4">
-                 {/* In a real app, this would be a list of actual comments */}
-                <div className="flex gap-3">
-                     <Avatar className="h-8 w-8">
-                        <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="glowing astronaut" />
-                        <AvatarFallback>SN</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 space-y-2">
-                        <Textarea 
-                            placeholder="Escribe tu respuesta..." 
-                            className="bg-background/50 text-sm"
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                        />
-                        <div className="flex justify-end gap-2">
-                             {post.blocks?.some(b => b.type === 'poll') && (
-                                <Button size="sm" variant="outline" onClick={() => handleAddOptionFromComment(0, newComment)} disabled={!newComment.trim()}>
-                                    Proponer como Opción
-                                </Button>
-                             )}
-                            <Button size="sm" onClick={handleAddComment} disabled={!newComment.trim()}>
-                                Responder
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+            <div className="w-full pt-4 mt-4 border-t border-white/10">
+                <CommentSection 
+                    postId={post.id}
+                    onCommentPosted={() => setPost(prev => ({...prev, comments: prev.comments + 1}))}
+                    onOptionProposed={(newOptionText) => handleAddOptionFromComment(post.blocks!.findIndex(b => b.type === 'poll'), newOptionText)}
+                    isPoll={!!pollBlockData}
+                />
             </div>
         )}
       </CardFooter>
