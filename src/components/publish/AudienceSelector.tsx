@@ -48,16 +48,10 @@ export function AudienceSelector({ availablePages, selectedArea, selectedDestina
     const [typeFilter, setTypeFilter] = useState<PageType | 'all'>('all');
     
     const handleCheckedChange = (checked: boolean, page: UserPage) => {
-        // For 'politics', only allow a single selection.
-        if (selectedArea === 'politics') {
-            onSelectionChange(checked ? [page] : []);
-        } else {
-            // For other areas, allow multiple selections.
-            const newSelection = checked 
-                ? [...selectedDestinations, page] 
-                : selectedDestinations.filter(p => p.id !== page.id);
-            onSelectionChange(newSelection);
-        }
+        const newSelection = checked 
+            ? [...selectedDestinations, page] 
+            : selectedDestinations.filter(p => p.id !== page.id);
+        onSelectionChange(newSelection);
     };
 
     const filteredPages = useMemo(() => {
