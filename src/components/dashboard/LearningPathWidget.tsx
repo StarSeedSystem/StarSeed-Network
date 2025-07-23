@@ -18,6 +18,18 @@ const learningItems = [
         type: "Artículo",
         image: "https://placehold.co/600x400.png",
         imageHint: "leaf structure",
+    },
+    {
+        title: "Filosofía del Posthumanismo",
+        type: "Debate",
+        image: "https://placehold.co/600x400.png",
+        imageHint: "philosophy statue",
+    },
+    {
+        title: "Taller de Prompt-Craft Avanzado",
+        type: "Taller",
+        image: "https://placehold.co/600x400.png",
+        imageHint: "ai art generation",
     }
 ];
 
@@ -36,9 +48,9 @@ export function LearningPathWidget() {
         </CardTitle>
         <CardDescription>Continúa tu viaje de conocimiento.</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col">
-        <ScrollArea className="flex-grow">
-          <div className="space-y-4">
+      <CardContent className="flex-grow flex flex-col min-h-0">
+        <ScrollArea className="flex-grow -mx-2">
+          <div className="space-y-4 px-2">
               {learningItems.map((item, index) => (
                   <div key={index} className="flex items-center gap-4 group p-2 rounded-lg hover:bg-primary/10">
                       <div className="w-20 h-16 rounded-lg overflow-hidden relative shrink-0">

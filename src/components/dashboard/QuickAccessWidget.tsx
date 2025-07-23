@@ -38,9 +38,9 @@ export function QuickAccessWidget() {
         <CardDescription>Acceso directo a las áreas principales.</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col">
-        <div className="space-y-3 flex flex-col flex-grow justify-around">
+        <div className="space-y-3 flex flex-col flex-grow justify-around h-full">
             {quickAccessLinks.map((link) => (
-                <Button key={link.href} variant="outline" className="w-full justify-start h-auto py-3" asChild>
+                <Button key={link.href} variant="outline" className="w-full justify-start h-auto py-3 flex-grow" asChild>
                     <Link href={link.href}>
                        <link.icon className="h-5 w-5 mr-3 text-primary/80" />
                        <div className="flex flex-col items-start">

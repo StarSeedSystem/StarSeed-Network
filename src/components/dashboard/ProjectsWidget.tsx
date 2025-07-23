@@ -19,6 +19,18 @@ const projects = [
         progress: 100,
         entity: "E.F. Global"
     },
+    {
+        title: "Sistema de Riego Automatizado para Permacultura",
+        status: "En Progreso",
+        progress: 30,
+        entity: "Innovación Sostenible"
+    },
+    {
+        title: "Protocolo de Identidad Soberana v2",
+        status: "Pausado",
+        progress: 80,
+        entity: "Consejo de Ética Digital"
+    }
 ];
 
 export function ProjectsWidget() {
@@ -36,13 +48,13 @@ export function ProjectsWidget() {
         </CardTitle>
         <CardDescription>Seguimiento de los proyectos aprobados por la comunidad.</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col">
-        <ScrollArea className="flex-grow">
-            <div className="space-y-6">
+      <CardContent className="flex-grow flex flex-col min-h-0">
+        <ScrollArea className="flex-grow -mx-4">
+            <div className="space-y-6 px-4">
                 {projects.map((proj, index) => (
                     <div key={index}>
-                        <div className="flex justify-between items-center mb-1">
-                            <p className="font-semibold">{proj.title}</p>
+                        <div className="flex justify-between items-center mb-1 gap-4">
+                            <p className="font-semibold truncate">{proj.title}</p>
                             <div className="flex items-center gap-2 text-sm shrink-0 ml-2">
                               {proj.status === "Completado" && <CheckCircle className="h-4 w-4 text-sea-green"/>}
                               <span className={proj.status === "Completado" ? "text-sea-green" : "text-electric-lime"}>

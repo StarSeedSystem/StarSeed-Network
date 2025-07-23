@@ -19,6 +19,12 @@ const proposals = [
         status: "Debate Activo",
         isUrgent: false,
         entity: "E.F. Global"
+    },
+    {
+        title: "Fondo Universal para Creadores de Contenido",
+        status: "En Votación",
+        isUrgent: false,
+        entity: "Partido de la Conciencia Digital"
     }
 ];
 
