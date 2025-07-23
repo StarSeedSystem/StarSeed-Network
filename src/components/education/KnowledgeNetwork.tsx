@@ -35,15 +35,19 @@ const findNodeById = (nodes: KnowledgeNode[], id: string): KnowledgeNode | null 
     return null;
 };
 
-const getPathToNode = (nodes: KnowledgeNode[], nodeId: string): KnowledgeNode[] => {
+// CORRECTED LOGIC: Now considers the parentId to find the correct path in a complex graph.
+const getPathToNode = (nodes: KnowledgeNode[], nodeId: string, parentId?: string): KnowledgeNode[] => {
     const path: KnowledgeNode[] = [];
     
     function findPath(currentNodes: KnowledgeNode[], currentPath: KnowledgeNode[]): boolean {
         for (const node of currentNodes) {
             const newPath = [...currentPath, node];
             if (node.id === nodeId) {
-                path.push(...newPath);
-                return true;
+                // If a parentId is specified, ensure this node is in the correct branch.
+                if (!parentId || node.parentIds.includes(parentId)) {
+                    path.push(...newPath);
+                    return true;
+                }
             }
             if (node.children && findPath(node.children, newPath)) {
                 return true;
@@ -81,8 +85,9 @@ const ListView = ({ nodes, posts, selectionMode, selectedDestinations, onSelecti
     const handleNodeClick = (node: KnowledgeNode) => {
         if (searchTerm) {
             // When clicking from search results, construct the full path to that node
-            const pathToNode = getPathToNode(nodes, node.id);
-            setActivePath(pathToNode);
+            const currentParentId = activePath.length > 0 ? activePath[activePath.length - 1].id : undefined;
+            const pathToNode = getPathToNode(nodes, node.id, currentParentId);
+            setActivePath(pathToNode.length > 0 ? pathToNode : [node]); // Fallback to just the node if path isn't found
             setSearchTerm('');
         } else {
              setActivePath([...activePath, node]);
@@ -132,7 +137,7 @@ const ListView = ({ nodes, posts, selectionMode, selectedDestinations, onSelecti
                 <div className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
                      <Button variant="link" className="p-0 h-auto" onClick={() => setActivePath([])}>Raíz</Button>
                      {activePath.map((node, index) => (
-                         <React.Fragment key={node.id}>
+                         <React.Fragment key={`${node.id}-${index}`}>
                             <ChevronRight className="h-4 w-4" />
                             <Button variant="link" className="p-0 h-auto" onClick={() => handleBreadcrumbClick(index)}>{node.name}</Button>
                          </React.Fragment>
