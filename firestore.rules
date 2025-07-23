@@ -1,4 +1,3 @@
-
 rules_version = '2';
 
 service cloud.firestore {
@@ -9,14 +8,11 @@ service cloud.firestore {
     }
 
     // --- REGLAS PARA PERFILES DE USUARIO ---
-    // Cualquiera puede leer un perfil, pero solo el propietario puede escribir en él.
     match /users/{userId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Esta regla es VITAL para que la página de Colecciones funcione,
-    // ya que necesita buscar en todos los perfiles.
     match /{path=**}/users/{userId} {
       allow read: if true;
     }
@@ -44,30 +40,66 @@ service cloud.firestore {
     }
     
     // --- REGLAS PARA PÁGINAS PÚBLICAS Y SU CONTENIDO ANIDADO ---
-    function publicPageRules() {
-      return {
-        // Cualquiera puede leer la página principal
-        allow read: if true,
-        // Solo usuarios autenticados pueden crear o unirse (actualizar 'members')
-        allow create, update, delete: if isAuthenticated(),
-        
-        // --- BIBLIOTECA Y COLECCIONES PÚBLICAS ---
-        // Cualquiera autenticado puede contribuir a la biblioteca o a las colecciones de la página.
-        match /libraryItems/{itemId} {
-          allow read: if true,
-          allow create, update, delete: if isAuthenticated()
-        },
-        match /collections/{collectionId} {
-          allow read: if true,
-          allow create, update, delete: if isAuthenticated()
-        }
-      };
+
+    // Comunidades
+    match /communities/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+      
+      match /libraryItems/{itemId} {
+        allow read: if true;
+        allow create, update, delete: if isAuthenticated();
+      }
+      match /collections/{collectionId} {
+        allow read: if true;
+        allow create, update, delete: if isAuthenticated();
+      }
     }
 
-    match /communities/{docId} { rules: publicPageRules(); }
-    match /federated_entities/{docId} { rules: publicPageRules(); }
-    match /political_parties/{docId} { rules: publicPageRules(); }
-    match /study_groups/{docId} { rules: publicPageRules(); }
+    // Entidades Federadas
+    match /federated_entities/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+
+      match /libraryItems/{itemId} {
+        allow read: if true;
+        allow create, update, delete: if isAuthenticated();
+      }
+      match /collections/{collectionId} {
+        allow read: if true;
+        allow create, update, delete: if isAuthenticated();
+      }
+    }
+
+    // Partidos Políticos
+    match /political_parties/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+
+      match /libraryItems/{itemId} {
+        allow read: if true;
+        allow create, update, delete: if isAuthenticated();
+      }
+      match /collections/{collectionId} {
+        allow read: if true;
+        allow create, update, delete: if isAuthenticated();
+      }
+    }
+
+    // Grupos de Estudio
+    match /study_groups/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+
+      match /libraryItems/{itemId} {
+        allow read: if true;
+        allow create, update, delete: if isAuthenticated();
+      }
+      match /collections/{collectionId} {
+        allow read: if true;
+        allow create, update, delete: if isAuthenticated();
+      }
+    }
 
     // --- OTRAS COLECCIONES DE NIVEL SUPERIOR ---
     match /chat_groups/{docId} {
