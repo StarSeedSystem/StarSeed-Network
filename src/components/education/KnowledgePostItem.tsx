@@ -18,8 +18,8 @@ export function KnowledgePostItem({ post }: { post: FeedPostType }) {
     : "ahora";
 
     return (
-        <Card className="p-3 bg-background/50">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-x-4 gap-y-2">
+        <Card className="bg-background/50">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-x-4 gap-y-2 p-3">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                     <Avatar className="h-10 w-10 shrink-0">
                         <AvatarImage src={post.avatarUrl} alt={post.authorName} data-ai-hint={post.avatarHint} />
