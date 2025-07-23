@@ -83,9 +83,9 @@ export function PublicPageFeed({ pageId }: PublicPageFeedProps) {
                 posts.map((post) => (
                     <FeedPost key={post.id} post={{
                         id: post.id,
-                        author: post.authorName,
+                        authorName: post.authorName,
                         handle: post.handle,
-                        avatar: post.avatarUrl,
+                        avatarUrl: post.avatarUrl,
                         avatarHint: "user avatar",
                         title: post.title,
                         content: post.content,
