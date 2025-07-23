@@ -3,63 +3,59 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
   
-    // --- GENERAL PUBLIC CONTENT ---
-    // Anyone can read public pages, but only logged-in users can create them.
-    // Members can update (e.g., join/leave).
-    match /{pageCollection}/{slug} where pageCollection in ['communities', 'federated_entities', 'political_parties', 'study_groups', 'chat_groups', 'events'] {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null; // Allows joining/leaving
-      allow delete: if false; // Prevent deletion for now
+    // Función para verificar si un usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    // --- PROPOSALS AND POSTS ---
-    // Anyone can read posts/proposals. Only logged-in users can interact.
-    match /posts/{postId} {
-      allow read: if true;
-      allow create, update: if request.auth != null;
-      
-      // Comments Subcollection
-      match /comments/{commentId} {
-        allow read: if true;
-        allow create: if request.auth != null;
-        allow update, delete: if request.auth.uid == resource.data.author.uid;
-      }
-    }
-    
-    match /proposals/{proposalId} {
-      allow read: if true;
-      allow create, update: if request.auth != null;
-      
-      // Comments Subcollection for Proposals
-      match /comments/{commentId} {
-        allow read: if true;
-        allow create: if request.auth != null;
-        allow update, delete: if request.auth.uid == resource.data.author.uid;
-      }
-    }
-    
-    // --- USER PROFILES & COLLECTIONS ---
-    // Public read for user profiles, but only the user can write to their own profile.
+    // --- REGLAS PARA USUARIOS ---
+    // Cualquiera puede leer perfiles de usuario (necesario para ver autores de posts, etc.)
+    // pero solo el propietario del perfil puede actualizarlo.
     match /users/{userId} {
       allow read: if true;
-      allow create: if request.auth.uid == userId;
-      allow update: if request.auth.uid == userId;
-      allow delete: if false;
+      allow update, delete: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId;
     }
     
-    // This is the crucial rule for Collection queries. It allows anyone to
-    // query across all user documents, which is needed to find a specific collection.
-    // This is safe because the rule above still protects writing to other users' documents.
-    match /users/{document=**} {
+    // Regla para permitir la consulta de grupo en la colección de usuarios
+    // Esto es ESENCIAL para que la página de Colecciones funcione.
+    match /{path=**}/users/{userId} {
       allow read: if true;
     }
-    
-    // --- TUTORIALS ---
-    match /tutorials/{tutorialId} {
+
+    // --- REGLAS PARA PUBLICACIONES Y COMENTARIOS ---
+    // Cualquiera puede leer posts, pero solo los usuarios autenticados pueden crear/actualizar.
+    match /posts/{postId} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth.uid == resource.data.authorId;
+      allow create, update, delete: if isAuthenticated();
+      
+      // Cualquiera puede leer comentarios, pero solo los autenticados pueden comentar.
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create, update, delete: if isAuthenticated();
+      }
+    }
+    
+    // --- REGLAS PARA PROPUESTAS Y SUS COMENTARIOS ---
+    // Las propuestas son públicas, pero la creación/actualización requiere autenticación.
+    match /proposals/{proposalId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+
+      // Cualquiera puede leer comentarios, pero solo los autenticados pueden comentar.
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create, update, delete: if isAuthenticated();
+      }
+    }
+    
+    // --- REGLAS GENÉRICAS PARA PÁGINAS PÚBLICAS ---
+    // (Comunidades, Entidades, Partidos, Grupos de Estudio, Grupos de Chat, Eventos)
+    // Son de lectura pública, pero la creación y actualización (como unirse) requiere autenticación.
+    match /{collectionName}/{docId} 
+        where collectionName in ['communities', 'federated_entities', 'political_parties', 'study_groups', 'chat_groups', 'events', 'tutorials', 'cultural_posts'] {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
     }
   }
 }
