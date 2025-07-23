@@ -28,9 +28,9 @@ export function FederatedEntitySettings({ onAreaChange }: FederatedEntitySetting
                             <SelectValue placeholder="Seleccionar área..." />
                         </SelectTrigger>
                         <SelectContent className="glass-card">
-                            <SelectItem value="legislative">Legislativo (Propuestas)</SelectItem>
-                            <SelectItem value="executive">Ejecutivo (Proyectos, Anuncios)</SelectItem>
-                            <SelectItem value="judicial">Judicial (Casos, Disputas)</SelectItem>
+                            <SelectItem value="legislative">Legislativo (Leyes y Votaciones)</SelectItem>
+                            <SelectItem value="executive">Ejecutivo (Proyectos y Comunicados)</SelectItem>
+                            <SelectItem value="judicial">Judicial (Casos y Disputas)</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -38,7 +38,5 @@ export function FederatedEntitySettings({ onAreaChange }: FederatedEntitySetting
         </Card>
     );
 }
-
-    
 
     

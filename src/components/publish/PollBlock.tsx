@@ -83,7 +83,7 @@ export function PollBlock({ data, onChange, onRemove, isLegislative = false }: P
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label htmlFor="poll-question">Propuesta</Label>
+          <Label htmlFor="poll-question">Propuesta o Pregunta</Label>
           <Input id="poll-question" placeholder="Escribe la propuesta o pregunta a votar..." value={data.question} onChange={handleQuestionChange} />
         </div>
         <div className="space-y-2">
@@ -106,3 +106,5 @@ export function PollBlock({ data, onChange, onRemove, isLegislative = false }: P
     </Card>
   );
 }
+
+    

@@ -1,9 +1,9 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -12,90 +12,64 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
-    // --- User Profiles ---
-    match /users/{userId} {
+    // Public collections can be read by anyone
+    match /communities/{docId} {
       allow read: if true;
-      allow create: if isAuthenticated() && isOwner(userId);
-      allow update: if isAuthenticated() && isOwner(userId);
-      allow delete: if false; // Do not allow users to delete their own profiles
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated() && isOwner(resource.data.creatorId);
     }
-
-    // --- Public Pages (Communities, Entities, etc.) ---
-    match /communities/{communityId} {
+     match /federated_entities/{docId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated(); // Allow joining/leaving
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated() && isOwner(resource.data.creatorId);
+    }
+     match /political_parties/{docId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated() && isOwner(resource.data.creatorId);
+    }
+     match /study_groups/{docId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated() && isOwner(resource.data.creatorId);
+    }
+     match /chat_groups/{docId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated() && isOwner(resource.data.creatorId);
+    }
+     match /events/{docId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated();
       allow delete: if isAuthenticated() && isOwner(resource.data.creatorId);
     }
 
-    match /federated_entities/{entityId} {
+    // Posts and proposals can be read by anyone
+     match /posts/{docId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if isAuthenticated() && isOwner(resource.data.creatorId);
-    }
-    
-    match /political_parties/{partyId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if isAuthenticated() && isOwner(resource.data.creatorId);
-    }
-
-    match /study_groups/{groupId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if isAuthenticated() && isOwner(resource.data.creatorId);
-    }
-
-    match /chat_groups/{groupId} {
-        allow read: if true;
-        allow create: if isAuthenticated();
-        allow update: if isAuthenticated();
-        allow delete: if isAuthenticated() && isOwner(resource.data.creatorId);
-    }
-
-    // --- Content (Posts, Proposals) ---
-    match /posts/{postId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated(); // For likes, comments, etc.
+      allow create, update: if isAuthenticated();
       allow delete: if isAuthenticated() && isOwner(resource.data.authorId);
     }
-    
-    match /proposals/{proposalId} {
-        allow read: if true;
-        allow create: if isAuthenticated();
-        allow update: if isAuthenticated(); // For voting
-        allow delete: if isAuthenticated() && isOwner(resource.data.authorId);
-    }
-
-    match /events/{eventId} {
-        allow read: if true;
-        allow create: if isAuthenticated();
-        allow update: if isAuthenticated(); // For attending
-        allow delete: if isAuthenticated() && isOwner(resource.data.creatorId);
-    }
-    
-    match /tutorials/{tutorialId} {
-        allow read: if true;
-        allow create: if isAuthenticated();
-        allow update: if isAuthenticated() && isOwner(resource.data.authorId);
-        allow delete: if isAuthenticated() && isOwner(resource.data.authorId);
-    }
-    
-    // --- Sub-collections (Comments) ---
-    match /posts/{postId}/comments/{commentId} {
+     match /proposals/{docId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() && isOwner(resource.data.author.uid);
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated() && isOwner(resource.data.authorId);
     }
 
-     match /proposals/{proposalId}/comments/{commentId} {
+    // User profiles are public, but can only be created/updated by their owner
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated() && isOwner(userId);
+      allow delete: if false; // Generally, don't allow users to delete their own profiles
+    }
+
+    // Comments can be read by anyone, created by authenticated users, and deleted by their author.
+    match /{collection}/{docId}/comments/{commentId} {
       allow read: if true;
       allow create: if isAuthenticated();
       allow update, delete: if isAuthenticated() && isOwner(resource.data.author.uid);
     }
   }
 }
+
+    

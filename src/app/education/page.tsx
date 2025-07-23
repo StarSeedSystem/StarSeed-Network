@@ -6,29 +6,41 @@ import Link from "next/link";
 import { collection, onSnapshot, query, where, getDocs, DocumentData } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, PlusCircle, Loader2 } from "lucide-react";
+import { BrainCircuit, BookOpen, PlusCircle, Loader2, List, Map, Share2, ChevronDown } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { FeedPost } from "@/components/dashboard/FeedPost";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdvancedFilter, FilterState } from "@/components/politics/AdvancedFilter";
+import type { AnyEntity } from "@/types/content-types";
+import { ConnectionCard } from "@/components/participations/ConnectionCard";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
+type SubArea = "classes" | "articles";
+type ViewMode = "list" | "map" | "network";
 
 export default function EducationPage() {
   const [posts, setPosts] = useState<DocumentData[]>([]);
+  const [myPages, setMyPages] = useState<AnyEntity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingPages, setIsLoadingPages] = useState(true);
   const { user } = useUser();
    const [filters, setFilters] = useState<FilterState>({
     entity: 'all', status: 'all', tags: '', saved: false, collection: 'all'
   });
+  const [activeSubArea, setActiveSubArea] = useState<SubArea>("articles");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
+
 
   useEffect(() => {
     if (!user) {
         setIsLoading(false);
+        setIsLoadingPages(false);
         return;
     }
 
+    // This query now fetches all documents from the 'posts' collection where the 'area' is 'education'
     const postsQuery = query(
         collection(db, "posts"),
         where("area", "==", "education")
@@ -36,59 +48,70 @@ export default function EducationPage() {
 
     const unsubscribePosts = onSnapshot(postsQuery, async (snapshot) => {
         const fetchedPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        const collectionsToQuery = ["communities", "study_groups"];
-        const userPagesIds: string[] = [user.uid];
-
-        for (const collectionName of collectionsToQuery) {
-            const q = query(collection(db, collectionName), where('members', 'array-contains', user.uid));
-            const userPagesSnapshot = await getDocs(q);
-            userPagesSnapshot.forEach(doc => userPagesIds.push(doc.id));
-        }
-
-        const filteredPosts = fetchedPosts.filter(post => 
-            post.destinations.some((dest: any) => userPagesIds.includes(dest.id))
-        );
         
-        // Sort client-side
-        const sortedPosts = filteredPosts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+        // This client-side filtering logic remains important for personalized feeds if needed,
+        // but for a general view, we can show all educational posts.
+        const sortedPosts = fetchedPosts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
         setPosts(sortedPosts);
         setIsLoading(false);
     });
+    
+    const fetchMyPages = async () => {
+        setIsLoadingPages(true);
+        const pages: AnyEntity[] = [];
+        const collectionsToQuery = [
+            { name: "study_groups", type: "study_group" },
+        ] as const;
+
+        for (const { name, type } of collectionsToQuery) {
+            const q = query(collection(db, name), where('members', 'array-contains', user.uid));
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach((doc) => {
+                pages.push({ ...doc.data(), type } as AnyEntity);
+            });
+        }
+        setMyPages(pages);
+        setIsLoadingPages(false);
+    };
+
+    fetchMyPages();
 
     return () => unsubscribePosts();
   }, [user]);
 
+  const filteredPosts = posts.filter(post => post.subArea === activeSubArea);
+
   const renderFeed = () => {
     if (isLoading) return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin"/></div>
-    if (posts.length === 0) return (
+    if (filteredPosts.length === 0) return (
         <Card className="text-center py-16 bg-card/50 rounded-lg">
-            <h3 className="text-xl font-semibold">No Hay Contenido Educativo Todavía</h3>
+            <h3 className="text-xl font-semibold">No Hay Contenido en esta Sección Todavía</h3>
             <p className="text-muted-foreground mt-2">¡Sé el primero en compartir tu conocimiento!</p>
         </Card>
     )
     return (
         <div className="space-y-6">
-            {posts.map((post) => (
-                <FeedPost key={post.id} post={{
-                    id: post.id,
-                    authorName: post.authorName,
-                    handle: post.handle,
-                    avatarUrl: post.avatarUrl,
-                    avatarHint: "user avatar",
-                    title: post.title,
-                    content: post.content,
-                    comments: post.comments,
-                    reposts: post.reposts,
-                    likes: post.likes,
-                    destinations: post.destinations,
-                    blocks: post.blocks,
-                    createdAt: post.createdAt,
-                }}/>
+            {filteredPosts.map((post) => (
+                <FeedPost key={post.id} post={{...post}}/>
             ))}
         </div>
     )
+  }
+
+  const renderMyPages = () => {
+      if (isLoadingPages) return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin"/></div>
+      if (myPages.length === 0) return (
+          <Card className="text-center py-16 bg-card/50 rounded-lg">
+              <h3 className="text-xl font-semibold">No participas en ningún Grupo de Estudio.</h3>
+              <p className="text-muted-foreground mt-2">Explora y únete a grupos para aprender colaborativamente.</p>
+          </Card> 
+      )
+      return (
+           <div className="space-y-4">
+              {myPages.map(page => <ConnectionCard key={`${page.type}-${page.id}`} item={page} />)}
+          </div>
+      )
   }
   
   return (
@@ -104,21 +127,51 @@ export default function EducationPage() {
       />
       
        <Tabs defaultValue="publications" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-card/60 rounded-xl h-auto">
+            <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 bg-card/60 rounded-xl h-auto">
                 <TabsTrigger value="publications">Publicaciones</TabsTrigger>
-                <TabsTrigger value="pages">Mis Grupos de Estudio</TabsTrigger>
+                <TabsTrigger value="my-groups">Mis Grupos de Estudio</TabsTrigger>
+                <TabsTrigger value="ai-agent">Agente IA Educativo</TabsTrigger>
             </TabsList>
             <TabsContent value="publications" className="mt-6 space-y-6">
+                 <Tabs defaultValue={activeSubArea} onValueChange={(value) => setActiveSubArea(value as SubArea)}>
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <TabsList className="grid w-full grid-cols-2 bg-card/80 rounded-xl h-auto max-w-sm">
+                            <TabsTrigger value="articles">Artículos</TabsTrigger>
+                            <TabsTrigger value="classes">Clases</TabsTrigger>
+                        </TabsList>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">
+                                    {viewMode === 'list' && <List className="mr-2 h-4 w-4"/>}
+                                    {viewMode === 'map' && <Map className="mr-2 h-4 w-4"/>}
+                                    {viewMode === 'network' && <Share2 className="mr-2 h-4 w-4"/>}
+                                    Vista: {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}
+                                    <ChevronDown className="ml-2 h-4 w-4"/>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="glass-card">
+                                <DropdownMenuItem onClick={() => setViewMode('list')}><List className="mr-2 h-4 w-4"/> Lista</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setViewMode('map')} disabled><Map className="mr-2 h-4 w-4"/> Mapa Conceptual</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setViewMode('network')} disabled><Share2 className="mr-2 h-4 w-4"/> Red 3D</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </Tabs>
                 <AdvancedFilter filters={filters} onFilterChange={setFilters} />
                 {renderFeed()}
             </TabsContent>
-            <TabsContent value="pages" className="mt-6">
+            <TabsContent value="my-groups" className="mt-6">
+                {renderMyPages()}
+            </TabsContent>
+            <TabsContent value="ai-agent" className="mt-6">
                  <Card className="text-center py-16 bg-card/50 rounded-lg">
-                    <h3 className="text-xl font-semibold">Función en Construcción</h3>
-                    <p className="text-muted-foreground mt-2">Aquí verás los grupos de estudio en los que participas.</p>
+                    <h3 className="text-xl font-semibold flex items-center justify-center gap-2"><BrainCircuit className="h-6 w-6"/>Función en Construcción</h3>
+                    <p className="text-muted-foreground mt-2">Aquí podrás interactuar con un agente de IA para que te guíe en tu aprendizaje.</p>
                 </Card> 
             </TabsContent>
         </Tabs>
     </div>
   );
 }
+
+    

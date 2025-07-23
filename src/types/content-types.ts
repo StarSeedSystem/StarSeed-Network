@@ -1,10 +1,4 @@
 
-
-
-
-
-
-
 export interface Author {
     name: string;
     avatar: string;
@@ -21,6 +15,22 @@ export interface BaseContent {
     description: string;
 }
 
+export interface Badge {
+    id: string;
+    name: string;
+    description: string;
+    icon: string; // Lucide icon name or image URL
+}
+
+export interface Mission {
+    id: string;
+    title: string;
+    description: string;
+    type: 'practice' | 'exam' | 'attendance';
+    badge?: Badge;
+}
+
+
 export interface CulturalContent extends BaseContent {
     // Cultural-specific properties can go here
 }
@@ -28,6 +38,10 @@ export interface CulturalContent extends BaseContent {
 export interface EducationalContent extends BaseContent {
     category: string;
     level: "Principiante" | "Intermedio" | "Avanzado";
+    subArea: 'class' | 'article';
+    categories: string[];
+    prerequisites: string[];
+    missions: Mission[];
 }
 
 export interface NatalChartData {
@@ -130,3 +144,5 @@ export interface User {
     showLibrary: 'public' | 'private' | 'friends';
   };
 }
+
+    
