@@ -250,7 +250,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                         <CardDescription>{activeNode ? activeNode.description : "Haz clic en un ítem para explorarlo."}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ScrollArea className="h-[50vh] pr-3">
+                        <ScrollArea className="h-[50vh]">
                            <div className="space-y-6">
                             {/* Topics in this Category OR Categories this Topic belongs to */}
                             {activeNode && networkType === 'category' && relatedContent.topics.length > 0 && (
