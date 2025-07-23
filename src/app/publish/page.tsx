@@ -29,7 +29,7 @@ import { KnowledgeNode } from "@/types/content-types";
 import knowledgeData from "@/data/knowledge-network.json";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { LibraryGrid, LibraryItem } from "../profile/LibraryGrid";
+import { LibraryGrid, LibraryItem } from "@/components/profile/LibraryGrid";
 
 
 type Step = "area" | "context" | "canvas";
@@ -193,9 +193,9 @@ export default function PublishPage() {
 
     const handleLibraryItemSelected = (item: LibraryItem) => {
         // For now, we'll just append a markdown-style image link to the content
-        const markdownLink = `\n![${item.title}](${item.thumbnail})\n`;
+        const markdownLink = `\n![${"item.title"}](${"item.thumbnail"})\n`;
         setContent(prev => prev + markdownLink);
-        toast({ title: "Contenido Añadido", description: `${item.title} ha sido añadido al cuerpo de la publicación.`});
+        toast({ title: "Contenido Añadido", description: `${"item.title"} ha sido añadido al cuerpo de la publicación.`});
         setIsLibraryOpen(false);
     }
     
@@ -386,8 +386,6 @@ export default function PublishPage() {
                                             </DialogTrigger>
                                             <DialogContent className="max-w-4xl h-[80vh] glass-card flex flex-col">
                                                  <LibraryGrid 
-                                                    items={[]} 
-                                                    folders={[]}
                                                     selectionMode={true}
                                                     onItemSelected={handleLibraryItemSelected}
                                                   />
