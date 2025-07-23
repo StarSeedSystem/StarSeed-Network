@@ -11,6 +11,7 @@ import { BackButton } from "@/components/utils/BackButton";
 import { AnyRecommendedPage } from "@/types/content-types";
 import { ConnectionCard } from "@/components/participations/ConnectionCard";
 import { LibraryGrid, LibraryItem } from "@/components/profile/LibraryGrid";
+import Image from "next/image";
 
 // Hardcoded library items for now
 const allLibraryItems: LibraryItem[] = [

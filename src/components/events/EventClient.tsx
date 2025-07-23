@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useUser } from "@/context/UserContext";
 import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "@/data/firebase";
+import { SaveToCollectionDialog } from "../utils/SaveToCollectionDialog";
 
 interface EventClientProps {
   slug: string;
@@ -112,23 +113,26 @@ export function EventClient({ slug }: EventClientProps) {
               <span>{attendeeCount} Asistentes</span>
             </div>
           </div>
-          <Button
-            size="lg"
-            className={cn(
-                "mt-6 w-full sm:w-auto",
-                isAttending && "bg-green-600 hover:bg-green-700"
-            )}
-            onClick={handleAttendClick}
-            disabled={!user || isUpdatingAttendance}
-          >
-            {isUpdatingAttendance ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            ) : isAttending ? (
-                <><Check className="mr-2 h-5 w-5" /> Asistiendo</>
-            ) : (
-                "Asistiré"
-            )}
-          </Button>
+          <div className="flex items-center gap-2 mt-6">
+            <Button
+              size="lg"
+              className={cn(
+                  "w-full sm:w-auto",
+                  isAttending && "bg-green-600 hover:bg-green-700"
+              )}
+              onClick={handleAttendClick}
+              disabled={!user || isUpdatingAttendance}
+            >
+              {isUpdatingAttendance ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : isAttending ? (
+                  <><Check className="mr-2 h-5 w-5" /> Asistiendo</>
+              ) : (
+                  "Asistiré"
+              )}
+            </Button>
+            <SaveToCollectionDialog pageId={event.id} pageName={event.name} />
+          </div>
         </div>
       </div>
       <div className="px-4 sm:px-8 prose dark:prose-invert max-w-none text-foreground/90">
