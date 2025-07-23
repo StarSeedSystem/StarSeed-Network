@@ -25,9 +25,9 @@ export function KnowledgePostItem({ post }: { post: FeedPostType }) {
                         <AvatarImage src={post.avatarUrl} alt={post.authorName} data-ai-hint={post.avatarHint} />
                         <AvatarFallback>{post.authorName.substring(0, 2)}</AvatarFallback>
                     </Avatar>
-                    <div className="flex-grow overflow-hidden">
+                    <div className="flex-grow overflow-hidden min-w-0">
                         <p className="font-semibold truncate">{post.title}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground truncate">
                             por {post.authorName} • {timeAgo}
                         </p>
                     </div>
@@ -42,3 +42,5 @@ export function KnowledgePostItem({ post }: { post: FeedPostType }) {
     )
 
 }
+
+    

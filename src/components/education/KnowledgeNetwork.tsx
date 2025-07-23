@@ -252,10 +252,9 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                     <CardContent className="space-y-6">
                         <ScrollArea className="h-[50vh]">
                            <div className="space-y-6">
-                            {/* Topics in this Category OR Categories this Topic belongs to */}
                             {activeNode && networkType === 'category' && relatedContent.topics.length > 0 && (
                                 <div className="space-y-2">
-                                    <h4 className="font-semibold flex items-center gap-2"><FileText className="h-4 w-4"/> Temas en esta Categoría</h4>
+                                    <div className="flex items-center gap-2"><FileText className="h-4 w-4"/><h4 className="font-semibold">Temas en esta Categoría</h4></div>
                                     <div className="flex flex-wrap gap-2">
                                         {relatedContent.topics.map(topic => (
                                             <Button key={topic.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
@@ -269,7 +268,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
 
                             {activeNode && networkType !== 'category' && relatedContent.categories.length > 0 && (
                                 <div className="space-y-2">
-                                    <h4 className="font-semibold flex items-center gap-2"><LinkIcon className="h-4 w-4"/> Vinculado en Categorías</h4>
+                                    <div className="flex items-center gap-2"><LinkIcon className="h-4 w-4"/><h4 className="font-semibold">Vinculado en Categorías</h4></div>
                                     <div className="flex flex-wrap gap-2">
                                         {relatedContent.categories.map(cat => (
                                             <Button key={cat.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
@@ -281,11 +280,10 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                                 </div>
                             )}
 
-                            {/* Posts */}
                             {activeNode && (
                                 relatedContent.posts.length > 0 ? (
                                     <div className="space-y-4">
-                                        <h4 className="font-semibold flex items-center gap-2"><BookOpen className="h-4 w-4"/> Publicaciones Relacionadas</h4>
+                                        <div className="flex items-center gap-2"><BookOpen className="h-4 w-4"/><h4 className="font-semibold">Publicaciones Relacionadas</h4></div>
                                         {relatedContent.posts.map(post => <KnowledgePostItem key={post.id} post={post as any}/>)}
                                     </div>
                                 ) : (
@@ -324,3 +322,5 @@ export const KnowledgeNetwork = (props: KnowledgeNetworkProps) => {
             return <ListView {...props} />;
     }
 };
+
+    
