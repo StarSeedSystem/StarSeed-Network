@@ -7,7 +7,7 @@ import { collection, onSnapshot, query, where, getDocs, DocumentData } from "fir
 import { db } from "@/data/firebase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BrainCircuit, BookOpen, PlusCircle, Loader2, List, Map, Share2, ChevronDown, FileText, Folder, Network, Layers } from "lucide-react";
+import { BrainCircuit, BookOpen, PlusCircle, Loader2, List, Share2, ChevronDown, FileText, Folder, Network, Layers } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { FeedPost } from "@/components/dashboard/FeedPost";
 import { PageHeader } from "@/components/layout/PageHeader";
