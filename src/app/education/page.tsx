@@ -7,7 +7,7 @@ import { collection, onSnapshot, query, where, getDocs, DocumentData } from "fir
 import { db } from "@/data/firebase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BrainCircuit, BookOpen, PlusCircle, Loader2, List, Map, Share2, ChevronDown } from "lucide-react";
+import { BrainCircuit, BookOpen, PlusCircle, Loader2, List, Map, Share2, ChevronDown, FileText } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { FeedPost } from "@/components/dashboard/FeedPost";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -28,6 +28,8 @@ export default function EducationPage() {
   const { user } = useUser();
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [knowledgeNodes, setKnowledgeNodes] = useState<KnowledgeNode[]>([]);
+  const [activeTab, setActiveTab] = useState("knowledge-network");
+  const [articleFilter, setArticleFilter] = useState<"all" | "class" | "article">("all");
 
   useEffect(() => {
     // Load knowledge network data from JSON
@@ -90,6 +92,11 @@ export default function EducationPage() {
       )
   }
   
+  const filteredPosts = useMemo(() => {
+    if (articleFilter === 'all') return posts;
+    return posts.filter(p => p.subArea === articleFilter);
+  }, [posts, articleFilter]);
+  
   return (
     <div className="space-y-8">
       <PageHeader
@@ -102,9 +109,10 @@ export default function EducationPage() {
         }
       />
       
-       <Tabs defaultValue="knowledge-network" className="w-full">
-            <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 bg-card/60 rounded-xl h-auto">
+       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-1 md:grid-cols-4 bg-card/60 rounded-xl h-auto">
                 <TabsTrigger value="knowledge-network">Red de Conocimiento</TabsTrigger>
+                <TabsTrigger value="publications">Publicaciones</TabsTrigger>
                 <TabsTrigger value="my-groups">Mis Grupos de Estudio</TabsTrigger>
                 <TabsTrigger value="ai-agent">Agente IA Educativo</TabsTrigger>
             </TabsList>
@@ -142,6 +150,24 @@ export default function EducationPage() {
                         />
                     </CardContent>
                 </Card>
+            </TabsContent>
+            <TabsContent value="publications" className="mt-6 space-y-4">
+                <Tabs value={articleFilter} onValueChange={(v) => setArticleFilter(v as any)} className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="all">Todo</TabsTrigger>
+                        <TabsTrigger value="article"><FileText className="mr-2 h-4 w-4"/>Artículos</TabsTrigger>
+                        <TabsTrigger value="class"><BookOpen className="mr-2 h-4 w-4"/>Clases</TabsTrigger>
+                    </TabsList>
+                </Tabs>
+                <div className="space-y-6">
+                    {isLoading && <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin"/></div>}
+                    {!isLoading && filteredPosts.length === 0 && (
+                        <Card className="text-center py-16 bg-card/50 rounded-lg">
+                            <h3 className="text-xl font-semibold">No hay publicaciones de este tipo.</h3>
+                        </Card>
+                    )}
+                    {filteredPosts.map(post => <FeedPost key={post.id} post={post as any}/>)}
+                </div>
             </TabsContent>
             <TabsContent value="my-groups" className="mt-6">
                 {renderMyPages()}

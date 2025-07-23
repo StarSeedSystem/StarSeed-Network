@@ -1,6 +1,7 @@
 
 
 
+
 export interface Author {
     name: string;
     avatar: string;
@@ -72,8 +73,9 @@ export interface KnowledgeNode {
     id: string;
     name: string;
     description: string;
-    relatedIds: string[];
-    type: 'category' | 'topic';
+    type: 'category' | 'topic' | 'concept';
+    parentIds: string[];
+    children?: KnowledgeNode[];
 }
 
 export interface UserPage {
@@ -161,5 +163,3 @@ export interface User {
     showLibrary: 'public' | 'private' | 'friends';
   };
 }
-
-    
