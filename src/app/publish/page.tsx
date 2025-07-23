@@ -2,11 +2,11 @@
 "use client";
 
 import * as React from "react";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { db } from "@/data/firebase";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, query, where, getDocs, DocumentData } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
@@ -20,20 +20,11 @@ import { AudienceSelector, UserPage } from "@/components/publish/AudienceSelecto
 import { PollBlock, PollData } from "@/components/publish/PollBlock";
 import { FederatedEntitySettings } from "@/components/publish/FederatedEntitySettings";
 import { NewsSettings } from "@/components/publish/NewsSettings";
+import { LegislativeSettings, LegislativeData } from "@/components/publish/LegislativeSettings";
 
 type Step = "area" | "context" | "canvas";
 type Area = "politics" | "education" | "culture";
-type Block = PollData; // Will be extended with more block types
-
-// Mock data for user's pages
-const mockAvailablePages: UserPage[] = [
-    { id: "user123", name: "Mi Perfil Personal", type: "profile", areas: ["education", "culture"] },
-    { id: "innovacion-sostenible", name: "Innovación Sostenible", type: "community", areas: ["education", "culture"] },
-    { id: "art-ai-collective", name: "Art-AI Collective", type: "community", areas: ["culture"] },
-    { id: "consejo-etica-digital", name: "Consejo de Ética Digital", type: "federation", areas: ["politics"] },
-    { id: "partido-conciencia-digital", name: "Partido Conciencia Digital", type: "political_party", areas: ["politics"] },
-    { id: "exploradores-cuanticos", name: "Exploradores Cuánticos", type: "study_group", areas: ["education"] },
-];
+type Block = PollData;
 
 export default function PublishPage() {
     const router = useRouter();
@@ -44,6 +35,7 @@ export default function PublishPage() {
     const [step, setStep] = useState<Step>("area");
     const [selectedArea, setSelectedArea] = useState<Area | null>(null);
     const [federationArea, setFederationArea] = useState<string | null>(null);
+    const [availablePages, setAvailablePages] = useState<UserPage[]>([]);
 
     // Content State
     const [title, setTitle] = useState("");
@@ -52,30 +44,77 @@ export default function PublishPage() {
     const [destinations, setDestinations] = useState<UserPage[]>([]);
     const [isNews, setIsNews] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [legislativeData, setLegislativeData] = useState<LegislativeData>({});
 
     // Derived State
     const isFederationSelected = useMemo(() => destinations.some(d => d.type === 'federation'), [destinations]);
     const isLegislative = useMemo(() => isFederationSelected && federationArea === 'legislative', [isFederationSelected, federationArea]);
 
+    useEffect(() => {
+        const fetchUserPages = async () => {
+            if (!authUser || !profile) return;
+
+            setIsLoading(true);
+            const userPages: UserPage[] = [];
+
+            // Add user's personal profile
+            userPages.push({
+                id: authUser.uid,
+                name: "Mi Perfil Personal",
+                type: "profile",
+                areas: ["education", "culture", "politics"]
+            });
+
+            const collectionsToQuery = [
+                { name: "communities", type: 'community', areas: ["education", "culture"] },
+                { name: "federated_entities", type: 'federation', areas: ["politics"] },
+                { name: "political_parties", type: 'political_party', areas: ["politics"] },
+                { name: "study_groups", type: 'study_group', areas: ["education"] },
+            ] as const;
+
+            for (const { name, type, areas } of collectionsToQuery) {
+                const q = query(collection(db, name), where('members', 'array-contains', authUser.uid));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    userPages.push({
+                        id: doc.id,
+                        name: data.name,
+                        type: type,
+                        areas: areas
+                    });
+                });
+            }
+            
+            setAvailablePages(userPages);
+            setIsLoading(false);
+        };
+
+        fetchUserPages();
+
+    }, [authUser, profile]);
+
     const handleFederationAreaChange = useCallback((area: string | null) => {
         setFederationArea(area);
-        if (area === 'legislative') {
-            // Add legislative poll block if it doesn't exist
-            setBlocks(prev => {
-                if (!prev.some(b => b.isLegislative)) {
-                    return [...prev, { type: 'poll', question: 'Propuesta Legislativa', options: [{ text: "A favor" }, { text: "En contra" }], isLegislative: true }];
-                }
-                return prev;
-            });
-        } else {
-            // Remove legislative poll block if area is changed from legislative
-            setBlocks(prev => prev.filter(b => !b.isLegislative));
-        }
     }, []);
 
     const handleAreaSelect = (area: Area) => {
         setSelectedArea(area);
         setStep("context");
+    };
+    
+    const handleNextToCanvas = () => {
+        if (isLegislative) {
+            setBlocks(prev => {
+                if (!prev.some(b => b.isLegislative)) {
+                    return [...prev, { type: 'poll', question: '', options: [{ text: "A favor" }, { text: "En contra" }], isLegislative: true }];
+                }
+                return prev;
+            });
+        } else {
+             setBlocks(prev => prev.filter(b => !b.isLegislative));
+        }
+        setStep("canvas");
     };
 
     const resetState = () => {
@@ -107,17 +146,25 @@ export default function PublishPage() {
     const removeBlock = useCallback((index: number) => {
         setBlocks(prev => prev.filter((_, i) => i !== index));
     }, []);
-
+    
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!authUser || !profile) return toast({ variant: "destructive", title: "Necesitas iniciar sesión para publicar." });
         if (destinations.length === 0) return toast({ variant: "destructive", title: "Por favor, selecciona al menos un destino." });
         if (!title.trim() || !content.trim()) return toast({ variant: "destructive", title: "Por favor, completa el título y el contenido." });
         if (isLegislative && !blocks.some(b => b.isLegislative)) return toast({ variant: "destructive", title: "Las propuestas legislativas deben tener un bloque de votación." });
-
+        
         setIsLoading(true);
 
         try {
+            // Find the poll block to include legislative data
+            const finalBlocks = blocks.map(b => {
+                if (b.type === 'poll' && b.isLegislative) {
+                    return { ...b, legislativeData };
+                }
+                return b;
+            });
+
             await addDoc(collection(db, "posts"), {
                 authorId: authUser.uid,
                 authorName: profile.name,
@@ -125,7 +172,7 @@ export default function PublishPage() {
                 avatarUrl: profile.avatarUrl,
                 title,
                 content,
-                blocks,
+                blocks: finalBlocks,
                 destinations: destinations.map(({ id, name, type }) => ({ id, name, type })),
                 area: selectedArea,
                 subArea: federationArea,
@@ -189,9 +236,11 @@ export default function PublishPage() {
                             <div>
                                 <Label className="text-base font-semibold">Destino(s) de la Publicación</Label>
                                 <p className="text-sm text-muted-foreground mb-2">Selecciona las páginas donde quieres que aparezca esta publicación.</p>
-                                {selectedArea && (
+                                {isLoading ? (
+                                    <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin"/></div>
+                                ) : selectedArea && (
                                     <AudienceSelector
-                                        availablePages={mockAvailablePages}
+                                        availablePages={availablePages}
                                         selectedArea={selectedArea}
                                         selectedDestinations={destinations}
                                         onSelectionChange={setDestinations}
@@ -203,7 +252,7 @@ export default function PublishPage() {
                             )}
                         </CardContent>
                          <div className="p-6 flex justify-end">
-                            <Button size="lg" onClick={() => setStep('canvas')} disabled={destinations.length === 0 || (isFederationSelected && !federationArea)}>
+                            <Button size="lg" onClick={handleNextToCanvas} disabled={destinations.length === 0 || (isFederationSelected && !federationArea)}>
                                 Ir al Lienzo de Creación
                             </Button>
                          </div>
@@ -255,6 +304,10 @@ export default function PublishPage() {
                                         </Button>
                                     </CardContent>
                                 </Card>
+                                
+                                {isLegislative && (
+                                    <LegislativeSettings data={legislativeData} onChange={setLegislativeData} />
+                                )}
 
                                 <Card className="glass-card">
                                      <CardHeader><CardTitle>Configuración</CardTitle></CardHeader>
@@ -284,3 +337,5 @@ export default function PublishPage() {
         </div>
     );
 }
+
+      
