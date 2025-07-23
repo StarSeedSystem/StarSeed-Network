@@ -8,28 +8,24 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // --- REGLAS PARA USUARIOS ---
-    // Cualquiera puede leer perfiles de usuario (necesario para ver autores de posts, etc.)
-    // pero solo el propietario del perfil puede actualizarlo.
+    // --- REGLAS PARA PERFILES DE USUARIO ---
+    // Cualquiera puede leer un perfil, pero solo el propietario puede escribir en él.
     match /users/{userId} {
       allow read: if true;
-      allow update, delete: if isAuthenticated() && request.auth.uid == userId;
-      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow create, update, delete: if isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Regla para permitir la consulta de grupo en la colección de usuarios
-    // Esto es ESENCIAL para que la página de Colecciones funcione.
+    // Esta regla es VITAL para que la página de Colecciones funcione,
+    // ya que necesita buscar en todos los perfiles.
     match /{path=**}/users/{userId} {
       allow read: if true;
     }
 
-    // --- REGLAS PARA PUBLICACIONES Y COMENTARIOS ---
-    // Cualquiera puede leer posts, pero solo los usuarios autenticados pueden crear/actualizar.
+    // --- REGLAS PARA PUBLICACIONES Y SUS COMENTARIOS ---
     match /posts/{postId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
       
-      // Cualquiera puede leer comentarios, pero solo los autenticados pueden comentar.
       match /comments/{commentId} {
         allow read: if true;
         allow create, update, delete: if isAuthenticated();
@@ -37,50 +33,55 @@ service cloud.firestore {
     }
     
     // --- REGLAS PARA PROPUESTAS Y SUS COMENTARIOS ---
-    // Las propuestas son públicas, pero la creación/actualización requiere autenticación.
     match /proposals/{proposalId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
 
-      // Cualquiera puede leer comentarios, pero solo los autenticados pueden comentar.
       match /comments/{commentId} {
         allow read: if true;
         allow create, update, delete: if isAuthenticated();
       }
     }
     
-    // --- REGLAS GENÉRICAS PARA PÁGINAS PÚBLICAS ---
-    // Son de lectura pública, pero la creación y actualización (como unirse) requiere autenticación.
-
+    // --- REGLAS PARA PÁGINAS PÚBLICAS Y CONTENIDO ---
+    // Lectura pública, escritura solo para usuarios autenticados.
+    
     match /communities/{docId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
     }
+    
     match /federated_entities/{docId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
     }
+
     match /political_parties/{docId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
     }
+    
     match /study_groups/{docId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
     }
+
     match /chat_groups/{docId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
     }
+
     match /events/{docId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
     }
+
     match /tutorials/{docId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
     }
-     match /cultural_posts/{docId} {
+
+    match /cultural_posts/{docId} {
       allow read: if true;
       allow create, update, delete: if isAuthenticated();
     }
