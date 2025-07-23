@@ -265,7 +265,6 @@ function AppHeader() {
     );
 }
 
-
 function MainContent({ children }: { children: React.ReactNode }) {
     const { state, isMobile } = useSidebar();
 
@@ -289,7 +288,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (authRoutes.includes(pathname)) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="flex items-center justify-center min-h-screen p-4">
         {children}
       </div>
     );
