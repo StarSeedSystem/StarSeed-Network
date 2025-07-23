@@ -61,7 +61,7 @@ function FeedPostSkeleton() {
 }
 
 export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
-  const [post, setPost] = useState<DocumentData | null>(initialPost);
+  const [post, setPost] = useState<DocumentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const [isReposted, setIsReposted] = useState(false);
@@ -70,7 +70,12 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
   const { user } = useUser();
 
   useEffect(() => {
-    if (!initialPost.id) return;
+    if (!initialPost.id) {
+        setIsLoading(false);
+        setPost(initialPost);
+        return;
+    };
+    
     setIsLoading(true);
     const postRef = doc(db, "posts", initialPost.id);
     const unsubscribe = onSnapshot(postRef, (doc) => {
@@ -84,10 +89,15 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
         setPost(null);
       }
       setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching post in real-time:", error);
+        setPost(initialPost); // Fallback to initial data on error
+        setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [initialPost.id, user]);
+  }, [initialPost, user]);
+
 
   const handleLike = async () => {
     if (!user || !post) return toast({ variant: "destructive", title: "Necesitas iniciar sesión." });
@@ -123,6 +133,54 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
       toast({ variant: "destructive", title: "Error al dar Me Gusta" });
     }
   };
+
+  const handleVote = async (optionIndex: number) => {
+    if (!user || !post) return toast({ variant: "destructive", title: "Necesitas iniciar sesión para votar." });
+
+    const postRef = doc(db, "posts", post.id);
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            const postDoc = await transaction.get(postRef);
+            if (!postDoc.exists()) throw "Post not found";
+
+            const data = postDoc.data();
+            const blocks = [...(data.blocks || [])];
+            const pollIndex = blocks.findIndex(b => b.type === 'poll');
+            if (pollIndex === -1) throw "Poll not found in post";
+
+            const pollData: PollData = blocks[pollIndex];
+            if (pollData.voters && pollData.voters[user.uid]) {
+                toast({ variant: "destructive", title: "Ya has votado en esta propuesta." });
+                return; // Exit transaction early
+            }
+            
+            const selectedOption = pollData.options[optionIndex];
+            if (!selectedOption) throw "Invalid option selected";
+
+            // Update vote count
+            pollData.options[optionIndex].votes = (pollData.options[optionIndex].votes || 0) + 1;
+            
+            // Record user's vote
+            if (!pollData.voters) {
+                pollData.voters = {};
+            }
+            pollData.voters[user.uid] = selectedOption.text;
+
+            blocks[pollIndex] = pollData;
+
+            transaction.update(postRef, { blocks: blocks });
+        });
+
+        toast({ title: "¡Voto registrado!", description: "Tu voto ha sido contabilizado." });
+
+    } catch (error: any) {
+        if (error.message && !error.message.includes("Ya has votado")) {
+            console.error("Error al registrar el voto:", error);
+            toast({ variant: "destructive", title: "Error al Votar", description: error.message });
+        }
+    }
+  }
 
   const handleRepost = async () => {
     toast({ title: "Función no implementada todavía." });
@@ -163,6 +221,7 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
           <VotingSystem 
             poll={pollBlockData} 
             postId={post.id}
+            onVote={handleVote}
           />
         )}
 
