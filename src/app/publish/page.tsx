@@ -69,7 +69,21 @@ export default function PublishPage() {
         const allNodesData = knowledgeData.nodes as KnowledgeNode[];
         setAllNodes(allNodesData);
         setCategoryNodes(allNodesData.filter(node => node.type === 'category'));
-        setTopicNodes(allNodesData.filter(node => node.type === 'topic' || node.type === 'concept'));
+        
+        const topicsAndConcepts: KnowledgeNode[] = [];
+        const findTopicsRecursive = (nodes: KnowledgeNode[]) => {
+            for (const node of nodes) {
+                if (node.type === 'topic' || node.type === 'concept') {
+                    topicsAndConcepts.push(node);
+                }
+                if (node.children) {
+                    findTopicsRecursive(node.children);
+                }
+            }
+        }
+        findTopicsRecursive(allNodesData);
+        setTopicNodes(topicsAndConcepts);
+
 
         const fetchUserPages = async () => {
             if (!authUser || !profile) return;
@@ -390,7 +404,3 @@ export default function PublishPage() {
         </div>
     );
 }
-
-    
-
-    

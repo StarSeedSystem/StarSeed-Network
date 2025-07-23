@@ -41,7 +41,21 @@ export default function EducationPage() {
     setAllNodes(allNodesData);
 
     const categories = allNodesData.filter(node => node.type === 'category');
-    const topicsAndConcepts = allNodesData.filter(node => node.type === 'topic' || node.type === 'concept');
+    
+    // Flatten all topics and concepts for the topic network view
+    const topicsAndConcepts: KnowledgeNode[] = [];
+    const findTopicsRecursive = (nodes: KnowledgeNode[]) => {
+        for (const node of nodes) {
+            if (node.type === 'topic' || node.type === 'concept') {
+                topicsAndConcepts.push(node);
+            }
+            if (node.children) {
+                findTopicsRecursive(node.children);
+            }
+        }
+    }
+    findTopicsRecursive(allNodesData);
+
     setCategoryNodes(categories);
     setTopicNodes(topicsAndConcepts);
     
@@ -195,5 +209,3 @@ export default function EducationPage() {
     </div>
   );
 }
-
-    
