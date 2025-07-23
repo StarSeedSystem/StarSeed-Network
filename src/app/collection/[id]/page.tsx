@@ -68,53 +68,60 @@ export default function CollectionPage() {
 
         const findCollection = async () => {
             setIsLoading(true);
-            const usersQuery = query(collectionGroup(db, 'users'));
-            const usersSnapshot = await getDocs(usersQuery);
-            
-            let foundCollection = null;
-            let collectionOwner = null;
+            try {
+                const usersQuery = query(collection(db, 'users'));
+                const usersSnapshot = await getDocs(usersQuery);
+                
+                let foundCollection = null;
+                let collectionOwner = null;
 
-            for (const userDoc of usersSnapshot.docs) {
-                const userData = userDoc.data();
-                if (userData.collections) {
-                    const matchedCollection = userData.collections.find((c: any) => c.id === collectionId);
-                    if (matchedCollection) {
-                        foundCollection = matchedCollection;
-                        collectionOwner = userData;
-                        break;
+                for (const userDoc of usersSnapshot.docs) {
+                    const userData = userDoc.data();
+                    if (userData.collections) {
+                        const matchedCollection = userData.collections.find((c: any) => c.id === collectionId);
+                        if (matchedCollection) {
+                            foundCollection = matchedCollection;
+                            collectionOwner = userData;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (foundCollection) {
-                setCollectionData(foundCollection);
-                setOwner(collectionOwner);
+                if (foundCollection) {
+                    setCollectionData(foundCollection);
+                    setOwner(collectionOwner);
 
-                // Fetch pages
-                if (foundCollection.pageIds && foundCollection.pageIds.length > 0) {
-                     const collectionsToFetch = ["communities", "federated_entities", "political_parties", "study_groups", "chat_groups", "events"];
-                     const pagesData: AnyRecommendedPage[] = [];
+                    // Fetch pages
+                    if (foundCollection.pageIds && foundCollection.pageIds.length > 0) {
+                        const collectionsToFetch = ["communities", "federated_entities", "political_parties", "study_groups", "chat_groups", "events"];
+                        const pagesData: AnyRecommendedPage[] = [];
 
-                     for (const collectionName of collectionsToFetch) {
-                         const q = query(collection(db, collectionName), where('id', 'in', foundCollection.pageIds));
-                         const querySnapshot = await getDocs(q);
-                         querySnapshot.forEach(doc => {
-                             pagesData.push({ ...doc.data(), type: doc.data().type || collectionName.slice(0, -1) } as AnyRecommendedPage);
-                         });
-                     }
-                    setPages(pagesData);
+                        for (const collectionName of collectionsToFetch) {
+                            const q = query(collection(db, collectionName), where('id', 'in', foundCollection.pageIds));
+                            const querySnapshot = await getDocs(q);
+                            querySnapshot.forEach(doc => {
+                                pagesData.push({ ...doc.data(), type: doc.data().type || collectionName.slice(0, -1) } as AnyRecommendedPage);
+                            });
+                        }
+                        setPages(pagesData);
+                    }
+
+                    // Filter library items
+                    if (foundCollection.itemIds && foundCollection.itemIds.length > 0) {
+                        const itemData = allLibraryItems.filter(item => foundCollection.itemIds.includes(item.id));
+                        setItems(itemData);
+                    }
+
+                } else {
+                    console.log("Collection not found");
+                    setCollectionData(null); // Explicitly set to null if not found
                 }
-
-                // Filter library items
-                if (foundCollection.itemIds && foundCollection.itemIds.length > 0) {
-                    const itemData = allLibraryItems.filter(item => foundCollection.itemIds.includes(item.id));
-                    setItems(itemData);
-                }
-
-            } else {
-                notFound();
+            } catch (error) {
+                console.error("Error fetching collection:", error);
+                setCollectionData(null);
+            } finally {
+                setIsLoading(false);
             }
-             setIsLoading(false);
         };
 
         findCollection();
@@ -164,7 +171,16 @@ export default function CollectionPage() {
                      <h2 className="text-2xl font-headline font-semibold mb-4 mt-8">Archivos en esta colección ({items.length})</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {items.map(item => (
-                            <LibraryGrid items={[item]} folders={[]} key={item.id} />
+                            // Using a simplified card here for display
+                            <Card key={item.id} className="glass-card rounded-xl overflow-hidden group h-full flex flex-col">
+                                <div className="aspect-square relative">
+                                    <Image src={item.thumbnail} alt={item.title} layout="fill" objectFit="cover" className="group-hover:scale-105 transition-transform duration-300" data-ai-hint={item.thumbnailHint} />
+                                </div>
+                                <div className="p-3 flex flex-col flex-grow">
+                                    <p className="font-semibold truncate">{item.title}</p>
+                                    <p className="text-xs text-muted-foreground">{item.type}</p>
+                                </div>
+                            </Card>
                         ))}
                     </div>
                 </div>
