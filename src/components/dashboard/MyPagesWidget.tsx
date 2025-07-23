@@ -91,7 +91,7 @@ export function MyPagesWidget() {
                     </DropdownMenuContent>
                 </DropdownMenu>
             </CardHeader>
-            <CardContent className="flex-grow">
+            <CardContent className="flex-grow min-h-0">
                 <ScrollArea className="h-full pr-3">
                     <div className="space-y-3">
                         {isLoading ? (

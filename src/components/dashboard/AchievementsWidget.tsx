@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Star, Zap, BrainCircuit, Users, Award, ShieldCheck, Gem } from "lucide-react";
+import { Star, Zap, BrainCircuit, Users, Award, ShieldCheck, Gem, MessageSquare, BookOpen, Code, Palette, Video, Mic, Heart } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
 import { cn } from "@/lib/utils";
 
@@ -11,9 +11,14 @@ const achievements = [
   { id: 'communityWeaver', icon: Users, label: "Community Weaver", description: "Started a new community." },
   { id: 'trustedVoice', icon: ShieldCheck, label: "Trusted Voice", description: "High reputation score." },
   { id: 'genesisBlock', icon: Gem, label: "Genesis Block", description: "Contributor to the platform." },
-  { id: 'grandArchitect', icon: Award, label: "Grand Architect", description: "Coming soon..." },
+  { id: 'grandArchitect', icon: Award, label: "Grand Architect", description: "Proposed a successful global directive." },
   { id: 'eventHorizon', icon: Award, label: "Event Horizon", description: "Hosted 3+ events." },
-  { id: 'knowledgeSeeker', icon: Award, label: "Knowledge Seeker", description: "Completed 5 tutorials." },
+  { id: 'knowledgeSeeker', icon: BookOpen, label: "Knowledge Seeker", description: "Completed 5 tutorials." },
+  { id: 'codeAlchemist', icon: Code, label: "Code Alchemist", description: "Contributed a new app template." },
+  { id: 'masterOrator', icon: Mic, label: "Master Orator", description: "Won a major debate." },
+  { id: 'patronOfArts', icon: Palette, label: "Patron of the Arts", description: "Commissioned 10 AI art pieces." },
+  { id: 'viralHit', icon: Heart, label: "Viral Hit", description: "A post with over 1000 likes." },
+  { id: 'filmDirector', icon: Video, label: "Film Director", description: "Generated 5 videos with AI." },
 ];
 
 export function AchievementsWidget() {
@@ -23,7 +28,7 @@ export function AchievementsWidget() {
         <CardTitle className="font-headline">Achievements</CardTitle>
         <CardDescription>Badges earned throughout your journey.</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col">
+      <CardContent className="flex-grow flex flex-col min-h-0">
         <ScrollArea className="flex-grow -mx-2">
             <TooltipProvider>
                 <div className="grid grid-flow-row grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-x-4 gap-y-6 px-2">

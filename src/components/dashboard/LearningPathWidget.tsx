@@ -30,6 +30,18 @@ const learningItems = [
         type: "Taller",
         image: "https://placehold.co/600x400.png",
         imageHint: "ai art generation",
+    },
+    {
+        title: "Fundamentos de la Gobernanza Ontocrática",
+        type: "Lectura",
+        image: "https://placehold.co/600x400.png",
+        imageHint: "ancient scroll",
+    },
+    {
+        title: "Simulación de Economías Circulares",
+        type: "Simulación",
+        image: "https://placehold.co/600x400.png",
+        imageHint: "circular economy diagram",
     }
 ];
 

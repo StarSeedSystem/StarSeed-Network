@@ -9,28 +9,45 @@ import { Badge } from "../ui/badge";
 
 const proposals = [
     {
+        id: "prop-001",
         title: "Ley de Soberanía de Datos Personales",
         status: "En Votación",
         isUrgent: true,
         entity: "E.F. Global"
     },
     {
+        id: "prop-002",
         title: "Actualización del Protocolo de Verificación",
         status: "Debate Activo",
         isUrgent: false,
-        entity: "E.F. Global"
+        entity: "Consejo de Ética Digital"
     },
     {
+        id: "prop-003",
         title: "Fondo Universal para Creadores de Contenido",
         status: "En Votación",
         isUrgent: false,
         entity: "Partido de la Conciencia Digital"
+    },
+    {
+        id: "prop-004",
+        title: "Ratificación de Estándares de Interoperabilidad VR",
+        status: "En Votación",
+        isUrgent: false,
+        entity: "E.F. Global"
+    },
+    {
+        id: "prop-005",
+        title: "Regulación de Mercados Predictivos Descentralizados",
+        status: "Debate Activo",
+        isUrgent: true,
+        entity: "Consejo de Ética Digital"
     }
 ];
 
 export function PoliticalSummaryWidget() {
   return (
-    <Card className="glass-card rounded-2xl h-full">
+    <Card className="glass-card rounded-2xl h-full flex flex-col">
       <CardHeader>
         <CardTitle className="font-headline flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -43,15 +60,15 @@ export function PoliticalSummaryWidget() {
         </CardTitle>
         <CardDescription>Vistazo rápido a las propuestas legislativas más relevantes.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow">
         <div className="space-y-4">
-            {proposals.map((prop, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-primary/5">
+            {proposals.map((prop) => (
+                <div key={prop.id} className="flex items-center justify-between p-3 rounded-lg bg-primary/5">
                     <div>
-                        <p className="font-semibold">{prop.title}</p>
+                        <p className="font-semibold truncate">{prop.title}</p>
                         <p className="text-sm text-muted-foreground">{prop.entity}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
                         {prop.isUrgent && <AlertTriangle className="h-5 w-5 text-solar-orange" />}
                         <Badge variant={prop.status === "En Votación" ? "default" : "secondary"}>{prop.status}</Badge>
                     </div>

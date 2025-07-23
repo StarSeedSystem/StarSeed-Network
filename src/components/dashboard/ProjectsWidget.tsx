@@ -30,6 +30,18 @@ const projects = [
         status: "Pausado",
         progress: 80,
         entity: "Consejo de Ética Digital"
+    },
+    {
+        title: "Desarrollo de Bioma 'Bosque de Cristal'",
+        status: "En Progreso",
+        progress: 15,
+        entity: "Art-AI Collective"
+    },
+    {
+        title: "Traductor Universal en Tiempo Real (Fase 1)",
+        status: "En Progreso",
+        progress: 90,
+        entity: "E.F. Global"
     }
 ];
 
