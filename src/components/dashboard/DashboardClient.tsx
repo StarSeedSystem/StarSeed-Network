@@ -96,12 +96,12 @@ export function DashboardClient() {
                 onAddWidget={() => setIsLibraryOpen(true)}
             />
             {isClient ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-6 auto-rows-fr">
+                <div className="grid grid-cols-12 gap-6 auto-rows-[minmax(100px,auto)]">
                     {visibleLayout.map(item => (
                         <div
                             key={item.i}
                             className={cn(
-                                "transition-all duration-300 col-span-1 sm:col-span-2 md:col-span-12", // Default to full width on mobile
+                                "transition-all duration-300 col-span-full",
                                 `md:col-span-${item.w}`
                             )}
                             style={{
