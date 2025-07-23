@@ -62,8 +62,8 @@ function FeedPostSkeleton() {
 }
 
 export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
-  const [post, setPost] = useState<DocumentData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [post, setPost] = useState<DocumentData | null>(initialPost);
+  const [isLoading, setIsLoading] = useState(false); // No longer starts loading from initial prop
   const [isLiked, setIsLiked] = useState(false);
   const [isReposted, setIsReposted] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -77,7 +77,8 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
         return;
     };
     
-    setIsLoading(true);
+    // For posts coming from a real-time feed, we might not need this.
+    // But for static pages or pages fetching collections, we want live updates.
     const postRef = doc(db, "posts", initialPost.id);
     const unsubscribe = onSnapshot(postRef, (doc) => {
       if (doc.exists()) {
@@ -86,18 +87,13 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
         if (user && data.likers) {
           setIsLiked(data.likers.includes(user.uid));
         }
-      } else {
-        setPost(null);
       }
-      setIsLoading(false);
     }, (error) => {
         console.error("Error fetching post in real-time:", error);
-        setPost(initialPost); // Fallback to initial data on error
-        setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [initialPost, user]);
+  }, [initialPost.id, user]);
 
 
   const handleLike = async () => {

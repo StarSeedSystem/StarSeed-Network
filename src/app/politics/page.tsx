@@ -7,24 +7,32 @@ import { collection, onSnapshot, query, where, getDocs, DocumentData } from "fir
 import { db } from "@/data/firebase";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, Landmark, Shield } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { FeedPost } from "@/components/dashboard/FeedPost";
 import { AdvancedFilter, FilterState } from "@/components/politics/AdvancedFilter";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { AnyEntity } from "@/types/content-types";
+import { ConnectionCard } from "@/components/participations/ConnectionCard";
+
+type SubArea = "legislative" | "executive" | "judicial";
 
 export default function PoliticsPage() {
   const [posts, setPosts] = useState<DocumentData[]>([]);
+  const [myPages, setMyPages] = useState<AnyEntity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingPages, setIsLoadingPages] = useState(true);
   const { user } = useUser();
   const [filters, setFilters] = useState<FilterState>({
     entity: 'all', status: 'all', tags: '', saved: false, collection: 'all'
   });
+  const [activeSubArea, setActiveSubArea] = useState<SubArea>("legislative");
 
   useEffect(() => {
     if (!user) {
         setIsLoading(false);
+        setIsLoadingPages(false);
         return;
     }
 
@@ -35,56 +43,50 @@ export default function PoliticsPage() {
 
     const unsubscribePosts = onSnapshot(postsQuery, async (snapshot) => {
         const fetchedPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        const collectionsToQuery = ["federated_entities", "political_parties"];
-        const userPagesIds: string[] = [user.uid];
-
-        for (const collectionName of collectionsToQuery) {
-            const q = query(collection(db, collectionName), where('members', 'array-contains', user.uid));
-            const userPagesSnapshot = await getDocs(q);
-            userPagesSnapshot.forEach(doc => userPagesIds.push(doc.id));
-        }
-
-        const filteredByMembership = fetchedPosts.filter(post => 
-            post.destinations.some((dest: any) => userPagesIds.includes(dest.id))
-        );
-        
-        // Sort client-side
-        const sortedPosts = filteredByMembership.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
+        const sortedPosts = fetchedPosts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
         setPosts(sortedPosts);
         setIsLoading(false);
     });
+
+    const fetchMyPages = async () => {
+        setIsLoadingPages(true);
+        const pages: AnyEntity[] = [];
+        const collectionsToQuery = [
+            { name: "federated_entities", type: "federation" },
+            { name: "political_parties", type: "political_party" },
+        ] as const;
+
+        for (const { name, type } of collectionsToQuery) {
+            const q = query(collection(db, name), where('members', 'array-contains', user.uid));
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach((doc) => {
+                pages.push({ ...doc.data(), type } as AnyEntity);
+            });
+        }
+        setMyPages(pages);
+        setIsLoadingPages(false);
+    };
+
+    fetchMyPages();
 
     return () => unsubscribePosts();
   }, [user]);
 
   const filteredData = useMemo(() => {
     return posts.filter(post => {
-      const pollBlock = post.blocks?.find((b: any) => b.type === 'poll' && b.isLegislative);
-      const legislativeData = pollBlock?.legislativeData;
-
+      const subAreaMatch = post.subArea === activeSubArea;
       const entityMatch = filters.entity === 'all' || post.destinations.some((d: any) => d.id === filters.entity);
-      const tagsMatch = filters.tags === '' || post.content.toLowerCase().includes(filters.tags.toLowerCase()); // Simple tag search for now
-      
-      const statusMatch = () => {
-        if (!pollBlock || filters.status === 'all') return true;
-        if (filters.status === 'urgent') return legislativeData?.isUrgent === true;
-        // This is a placeholder; more complex status logic would be needed
-        if (filters.status === 'active') return true; 
-        return true;
-      }
-      
-      return entityMatch && tagsMatch && statusMatch();
+      const tagsMatch = filters.tags === '' || post.content.toLowerCase().includes(filters.tags.toLowerCase());
+      return subAreaMatch && entityMatch && tagsMatch;
     });
-  }, [posts, filters]);
+  }, [posts, filters, activeSubArea]);
 
   const renderFeed = () => {
       if (isLoading) return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin"/></div>
       if (filteredData.length === 0) return (
           <Card className="text-center py-16 bg-card/50 rounded-lg">
-              <h3 className="text-xl font-semibold">No hay actividad política que mostrar.</h3>
-              <p className="text-muted-foreground mt-2">Únete a entidades políticas o crea una nueva propuesta.</p>
+              <h3 className="text-xl font-semibold">No hay publicaciones en esta área.</h3>
+              <p className="text-muted-foreground mt-2">Únete a entidades políticas o crea una nueva publicación.</p>
           </Card> 
       )
       return (
@@ -109,6 +111,22 @@ export default function PoliticsPage() {
           </div>
       )
   }
+  
+   const renderMyPages = () => {
+      if (isLoadingPages) return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin"/></div>
+      if (myPages.length === 0) return (
+          <Card className="text-center py-16 bg-card/50 rounded-lg">
+              <h3 className="text-xl font-semibold">No participas en ninguna página política.</h3>
+              <p className="text-muted-foreground mt-2">Explora y únete a Entidades Federativas o Partidos Políticos.</p>
+          </Card> 
+      )
+      return (
+           <div className="space-y-4">
+              {myPages.map(page => <ConnectionCard key={page.id} item={page} />)}
+          </div>
+      )
+  }
+
 
   return (
     <div className="space-y-8">
@@ -122,21 +140,25 @@ export default function PoliticsPage() {
         }
       />
 
-       <Tabs defaultValue="proposals" className="w-full">
+       <Tabs defaultValue="publications" className="w-full">
             <TabsList className="grid w-full grid-cols-3 bg-card/60 rounded-xl h-auto">
-                <TabsTrigger value="proposals">Propuestas Legislativas</TabsTrigger>
-                <TabsTrigger value="parties">Partidos Políticos</TabsTrigger>
+                <TabsTrigger value="publications">Publicaciones</TabsTrigger>
+                <TabsTrigger value="pages">Mis Páginas Políticas</TabsTrigger>
                 <TabsTrigger value="replicated_vote">Voto Replicado</TabsTrigger>
             </TabsList>
-            <TabsContent value="proposals" className="mt-6 space-y-6">
+            <TabsContent value="publications" className="mt-6 space-y-6">
+                <Tabs defaultValue={activeSubArea} onValueChange={(value) => setActiveSubArea(value as SubArea)}>
+                    <TabsList className="grid w-full grid-cols-3 bg-card/80 rounded-xl h-auto">
+                         <TabsTrigger value="legislative">Legislativo</TabsTrigger>
+                         <TabsTrigger value="executive">Ejecutivo</TabsTrigger>
+                         <TabsTrigger value="judicial">Judicial</TabsTrigger>
+                    </TabsList>
+                </Tabs>
                 <AdvancedFilter filters={filters} onFilterChange={setFilters} />
                 {renderFeed()}
             </TabsContent>
-            <TabsContent value="parties" className="mt-6">
-                 <Card className="text-center py-16 bg-card/50 rounded-lg">
-                    <h3 className="text-xl font-semibold">Función en Construcción</h3>
-                    <p className="text-muted-foreground mt-2">Aquí verás los partidos políticos a los que sigues.</p>
-                </Card> 
+            <TabsContent value="pages" className="mt-6">
+                {renderMyPages()}
             </TabsContent>
             <TabsContent value="replicated_vote" className="mt-6">
                  <Card className="text-center py-16 bg-card/50 rounded-lg">

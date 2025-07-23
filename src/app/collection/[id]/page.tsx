@@ -5,13 +5,14 @@ import { useState, useEffect } from "react";
 import { notFound, useParams } from "next/navigation";
 import { collection, collectionGroup, query, where, getDocs, doc, getDoc, DocumentData } from "firebase/firestore";
 import { db } from "@/data/firebase";
-import { Loader2, Folder, Globe, Lock, ArrowLeft } from "lucide-react";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, Folder, Globe, Lock, ArrowLeft, Users, Calendar, File } from "lucide-react";
+import { Card, CardDescription, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BackButton } from "@/components/utils/BackButton";
-import { AnyRecommendedPage } from "@/types/content-types";
+import { AnyRecommendedPage, AnyEntity, Event } from "@/types/content-types";
 import { ConnectionCard } from "@/components/participations/ConnectionCard";
-import { LibraryGrid, LibraryItem } from "@/components/profile/LibraryGrid";
+import { LibraryItem } from "@/components/profile/LibraryGrid";
 import Image from "next/image";
+import { FeedPost } from "@/components/dashboard/FeedPost";
 
 // Hardcoded library items for now
 const allLibraryItems: LibraryItem[] = [
@@ -33,25 +34,16 @@ const allLibraryItems: LibraryItem[] = [
         source: "/avatar-generator",
         folderId: "folder_avatars"
     },
-    {
-        id: "img_002",
-        type: "Avatar",
-        title: "Ciber-Druida",
-        thumbnail: "https://placehold.co/400x400.png",
-        thumbnailHint: "cyber druid",
-        source: "/avatar-generator",
-        folderId: "folder_avatars"
-    },
-    {
-        id: "img_003",
-        type: "Image",
-        title: "Logo para 'Innovación Sostenible'",
-        thumbnail: "https://placehold.co/400x400.png",
-        thumbnailHint: "green logo",
-        source: "/agent",
-        folderId: "folder_proyectos"
-    }
 ];
+
+const collectionsToFetch = [
+    { name: "communities", type: 'community' },
+    { name: "federated_entities", type: 'federation' },
+    { name: "political_parties", type: 'political_party' },
+    { name: "study_groups", type: 'study_group' },
+    { name: "chat_groups", type: 'chat_group' },
+    { name: "events", type: 'event' },
+] as const;
 
 
 export default function CollectionPage() {
@@ -61,6 +53,7 @@ export default function CollectionPage() {
     const [collectionData, setCollectionData] = useState<any>(null);
     const [owner, setOwner] = useState<any>(null);
     const [pages, setPages] = useState<AnyRecommendedPage[]>([]);
+    const [posts, setPosts] = useState<DocumentData[]>([]);
     const [items, setItems] = useState<LibraryItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -70,6 +63,7 @@ export default function CollectionPage() {
         const findCollection = async () => {
             setIsLoading(true);
             try {
+                // Find the collection and its owner
                 const usersQuery = query(collection(db, 'users'));
                 const usersSnapshot = await getDocs(usersQuery);
                 
@@ -88,35 +82,43 @@ export default function CollectionPage() {
                     }
                 }
 
-                if (foundCollection) {
-                    setCollectionData(foundCollection);
-                    setOwner(collectionOwner);
-
-                    // Fetch pages
-                    if (foundCollection.pageIds && foundCollection.pageIds.length > 0) {
-                        const collectionsToFetch = ["communities", "federated_entities", "political_parties", "study_groups", "chat_groups", "events"];
-                        const pagesData: AnyRecommendedPage[] = [];
-
-                        for (const collectionName of collectionsToFetch) {
-                            const q = query(collection(db, collectionName), where('id', 'in', foundCollection.pageIds));
-                            const querySnapshot = await getDocs(q);
-                            querySnapshot.forEach(doc => {
-                                pagesData.push({ ...doc.data(), type: doc.data().type || collectionName.slice(0, -1) } as AnyRecommendedPage);
-                            });
-                        }
-                        setPages(pagesData);
-                    }
-
-                    // Filter library items
-                    if (foundCollection.itemIds && foundCollection.itemIds.length > 0) {
-                        const itemData = allLibraryItems.filter(item => foundCollection.itemIds.includes(item.id));
-                        setItems(itemData);
-                    }
-
-                } else {
+                if (!foundCollection) {
                     console.log("Collection not found");
-                    setCollectionData(null); // Explicitly set to null if not found
+                    setCollectionData(null);
+                    setIsLoading(false);
+                    return;
                 }
+                
+                setCollectionData(foundCollection);
+                setOwner(collectionOwner);
+
+                // Fetch Pages
+                if (foundCollection.pageIds && foundCollection.pageIds.length > 0) {
+                    const pagesData: AnyRecommendedPage[] = [];
+                    for (const collectionName of collectionsToFetch) {
+                        const q = query(collection(db, collectionName.name), where('id', 'in', foundCollection.pageIds));
+                        const querySnapshot = await getDocs(q);
+                        querySnapshot.forEach(doc => {
+                            pagesData.push({ ...doc.data(), type: doc.data().type || collectionName.type } as AnyRecommendedPage);
+                        });
+                    }
+                    setPages(pagesData);
+                }
+
+                // Fetch Items (Posts, Library Items etc.)
+                const itemIds = foundCollection.itemIds || [];
+                if (itemIds.length > 0) {
+                    // Fetch Posts
+                    const postsQuery = query(collection(db, "posts"), where('id', 'in', itemIds));
+                    const postsSnapshot = await getDocs(postsQuery);
+                    const postsData = postsSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                    setPosts(postsData);
+                    
+                    // Filter hardcoded library items
+                    const libraryItemsData = allLibraryItems.filter(item => itemIds.includes(item.id));
+                    setItems(libraryItemsData);
+                }
+
             } catch (error) {
                 console.error("Error fetching collection:", error);
                 setCollectionData(null);
@@ -135,6 +137,9 @@ export default function CollectionPage() {
     if (!collectionData) {
         return notFound();
     }
+    
+    const savedPages = pages.filter(p => p.type !== 'event');
+    const savedEvents = pages.filter(p => p.type === 'event');
 
     return (
         <div className="space-y-6">
@@ -145,7 +150,7 @@ export default function CollectionPage() {
                         <Folder className="h-8 w-8 text-primary"/>
                         {collectionData.name}
                     </CardTitle>
-                    <CardDescription className="flex items-center gap-4">
+                    <CardDescription className="flex items-center gap-4 pt-1">
                        <span>Colección de <span className="font-semibold text-foreground">{owner?.name || '...'}</span></span>
                         {collectionData.privacy === 'public' ? (
                             <span className="flex items-center gap-1.5"><Globe className="h-3 w-3" /> Pública</span>
@@ -156,12 +161,34 @@ export default function CollectionPage() {
                 </CardHeader>
             </Card>
 
-            {pages.length > 0 && (
+            {savedPages.length > 0 && (
                 <div>
-                    <h2 className="text-2xl font-headline font-semibold mb-4">Páginas en esta colección ({pages.length})</h2>
+                    <h2 className="text-2xl font-headline font-semibold mb-4 flex items-center gap-2"><Users className="h-5 w-5"/>Páginas ({savedPages.length})</h2>
                     <div className="space-y-4">
-                        {pages.map((page) => (
+                        {savedPages.map((page) => (
                            <ConnectionCard key={`${page.type}-${page.id}`} item={page} />
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {savedEvents.length > 0 && (
+                <div>
+                    <h2 className="text-2xl font-headline font-semibold mb-4 mt-8 flex items-center gap-2"><Calendar className="h-5 w-5"/>Eventos ({savedEvents.length})</h2>
+                    <div className="space-y-4">
+                        {savedEvents.map((page) => (
+                           <ConnectionCard key={`${page.type}-${page.id}`} item={page} />
+                        ))}
+                    </div>
+                </div>
+            )}
+            
+            {posts.length > 0 && (
+                 <div>
+                     <h2 className="text-2xl font-headline font-semibold mb-4 mt-8">Publicaciones Guardadas ({posts.length})</h2>
+                    <div className="space-y-6">
+                        {posts.map(post => (
+                           <FeedPost key={post.id} post={{...post}} />
                         ))}
                     </div>
                 </div>
@@ -169,10 +196,9 @@ export default function CollectionPage() {
             
             {items.length > 0 && (
                 <div>
-                     <h2 className="text-2xl font-headline font-semibold mb-4 mt-8">Archivos en esta colección ({items.length})</h2>
+                     <h2 className="text-2xl font-headline font-semibold mb-4 mt-8 flex items-center gap-2"><File className="h-5 w-5"/>Archivos ({items.length})</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {items.map(item => (
-                            // Using a simplified card here for display
                             <Card key={item.id} className="glass-card rounded-xl overflow-hidden group h-full flex flex-col">
                                 <div className="aspect-square relative">
                                     <Image src={item.thumbnail} alt={item.title} layout="fill" objectFit="cover" className="group-hover:scale-105 transition-transform duration-300" data-ai-hint={item.thumbnailHint} />
@@ -187,11 +213,12 @@ export default function CollectionPage() {
                 </div>
             )}
 
-            {pages.length === 0 && items.length === 0 && (
+            {pages.length === 0 && posts.length === 0 && items.length === 0 && (
                  <Card className="glass-card text-center p-12">
                     <p className="text-muted-foreground">Esta colección está vacía.</p>
-                </Card>
+                 </Card>
             )}
         </div>
     );
 }
+
