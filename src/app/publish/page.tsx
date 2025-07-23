@@ -57,19 +57,21 @@ export default function PublishPage() {
     const isFederationSelected = useMemo(() => destinations.some(d => d.type === 'federation'), [destinations]);
     const isLegislative = useMemo(() => isFederationSelected && federationArea === 'legislative', [isFederationSelected, federationArea]);
 
-    // Effect to manage blocks based on legislative status
-    // Ensures poll block is added/removed automatically
-    React.useEffect(() => {
-        if (isLegislative) {
-            // If not already present, add a legislative poll block
-            if (!blocks.some(b => b.isLegislative)) {
-                setBlocks(prev => [...prev, { type: 'poll', question: 'Propuesta Legislativa', options: [{ text: "A favor" }, { text: "En contra" }], isLegislative: true }]);
-            }
+    const handleFederationAreaChange = useCallback((area: string | null) => {
+        setFederationArea(area);
+        if (area === 'legislative') {
+            // Add legislative poll block if it doesn't exist
+            setBlocks(prev => {
+                if (!prev.some(b => b.isLegislative)) {
+                    return [...prev, { type: 'poll', question: 'Propuesta Legislativa', options: [{ text: "A favor" }, { text: "En contra" }], isLegislative: true }];
+                }
+                return prev;
+            });
         } else {
-            // Remove any legislative poll blocks if the context is no longer legislative
+            // Remove legislative poll block if area is changed from legislative
             setBlocks(prev => prev.filter(b => !b.isLegislative));
         }
-    }, [isLegislative, blocks]);
+    }, []);
 
     const handleAreaSelect = (area: Area) => {
         setSelectedArea(area);
@@ -88,22 +90,23 @@ export default function PublishPage() {
         setIsLoading(false);
     }
 
-    const addBlock = (type: Block['type']) => {
+    const addBlock = useCallback((type: Block['type']) => {
         if (type === 'poll') {
-            setBlocks([...blocks, { type: 'poll', question: '', options: [{ text: "" }, { text: "" }] }]);
+            setBlocks(prev => [...prev, { type: 'poll', question: '', options: [{ text: "" }, { text: "" }] }]);
         }
-    };
+    }, []);
 
     const updateBlockData = useCallback((index: number, data: Block) => {
-        const newBlocks = [...blocks];
-        newBlocks[index] = data;
-        setBlocks(newBlocks);
-    }, [blocks]);
+        setBlocks(prev => {
+            const newBlocks = [...prev];
+            newBlocks[index] = data;
+            return newBlocks;
+        });
+    }, []);
 
-
-    const removeBlock = (index: number) => {
-        setBlocks(blocks.filter((_, i) => i !== index));
-    };
+    const removeBlock = useCallback((index: number) => {
+        setBlocks(prev => prev.filter((_, i) => i !== index));
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -196,7 +199,7 @@ export default function PublishPage() {
                                 )}
                             </div>
                             {isFederationSelected && (
-                                <FederatedEntitySettings onAreaChange={setFederationArea} />
+                                <FederatedEntitySettings onAreaChange={handleFederationAreaChange} />
                             )}
                         </CardContent>
                          <div className="p-6 flex justify-end">
