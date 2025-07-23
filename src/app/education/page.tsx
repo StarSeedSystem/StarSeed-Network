@@ -3,14 +3,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { collection, onSnapshot, query, where, orderBy, getDocs, DocumentData } from "firebase/firestore";
+import { collection, onSnapshot, query, where, getDocs, DocumentData } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, PlusCircle, Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import { FeedPost } from "@/components/dashboard/FeedPost"; // Re-using the feed post component
+import { FeedPost } from "@/components/dashboard/FeedPost";
 
 export default function EducationPage() {
   const [posts, setPosts] = useState<DocumentData[]>([]);
@@ -25,8 +25,7 @@ export default function EducationPage() {
 
     const postsQuery = query(
         collection(db, "posts"),
-        where("area", "==", "education"),
-        orderBy("createdAt", "desc")
+        where("area", "==", "education")
     );
 
     const unsubscribePosts = onSnapshot(postsQuery, async (snapshot) => {
@@ -44,8 +43,11 @@ export default function EducationPage() {
         const filteredPosts = fetchedPosts.filter(post => 
             post.destinations.some((dest: any) => userPagesIds.includes(dest.id))
         );
+        
+        // Sort client-side
+        const sortedPosts = filteredPosts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
-        setPosts(filteredPosts);
+        setPosts(sortedPosts);
         setIsLoading(false);
     });
 
@@ -85,9 +87,9 @@ export default function EducationPage() {
             {posts.map((post) => (
                 <FeedPost key={post.id} post={{
                     id: post.id,
-                    author: post.authorName,
+                    authorName: post.authorName,
                     handle: post.handle,
-                    avatar: post.avatarUrl,
+                    avatarUrl: post.avatarUrl,
                     avatarHint: "user avatar",
                     title: post.title,
                     content: post.content,

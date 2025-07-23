@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { collection, onSnapshot, query, where, orderBy, getDocs, DocumentData } from "firebase/firestore";
+import { collection, onSnapshot, query, where, getDocs, DocumentData } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -28,8 +28,7 @@ export default function PoliticsPage() {
 
     const postsQuery = query(
         collection(db, "posts"),
-        where("area", "==", "politics"),
-        orderBy("createdAt", "desc")
+        where("area", "==", "politics")
     );
 
     const unsubscribePosts = onSnapshot(postsQuery, async (snapshot) => {
@@ -44,11 +43,14 @@ export default function PoliticsPage() {
             userPagesSnapshot.forEach(doc => userPagesIds.push(doc.id));
         }
 
-        const filteredPosts = fetchedPosts.filter(post => 
+        const filteredByMembership = fetchedPosts.filter(post => 
             post.destinations.some((dest: any) => userPagesIds.includes(dest.id))
         );
+        
+        // Sort client-side
+        const sortedPosts = filteredByMembership.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
-        setPosts(filteredPosts);
+        setPosts(sortedPosts);
         setIsLoading(false);
     });
 
@@ -90,9 +92,9 @@ export default function PoliticsPage() {
             filteredData.map(post => (
                  <FeedPost key={post.id} post={{
                     id: post.id,
-                    author: post.authorName,
+                    authorName: post.authorName,
                     handle: post.handle,
-                    avatar: post.avatarUrl,
+                    avatarUrl: post.avatarUrl,
                     avatarHint: "user avatar",
                     title: post.title,
                     content: post.content,

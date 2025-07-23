@@ -3,13 +3,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { collection, onSnapshot, query, where, orderBy, DocumentData } from "firebase/firestore";
+import { collection, onSnapshot, query, where, getDocs, DocumentData } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Loader2, Sparkles, Map, Calendar, Newspaper, Headset, Users } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import { FeedPost } from "@/components/dashboard/FeedPost"; // Re-using the feed post component
+import { FeedPost } from "@/components/dashboard/FeedPost";
 
 export default function CulturePage() {
   const [posts, setPosts] = useState<DocumentData[]>([]);
@@ -24,21 +24,14 @@ export default function CulturePage() {
 
     const postsQuery = query(
         collection(db, "posts"),
-        where("area", "==", "culture"),
-        // We'll filter by user participation client-side for simplicity without complex indexes
-        orderBy("createdAt", "desc")
+        where("area", "==", "culture")
     );
 
     const unsubscribePosts = onSnapshot(postsQuery, async (snapshot) => {
         const fetchedPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Since we cannot easily query for "posts where I am a member of one of its destinations",
-        // we'll fetch all user pages and filter client-side. This is less optimal for very large
-        // scale but works perfectly for this project's scope without needing complex backend setup.
-        
-        // This logic can be extracted to a hook later
         const collectionsToQuery = ["communities", "study_groups"];
-        const userPagesIds: string[] = [user.uid]; // User can post to their own profile
+        const userPagesIds: string[] = [user.uid];
 
         for (const collectionName of collectionsToQuery) {
             const q = query(collection(db, collectionName), where('members', 'array-contains', user.uid));
@@ -50,7 +43,10 @@ export default function CulturePage() {
             post.destinations.some((dest: any) => userPagesIds.includes(dest.id))
         );
 
-        setPosts(filteredPosts);
+        // Sort client-side
+        const sortedPosts = filteredPosts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+        setPosts(sortedPosts);
         setIsLoading(false);
     });
 
@@ -75,9 +71,9 @@ export default function CulturePage() {
                 {posts.map((post) => (
                     <FeedPost key={post.id} post={{
                         id: post.id,
-                        author: post.authorName,
+                        authorName: post.authorName,
                         handle: post.handle,
-                        avatar: post.avatarUrl,
+                        avatarUrl: post.avatarUrl,
                         avatarHint: "user avatar",
                         title: post.title,
                         content: post.content,
