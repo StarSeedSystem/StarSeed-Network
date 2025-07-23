@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Check, ArrowLeft, PenSquare, Vote, Gavel, GraduationCap, Sparkles, Book, FileText, Folder, Layers } from "lucide-react";
+import { Loader2, Check, ArrowLeft, PenSquare, Vote, Gavel, GraduationCap, Sparkles, Book, FileText, Folder, Layers, Library } from "lucide-react";
 import { AudienceSelector, UserPage } from "@/components/publish/AudienceSelector";
 import { PollBlock, PollData } from "@/components/publish/PollBlock";
 import { FederatedEntitySettings } from "@/components/publish/FederatedEntitySettings";
@@ -28,6 +28,8 @@ import { KnowledgeNetwork, ViewMode } from "@/components/education/KnowledgeNetw
 import { KnowledgeNode } from "@/types/content-types";
 import knowledgeData from "@/data/knowledge-network.json";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { LibraryGrid, LibraryItem } from "../profile/LibraryGrid";
 
 
 type Step = "area" | "context" | "canvas";
@@ -52,6 +54,7 @@ export default function PublishPage() {
     const [categoryNodes, setCategoryNodes] = useState<KnowledgeNode[]>([]);
     const [topicNodes, setTopicNodes] = useState<KnowledgeNode[]>([]);
     const [knowledgeViewMode, setKnowledgeViewMode] = useState<ViewMode>('list');
+    const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
     // Content State
     const [title, setTitle] = useState("");
@@ -187,6 +190,14 @@ export default function PublishPage() {
     const removeBlock = useCallback((index: number) => {
         setBlocks(prev => prev.filter((_, i) => i !== index));
     }, []);
+
+    const handleLibraryItemSelected = (item: LibraryItem) => {
+        // For now, we'll just append a markdown-style image link to the content
+        const markdownLink = `\n![${item.title}](${item.thumbnail})\n`;
+        setContent(prev => prev + markdownLink);
+        toast({ title: "Contenido Añadido", description: `${item.title} ha sido añadido al cuerpo de la publicación.`});
+        setIsLibraryOpen(false);
+    }
     
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -367,6 +378,21 @@ export default function PublishPage() {
                                 <Card className="glass-card">
                                     <CardHeader><CardTitle>Herramientas</CardTitle></CardHeader>
                                     <CardContent className="space-y-2">
+                                        <Dialog open={isLibraryOpen} onOpenChange={setIsLibraryOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button variant="outline" className="w-full justify-start">
+                                                    <Library className="mr-2 h-4 w-4"/> Añadir desde Biblioteca
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-4xl h-[80vh] glass-card flex flex-col">
+                                                 <LibraryGrid 
+                                                    items={[]} 
+                                                    folders={[]}
+                                                    selectionMode={true}
+                                                    onItemSelected={handleLibraryItemSelected}
+                                                  />
+                                            </DialogContent>
+                                        </Dialog>
                                         {selectedArea !== 'education' && !isLegislative && (
                                             <Button variant="outline" className="w-full justify-start" onClick={() => addBlock('poll')}>
                                                 <Vote className="mr-2 h-4 w-4"/> Añadir Votación/Encuesta

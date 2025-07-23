@@ -2,15 +2,18 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import { Video, Image as ImageIcon, PlusCircle, CheckCircle, Folder, LayoutGrid, X, File, FolderPlus, Bookmark } from "lucide-react";
+import { Video, Image as ImageIcon, PlusCircle, CheckCircle, Folder, LayoutGrid, X, File, FolderPlus, Bookmark, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "../ui/input";
 import { SaveToCollectionDialog } from "../utils/SaveToCollectionDialog";
+import { useUser } from "@/context/UserContext";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "@/data/firebase";
 
 export interface LibraryItem {
     id: string;
@@ -28,8 +31,6 @@ export interface LibraryFolder {
 }
 
 interface LibraryGridProps {
-    items: LibraryItem[];
-    folders: LibraryFolder[];
     selectionMode?: boolean;
     onItemSelected?: (item: LibraryItem) => void;
 }
@@ -40,12 +41,54 @@ const typeIcons = {
     Image: <ImageIcon className="h-4 w-4" />,
 }
 
-export function LibraryGrid({ items, folders: initialFolders = [], selectionMode = false, onItemSelected }: LibraryGridProps) {
+// Placeholder data for generated content. In a real app, this would come from a database.
+const initialLibraryItems: LibraryItem[] = [
+    {
+        id: "vid_001",
+        type: "Video",
+        title: "Dragon over forest",
+        thumbnail: "https://placehold.co/600x400.png",
+        thumbnailHint: "dragon forest",
+        source: "/video-generator",
+        folderId: "folder_videos"
+    },
+    {
+        id: "img_001",
+        type: "Avatar",
+        title: "AI Symbiote",
+        thumbnail: "https://placehold.co/400x400.png",
+        thumbnailHint: "glowing astronaut",
+        source: "/avatar-generator",
+        folderId: "folder_avatars"
+    },
+];
+
+const initialFolders: LibraryFolder[] = [
+    { id: "folder_proyectos", name: "Proyectos en Curso" },
+    { id: "folder_avatars", name: "Mis Avatares" },
+    { id: "folder_videos", name: "Videos Generados" },
+];
+
+
+export function LibraryGrid({ selectionMode = false, onItemSelected }: LibraryGridProps) {
+    const { user, profile } = useUser();
+    const [items, setItems] = useState<LibraryItem[]>(initialLibraryItems); // Placeholder for now
+    const [folders, setFolders] = useState<LibraryFolder[]>(profile?.libraryFolders || initialFolders);
+    const [isLoading, setIsLoading] = useState(true);
+
     const [selectedId, setSelectedId] = useState<string | null>(null);
-    const [folders, setFolders] = useState<LibraryFolder[]>(initialFolders);
     const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
     const [isAddingFolder, setIsAddingFolder] = useState(false);
     const [newFolderName, setNewFolderName] = useState("");
+    
+    // In a real app, we would fetch items from Firestore
+    useEffect(() => {
+        // const q = query(collection(db, `users/${user.uid}/library`));
+        // const unsubscribe = onSnapshot(q, (snapshot) => ...);
+        // For now, we'll just use the placeholder data.
+        setIsLoading(false);
+    }, [user]);
+
 
     const handleItemClick = (item: LibraryItem) => {
         if (selectionMode && onItemSelected) {
@@ -61,6 +104,7 @@ export function LibraryGrid({ items, folders: initialFolders = [], selectionMode
                 name: newFolderName,
             };
             setFolders([...folders, newFolder]);
+            // Here you would also update the user's profile in Firestore
             setNewFolderName("");
             setIsAddingFolder(false);
         }
@@ -83,7 +127,7 @@ export function LibraryGrid({ items, folders: initialFolders = [], selectionMode
                     <Image src={item.thumbnail} alt={item.title} layout="fill" objectFit="cover" className="group-hover:scale-105 transition-transform duration-300" data-ai-hint={item.thumbnailHint} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute top-2 right-2">
-                        <SaveToCollectionDialog itemId={item.id} pageName={item.title}/>
+                        {!selectionMode && <SaveToCollectionDialog itemId={item.id} pageName={item.title}/>}
                     </div>
                     <div className="absolute bottom-2 left-2 text-white">
                         <div className="flex items-center gap-1.5 text-xs bg-black/50 backdrop-blur-sm rounded-full px-2 py-1">
@@ -175,7 +219,9 @@ export function LibraryGrid({ items, folders: initialFolders = [], selectionMode
 
                     {/* Grilla de Contenido */}
                     <main className="md:col-span-3">
-                        {filteredItems.length > 0 ? (
+                        {isLoading ? (
+                            <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                        ) : filteredItems.length > 0 ? (
                             <div className={cn(
                                 "grid gap-4",
                                 selectionMode 

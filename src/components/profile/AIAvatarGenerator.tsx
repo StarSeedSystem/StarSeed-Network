@@ -13,9 +13,11 @@ import { Textarea } from "../ui/textarea";
 export function AIAvatarGenerator({
   currentAvatar,
   onAvatarGenerated,
+  context = "profile", // 'profile' or 'dialog'
 }: {
   currentAvatar?: string;
   onAvatarGenerated: (url: string, description: string) => void;
+  context?: "profile" | "dialog";
 }) {
   const [description, setDescription] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -64,6 +66,7 @@ export function AIAvatarGenerator({
   };
 
   const displayAvatar = generatedAvatar || currentAvatar;
+  const buttonText = context === 'profile' ? "Usar este Avatar y Obtener Insignia" : "Usar este Avatar";
 
   return (
     <div className="space-y-6">
@@ -101,7 +104,7 @@ export function AIAvatarGenerator({
         <div className="space-y-4 text-center">
            <h3 className="text-lg font-headline font-semibold">Paso 2: Resultado</h3>
             <div className="flex justify-center items-center gap-8">
-                {currentAvatar && (
+                {currentAvatar && context === "profile" && (
                     <div className="text-center">
                         <Label className="text-sm text-muted-foreground">Actual</Label>
                         <Avatar className="h-24 w-24 border-2 border-primary/50 mt-1">
@@ -130,7 +133,7 @@ export function AIAvatarGenerator({
             </div>
              {generatedAvatar && (
                 <div className="pt-2">
-                    <Button onClick={handleUseAvatar} size="lg">Usar este Avatar y Obtener Insignia</Button>
+                    <Button onClick={handleUseAvatar} size="lg">{buttonText}</Button>
                 </div>
             )}
         </div>

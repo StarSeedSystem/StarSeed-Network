@@ -32,11 +32,6 @@ import { AIBannerGenerator } from "./AIBannerGenerator";
 import { AIAvatarGenerator } from "./AIAvatarGenerator";
 import { CollectionsTab } from "./CollectionsTab";
 
-// --- Placeholder Data ---
-const initialLibraryItems: LibraryItem[] = [ { id: "vid_001", type: "Video", title: "Dragon over forest", thumbnail: "https://placehold.co/600x400.png", thumbnailHint: "dragon forest", source: "/video-generator", folderId: "folder_videos" }];
-const initialFolders: LibraryFolder[] = [ { id: "folder_avatars", name: "Mis Avatares" }, { id: "folder_videos", name: "Videos Generados" }];
-
-
 function ProfileSkeleton() {
     return (
         <div className="space-y-4">
@@ -289,7 +284,7 @@ export function ProfileClient() {
             <TabsContent value="publications" className="mt-6"><ProfileFeed profile={profile} /></TabsContent>
             <TabsContent value="collections" className="mt-6"><CollectionsTab collections={profile.collections || []} /></TabsContent>
             <TabsContent value="badges" className="mt-6"><BadgesGrid earnedBadges={profile.badges || {}} /></TabsContent>
-            <TabsContent value="library" className="mt-6"><LibraryGrid items={initialLibraryItems} folders={initialFolders} /></TabsContent>
+            <TabsContent value="library" className="mt-6"><LibraryGrid /></TabsContent>
         </Tabs>
       </div>
     </>

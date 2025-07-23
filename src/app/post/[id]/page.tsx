@@ -12,13 +12,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { EducationData, EducationSettings } from "@/components/publish/EducationSettings";
+import { EducationData } from "@/components/publish/EducationSettings";
 import { PollData, VotingSystem } from "@/components/politics/VotingSystem";
 import { CommentSection } from "@/components/politics/CommentSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, LayoutDashboard, BrainCircuit, Library, Users, Gavel } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/UserContext";
+import { EducationInfoDisplay } from "@/components/publish/EducationInfoDisplay";
 
 function PostSkeleton() {
     return (
@@ -129,13 +130,13 @@ export default function PostPage() {
                             </CardFooter>
                         )}
                     </Card>
-
+                    
                     {educationBlock && (
                         <div className="mt-6">
-                            <EducationSettings data={educationBlock} onChange={() => {}} />
+                           <EducationInfoDisplay data={educationBlock} />
                         </div>
                     )}
-                    
+
                     {pollBlock && (
                          <div className="mt-6">
                             <VotingSystem poll={pollBlock} postId={post.id} onVote={handleVote} />
