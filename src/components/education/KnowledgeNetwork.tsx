@@ -254,31 +254,20 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                 <CardContent>
                   <ScrollArea className="h-full max-h-[60vh]">
                        <div className="space-y-6">
-                        {activeNode && relatedContent.topics.length > 0 && (
+                        {activeNode && (activeNode.type === 'category' ? relatedContent.topics : relatedContent.categories).length > 0 && (
                             <div className="space-y-2">
-                                <div className="flex items-center gap-2 flex-wrap"><FileText className="h-4 w-4"/><h4 className="font-semibold flex-1 min-w-0">Temas en esta Categoría</h4></div>
+                                <div className="flex items-center gap-2 flex-wrap min-w-0">
+                                    {activeNode.type === 'category' ? <FileText className="h-4 w-4"/> : <Share2 className="h-4 w-4 shrink-0"/>}
+                                    <h4 className="font-semibold flex-1 min-w-0 truncate">{activeNode.type === 'category' ? "Temas en esta Categoría" : "Vinculado en Categorías"}</h4>
+                                </div>
                                 <div className="flex flex-wrap gap-2">
-                                    {relatedContent.topics.map(topic => (
-                                        <Button key={topic.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
-                                            {topic.name}
+                                    {(activeNode.type === 'category' ? relatedContent.topics : relatedContent.categories).map(item => (
+                                        <Button key={item.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
+                                            {item.name}
                                         </Button>
                                     ))}
                                 </div>
                                 <Separator />
-                            </div>
-                        )}
-
-                        {activeNode && relatedContent.categories.length > 0 && (
-                             <div className="space-y-2">
-                                <div className="flex items-center gap-2 flex-wrap"><Share2 className="h-4 w-4 shrink-0"/><h4 className="font-semibold flex-1 min-w-0">Vinculado en Categorías</h4></div>
-                                <div className="flex flex-wrap gap-2">
-                                    {relatedContent.categories.map(cat => (
-                                        <Button key={cat.id} variant="link" className="p-0 h-auto font-normal text-muted-foreground hover:text-primary">
-                                            {cat.name}
-                                        </Button>
-                                    ))}
-                                </div>
-                                 <Separator />
                             </div>
                         )}
 
@@ -334,5 +323,7 @@ export const KnowledgeNetwork = (props: KnowledgeNetworkProps) => {
             return <ListView {...props} />;
     }
 };
+
+    
 
     

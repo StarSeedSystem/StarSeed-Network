@@ -19,7 +19,7 @@ export function KnowledgePostItem({ post }: { post: FeedPostType }) {
 
     return (
         <Card className="p-3 bg-background/50">
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-x-4 gap-y-2">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                     <Avatar className="h-10 w-10 shrink-0">
                         <AvatarImage src={post.avatarUrl} alt={post.authorName} data-ai-hint={post.avatarHint} />
@@ -32,7 +32,7 @@ export function KnowledgePostItem({ post }: { post: FeedPostType }) {
                         </p>
                     </div>
                 </div>
-                 <Button variant="outline" size="sm" asChild className="shrink-0">
+                 <Button variant="outline" size="sm" asChild className="shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
                     <Link href={`/publish/${post.id}`}>
                         Ver Publicación <ArrowRight className="h-4 w-4 ml-2" />
                     </Link>
@@ -42,5 +42,7 @@ export function KnowledgePostItem({ post }: { post: FeedPostType }) {
     )
 
 }
+
+    
 
     
