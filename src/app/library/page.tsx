@@ -1,11 +1,11 @@
 
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Library as LibraryIcon, Store, Bot, LayoutTemplate, Folder } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const ecosystemSections = [
     {
@@ -49,6 +49,12 @@ const ecosystemSections = [
 export default function LibraryPage() {
     return (
         <div className="space-y-8">
+            <PageHeader
+                title="Biblioteca"
+                subtitle="Tu ecosistema personal de apps, archivos y creaciones de IA."
+                actionType="library"
+                currentLibrary="hub"
+            />
             <Card className="glass-card p-4">
                 <div className="relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

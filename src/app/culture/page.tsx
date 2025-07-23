@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { FeedPost } from "@/components/dashboard/FeedPost";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function CulturePage() {
   const [posts, setPosts] = useState<DocumentData[]>([]);
@@ -57,13 +58,15 @@ export default function CulturePage() {
 
   return (
     <div className="space-y-8">
-        <div className="flex items-center justify-between">
-            <div>
-                <h2 className="text-2xl font-headline">Galería Cultural</h2>
-                <p className="text-muted-foreground">El lienzo de expresión de las comunidades en las que participas.</p>
-            </div>
-            <Button asChild><Link href="/publish"><PlusCircle className="mr-2 h-4 w-4" />Publicar Obra</Link></Button>
-        </div>
+        <PageHeader
+            title="Cultura"
+            subtitle="Expresión artística, eventos y creaciones sociales."
+            actionType="network"
+            currentNetwork="culture"
+            actionButton={
+                 <Button asChild><Link href="/publish"><PlusCircle className="mr-2 h-4 w-4" />Publicar Obra</Link></Button>
+            }
+        />
 
         {isLoading ? ( <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin"/></div>
         ) : posts.length > 0 ? (

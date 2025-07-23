@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Search, PlusCircle, Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { FeedPost } from "@/components/dashboard/FeedPost";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function EducationPage() {
   const [posts, setPosts] = useState<DocumentData[]>([]);
@@ -56,6 +57,13 @@ export default function EducationPage() {
   
   return (
     <div className="space-y-8">
+      <PageHeader
+        title="Educación"
+        subtitle="Comparte conocimiento, tutoriales e investigaciones."
+        actionType="network"
+        currentNetwork="education"
+      />
+      
        <Card className="glass-card p-4">
             <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-grow">

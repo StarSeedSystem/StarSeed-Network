@@ -7,6 +7,7 @@ import { useUser } from "@/context/UserContext";
 import { CreateProfileForm } from "@/components/profile/CreateProfileForm";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function ProfilePage() {
   const { user, profile, loading } = useUser();
@@ -37,7 +38,16 @@ export default function ProfilePage() {
         return <CreateProfileForm />;
       }
       // Once the profile is loaded, render the client component.
-      return <ProfileClient />;
+      return (
+        <div className="space-y-4">
+           <PageHeader
+                title="Mi Perfil"
+                subtitle="Tu identidad y presencia en la red StarSeed."
+                actionType="profile"
+            />
+          <ProfileClient />
+        </div>
+      );
   }
 
   // If there's no user and we are not loading, the useEffect will handle the redirect.

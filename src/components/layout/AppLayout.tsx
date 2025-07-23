@@ -251,24 +251,10 @@ function AppSidebar() {
   );
 }
 
-function AppHeader() {
-    const { isMobile, toggleSidebar } = useSidebar();
-    return (
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-xl md:px-6">
-            <div className="flex items-center gap-4">
-                {isMobile && <Button variant="ghost" size="icon" onClick={toggleSidebar}><PanelLeft className="h-5 w-5"/></Button>}
-            </div>
-            <div className="flex-1">
-                 {/* Can add breadcrumbs or page titles here in the future */}
-            </div>
-        </header>
-    );
-}
-
 function MainContent({ children }: { children: React.ReactNode }) {
     return (
-        <main className="flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-7xl p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto pt-8">
+            <div className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
             {children}
             </div>
         </main>
@@ -279,7 +265,7 @@ function AppLayoutClient({ children }: { children: React.ReactNode }) {
   const { state, isMobile } = useSidebar();
   
   return (
-    <div className="relative flex min-h-screen">
+    <div className="relative flex min-h-screen w-full">
       <AppSidebar />
       <div
         className={cn(
@@ -287,7 +273,6 @@ function AppLayoutClient({ children }: { children: React.ReactNode }) {
           !isMobile && (state === 'expanded' ? "ml-[18rem]" : "ml-[4.5rem]")
         )}
       >
-        <AppHeader />
         <MainContent>{children}</MainContent>
       </div>
     </div>

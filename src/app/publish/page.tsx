@@ -21,6 +21,7 @@ import { PollBlock, PollData } from "@/components/publish/PollBlock";
 import { FederatedEntitySettings } from "@/components/publish/FederatedEntitySettings";
 import { NewsSettings } from "@/components/publish/NewsSettings";
 import { LegislativeSettings, LegislativeData } from "@/components/publish/LegislativeSettings";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 type Step = "area" | "context" | "canvas";
 type Area = "politics" | "education" | "culture";
@@ -322,10 +323,10 @@ export default function PublishPage() {
 
     return (
         <div className="space-y-6">
-            <div className="text-center">
-                <h1 className="text-4xl font-bold font-headline">Crear Publicación</h1>
-                <p className="text-muted-foreground mt-2">Comparte tu visión, conocimiento o creatividad con la red a través del Lienzo de Creación.</p>
-            </div>
+            <PageHeader 
+                title="Crear Publicación"
+                subtitle="Comparte tu visión, conocimiento o creatividad con la red."
+            />
             {renderStepContent()}
         </div>
     );

@@ -11,6 +11,7 @@ import { PlusCircle, Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { FeedPost } from "@/components/dashboard/FeedPost";
 import { AdvancedFilter, FilterState } from "@/components/politics/AdvancedFilter";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function PoliticsPage() {
   const [posts, setPosts] = useState<DocumentData[]>([]);
@@ -79,10 +80,15 @@ export default function PoliticsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold font-headline">Centro Político</h1>
-         <Button asChild><Link href="/publish"><PlusCircle className="mr-2 h-4 w-4" />Crear Publicación</Link></Button>
-      </div>
+      <PageHeader
+        title="Política"
+        subtitle="Propuestas, leyes y debates para la gobernanza de la red."
+        actionType="network"
+        currentNetwork="politics"
+        actionButton={
+            <Button asChild><Link href="/publish"><PlusCircle className="mr-2 h-4 w-4" />Crear Publicación</Link></Button>
+        }
+      />
 
       <AdvancedFilter filters={filters} onFilterChange={setFilters} />
       
