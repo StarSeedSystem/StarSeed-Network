@@ -54,7 +54,6 @@ const findNodeInTree = (nodes: KnowledgeNode[], nodeId: string): KnowledgeNode |
     return null;
 };
 
-
 const getPathToNode = (nodes: KnowledgeNode[], nodeId: string, currentParentId?: string): KnowledgeNode[] => {
     const path: KnowledgeNode[] = [];
     
@@ -106,8 +105,8 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
         // If there's an active node, show its children. Otherwise, show the root nodes for the current network type.
         if (activeNode) {
             if (networkType === 'category') {
-                 // In category view, children can be categories or topics. We only want to show sub-categories here.
-                 return activeNode.children?.filter(c => c.type === 'category') || [];
+                 // In category view, children can be categories or topics.
+                 return activeNode.children || [];
             }
              // In topic view, children can be sub-topics or concepts.
             return activeNode.children || [];
@@ -250,7 +249,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                         <CardDescription>{activeNode ? activeNode.description : "Haz clic en un ítem para explorarlo."}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ScrollArea className="h-[50vh]">
+                        <ScrollArea className="h-[50vh] pr-2">
                            <div className="space-y-6">
                             {/* Topics in this Category OR Categories this Topic belongs to */}
                             {activeNode && networkType === 'category' && relatedContent.topics.length > 0 && (

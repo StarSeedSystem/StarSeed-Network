@@ -222,11 +222,10 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
             onVote={handleVote}
           />
         )}
-
       </CardContent>
       <CardFooter className="flex flex-col items-start gap-4">
         {post.destinations && post.destinations.length > 0 && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+            <div className="flex items-center gap-x-2 gap-y-1 text-xs text-muted-foreground flex-wrap">
                 <SendHorizonal className="h-3 w-3" />
                 <span>Publicado en:</span>
                 {post.destinations.map((dest: any) => {
@@ -234,7 +233,7 @@ export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
                 })}
             </div>
         )}
-        <div className="flex justify-between w-full">
+        <div className="flex justify-between items-center w-full flex-wrap gap-2">
             <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-primary" onClick={() => setShowComments(!showComments)}>
                 <MessageSquare className="h-4 w-4" /> {post.comments}
             </Button>
