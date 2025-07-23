@@ -9,6 +9,7 @@ import { MyPagesWidget } from "./MyPagesWidget";
 import { AchievementsWidget } from "./AchievementsWidget";
 import { ProjectsWidget } from "./ProjectsWidget";
 import { LearningPathWidget } from "./LearningPathWidget";
+import { PoliticalSummaryWidget } from "./PoliticalSummaryWidget";
 import { PlusCircle } from "lucide-react";
 
 export interface Widget {
@@ -24,6 +25,7 @@ export const allWidgets: Widget[] = [
     { id: 'achievements', name: "Logros", description: "Tus insignias y reconocimientos.", component: AchievementsWidget },
     { id: 'projects', name: "Proyectos Ejecutivos", description: "Seguimiento de proyectos aprobados.", component: ProjectsWidget },
     { id: 'learningPath', name: "Ruta de Aprendizaje", description: "Tus cursos y artículos recomendados.", component: LearningPathWidget },
+    { id: 'politicalSummary', name: "Resumen Político", description: "Vistazo a propuestas legislativas.", component: PoliticalSummaryWidget },
 ];
 
 interface WidgetLibraryProps {

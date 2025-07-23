@@ -60,9 +60,9 @@ export function ProjectsWidget() {
         </CardTitle>
         <CardDescription>Seguimiento de los proyectos aprobados por la comunidad.</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col min-h-0">
-        <ScrollArea className="flex-grow -mx-4">
-            <div className="space-y-6 px-4">
+      <CardContent className="flex-grow min-h-0">
+        <ScrollArea className="h-full">
+            <div className="space-y-6">
                 {projects.map((proj, index) => (
                     <div key={index}>
                         <div className="flex justify-between items-center mb-1 gap-4">

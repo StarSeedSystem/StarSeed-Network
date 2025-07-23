@@ -61,9 +61,9 @@ export function PoliticalSummaryWidget() {
         </CardTitle>
         <CardDescription>Vistazo rápido a las propuestas legislativas más relevantes.</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow flex-col min-h-0">
-        <ScrollArea className="flex-grow -mx-4">
-            <div className="space-y-4 px-4">
+      <CardContent className="flex-grow min-h-0">
+        <ScrollArea className="h-full">
+            <div className="space-y-4">
                 {proposals.map((prop) => (
                     <div key={prop.id} className="flex items-center justify-between p-3 rounded-lg bg-primary/5">
                         <div>

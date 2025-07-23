@@ -60,9 +60,9 @@ export function LearningPathWidget() {
         </CardTitle>
         <CardDescription>Continúa tu viaje de conocimiento.</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col min-h-0">
-        <ScrollArea className="flex-grow -mx-2">
-          <div className="space-y-4 px-2">
+      <CardContent className="flex-grow min-h-0">
+        <ScrollArea className="h-full">
+          <div className="space-y-4">
               {learningItems.map((item, index) => (
                   <div key={index} className="flex items-center gap-4 group p-2 rounded-lg hover:bg-primary/10">
                       <div className="w-20 h-16 rounded-lg overflow-hidden relative shrink-0">

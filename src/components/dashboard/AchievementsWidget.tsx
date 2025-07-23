@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Star, Zap, BrainCircuit, Users, Award, ShieldCheck, Gem, MessageSquare, BookOpen, Code, Palette, Video, Mic, Heart } from "lucide-react";
@@ -28,10 +29,10 @@ export function AchievementsWidget() {
         <CardTitle className="font-headline">Achievements</CardTitle>
         <CardDescription>Badges earned throughout your journey.</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col min-h-0">
-        <ScrollArea className="flex-grow -mx-2">
+      <CardContent className="flex-grow min-h-0">
+        <ScrollArea className="h-full">
             <TooltipProvider>
-                <div className="grid grid-flow-row grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-x-4 gap-y-6 px-2">
+                <div className="grid grid-flow-row grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-x-4 gap-y-6">
                 {achievements.map((ach, index) => (
                     <Tooltip key={index}>
                         <TooltipTrigger asChild>

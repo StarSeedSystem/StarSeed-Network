@@ -12,6 +12,7 @@ import { MyPagesWidget } from "./MyPagesWidget";
 import { ProjectsWidget } from "./ProjectsWidget";
 import { LearningPathWidget } from "./LearningPathWidget";
 import { AchievementsWidget } from "./AchievementsWidget";
+import { PoliticalSummaryWidget } from "./PoliticalSummaryWidget";
 
 export interface LayoutItem {
   i: string; // Corresponds to widget id
@@ -21,13 +22,14 @@ export interface LayoutItem {
   h: number;
 }
 
-const WIDGET_COLS = 12;
-
 // Define default layout for widgets
 const defaultLayout: LayoutItem[] = [
   { i: 'quickAccess', x: 0, y: 0, w: 3, h: 2 },
   { i: 'myPages', x: 3, y: 0, w: 9, h: 4 },
   { i: 'achievements', x: 0, y: 2, w: 3, h: 2 },
+  { i: 'politicalSummary', x: 0, y: 4, w: 6, h: 2 },
+  { i: 'projects', x: 6, y: 4, w: 6, h: 2 },
+  { i: 'learningPath', x: 0, y: 6, w: 12, h: 2 },
 ];
 
 const defaultWidgets = allWidgets.filter(w => defaultLayout.some(l => l.i === w.id));
@@ -44,8 +46,13 @@ export function DashboardClient() {
         const savedWidgets = localStorage.getItem('dashboard_widgets');
         const savedLayout = localStorage.getItem('dashboard_layout');
         if (savedWidgets && savedLayout) {
-            setWidgets(JSON.parse(savedWidgets));
-            setLayout(JSON.parse(savedLayout));
+            try {
+                setWidgets(JSON.parse(savedWidgets));
+                setLayout(JSON.parse(savedLayout));
+            } catch (e) {
+                setWidgets(defaultWidgets);
+                setLayout(defaultLayout);
+            }
         } else {
             setWidgets(defaultWidgets);
             setLayout(defaultLayout);
@@ -66,10 +73,9 @@ export function DashboardClient() {
     };
 
     const handleAddWidget = (widget: Widget) => {
-        if (widgets.some(w => w.id === widget.id)) return; // Avoid duplicates
+        if (widgets.some(w => w.id === widget.id)) return;
         
         const newWidgets = [...widgets, widget];
-        // Position new widget at the bottom
         const y = Math.max(0, ...layout.map(l => l.y + l.h));
         const newLayoutItem: LayoutItem = { i: widget.id, x: 0, y: y, w: 3, h: 2 };
         const newLayout = [...layout, newLayoutItem];
@@ -78,7 +84,6 @@ export function DashboardClient() {
         setIsLibraryOpen(false);
     };
     
-    // Renders the component for a given widget ID
     const renderWidget = (widgetId: string) => {
         const widget = allWidgets.find(w => w.id === widgetId);
         if (!widget) return null;
@@ -96,12 +101,12 @@ export function DashboardClient() {
                 onAddWidget={() => setIsLibraryOpen(true)}
             />
             {isClient ? (
-                <div className="grid grid-cols-12 gap-6 auto-rows-[minmax(100px,auto)]">
+                <div className="grid grid-cols-12 gap-6">
                     {visibleLayout.map(item => (
                         <div
                             key={item.i}
                             className={cn(
-                                "transition-all duration-300 col-span-full",
+                                "col-span-full",
                                 `md:col-span-${item.w}`
                             )}
                             style={{
