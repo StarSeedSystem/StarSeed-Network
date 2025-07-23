@@ -151,9 +151,9 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="h-full flex flex-col md:flex-row glass-card rounded-2xl overflow-hidden">
+    <div className="h-full flex flex-col md:flex-row glass-card rounded-2xl overflow-hidden min-h-[calc(100vh-10rem)]">
       {/* Conversations List */}
-      <div className="w-full md:w-1/3 lg:w-1/4 border-b md:border-b-0 md:border-r border-white/10 flex flex-col">
+      <div className="w-full md:w-1/3 lg:w-1/4 border-b md:border-b-0 md:border-r border-white/10 flex flex-col shrink-0">
         <div className="p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-headline font-bold">Mensajes</h2>
@@ -200,10 +200,10 @@ export default function MessagesPage() {
       </div>
 
       {/* Active Chat */}
-      <div className="w-full md:w-1/2 flex flex-col bg-background/30">
+      <div className="w-full md:w-1/2 flex flex-col bg-background/30 grow">
         {activeConversation ? (
           <>
-            <div className="flex items-center p-4 border-b border-white/10">
+            <div className="flex items-center p-4 border-b border-white/10 shrink-0">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={activeConversation.avatar} alt={activeConversation.name} data-ai-hint={activeConversation.avatarHint} />
@@ -242,7 +242,7 @@ export default function MessagesPage() {
                 ))}
               </div>
             </ScrollArea>
-            <form onSubmit={handleSendMessage} className="p-4 border-t border-white/10">
+            <form onSubmit={handleSendMessage} className="p-4 border-t border-white/10 shrink-0">
               <div className="relative">
                 <Input 
                   placeholder="Escribe un mensaje..." 
@@ -266,7 +266,7 @@ export default function MessagesPage() {
       </div>
 
       {/* Contact Info */}
-      <div className="w-full md:w-1/3 lg:w-1/4 border-t md:border-t-0 md:border-l border-white/10 flex-col hidden lg:flex">
+      <div className="w-full md:w-1/3 lg:w-1/4 border-t md:border-t-0 md:border-l border-white/10 flex-col hidden lg:flex shrink-0">
         {activeConversation ? (
           <ScrollArea className="flex-1">
             <div className="flex flex-col items-center text-center p-6">

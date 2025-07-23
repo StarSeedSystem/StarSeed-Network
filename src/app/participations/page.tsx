@@ -179,8 +179,8 @@ export default function ConnectionsHubPage() {
                         <Link href={link.href}>
                             <link.icon className="h-6 w-6 text-primary"/>
                             <div className="flex flex-col text-center">
-                                <span className="font-semibold">{link.label}</span>
-                                <span className="text-xs font-normal text-muted-foreground hidden sm:block">{link.description}</span>
+                                <span className="font-semibold truncate">{link.label}</span>
+                                <span className="text-xs font-normal text-muted-foreground hidden sm:block truncate">{link.description}</span>
                             </div>
                         </Link>
                     </Button>
@@ -272,7 +272,7 @@ export default function ConnectionsHubPage() {
                     <CardContent className="space-y-3">
                         {activeParticipations.votes.map(vote => (
                             <div key={vote.id} className="p-3 rounded-lg bg-secondary/70">
-                                <p className="font-semibold">{vote.title}</p>
+                                <p className="font-semibold truncate">{vote.title}</p>
                                 <p className="text-sm text-muted-foreground">{vote.timeLeft}</p>
                                 <Button variant="link" asChild className="p-0 h-auto mt-1"><Link href={`/politics/proposal/${vote.id}`}>Ir a Votar</Link></Button>
                             </div>
@@ -284,8 +284,8 @@ export default function ConnectionsHubPage() {
                     <CardContent className="space-y-3">
                        {activeParticipations.tasks.map(task => (
                             <div key={task.title} className="p-3 rounded-lg bg-secondary/70">
-                                <p className="font-semibold">{task.title}</p>
-                                <p className="text-sm text-muted-foreground">Proyecto: {task.project}</p>
+                                <p className="font-semibold truncate">{task.title}</p>
+                                <p className="text-sm text-muted-foreground truncate">Proyecto: {task.project}</p>
                             </div>
                         ))}
                     </CardContent>
@@ -295,7 +295,7 @@ export default function ConnectionsHubPage() {
                     <CardContent className="space-y-3">
                         {activeParticipations.events.map(event => (
                             <div key={event.title} className="p-3 rounded-lg bg-secondary/70">
-                                <p className="font-semibold">{event.title}</p>
+                                <p className="font-semibold truncate">{event.title}</p>
                                 <p className="text-sm text-muted-foreground">{event.date}</p>
                             </div>
                         ))}
@@ -306,7 +306,7 @@ export default function ConnectionsHubPage() {
                     <CardContent className="space-y-4">
                         {activeParticipations.projects.map(project => (
                              <div key={project.title} className="p-3 rounded-lg bg-secondary/70">
-                                <p className="font-semibold">{project.title}</p>
+                                <p className="font-semibold truncate">{project.title}</p>
                                 <p className="text-sm text-muted-foreground">Mi Rol: {project.role}</p>
                                 <Progress value={project.progress} className="mt-2 h-1.5" />
                             </div>

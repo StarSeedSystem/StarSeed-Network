@@ -108,9 +108,9 @@ export default function NotificationsPage() {
                             n.isRead ? "bg-card/60" : "bg-primary/10 border border-primary/20"
                         )}
                     >
-                        <div className="mt-1">{notificationIcons[n.type]}</div>
+                        <div className="mt-1 flex-shrink-0">{notificationIcons[n.type]}</div>
                         <div className="flex-grow">
-                             <div className="flex items-center gap-2">
+                             <div className="flex items-center gap-2 flex-wrap">
                                 <Avatar className="h-6 w-6">
                                     <AvatarImage src={n.author.avatar} alt={n.author.name} data-ai-hint={n.author.avatarHint} />
                                     <AvatarFallback>{n.author.name.substring(0, 2)}</AvatarFallback>
@@ -125,7 +125,7 @@ export default function NotificationsPage() {
                                 </blockquote>
                             )}
                         </div>
-                        <div className="text-xs text-muted-foreground whitespace-nowrap">{n.timestamp}</div>
+                        <div className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{n.timestamp}</div>
                     </div>
                 ))}
             </div>
@@ -136,7 +136,7 @@ export default function NotificationsPage() {
         <div className="space-y-8">
             <Card className="glass-card">
                 <CardHeader>
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-wrap justify-between items-center gap-4">
                          <div className="flex items-center gap-3">
                              <div>
                                 <CardTitle className="font-headline text-3xl">Notificaciones</CardTitle>

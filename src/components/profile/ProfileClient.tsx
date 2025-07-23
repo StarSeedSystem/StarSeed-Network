@@ -178,7 +178,7 @@ export function ProfileClient() {
 
   return (
     <>
-      <div className="relative h-48 w-full rounded-2xl overflow-hidden group">
+      <div className="relative h-36 md:h-48 w-full rounded-2xl overflow-hidden group">
         <Image src={profile.bannerUrl} alt="Profile Banner" layout="fill" objectFit="cover" data-ai-hint="profile banner" />
         <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
           <DialogTrigger asChild>
@@ -218,10 +218,10 @@ export function ProfileClient() {
         </Dialog>
       </div>
 
-      <div className="relative px-4 sm:px-8 pb-8 -mt-24">
+      <div className="relative px-4 sm:px-8 pb-4 -mt-16 md:-mt-24">
           <div className="flex flex-col sm:flex-row items-start gap-6">
-              <div className="group relative">
-                <Avatar className="w-32 h-32 border-4 border-background ring-4 ring-primary">
+              <div className="group relative shrink-0">
+                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-background ring-4 ring-primary">
                     <AvatarImage src={profile.avatarUrl} alt="User Avatar" />
                     <AvatarFallback>{profile.name?.substring(0, 2) || '??'}</AvatarFallback>
                 </Avatar>
@@ -252,10 +252,10 @@ export function ProfileClient() {
                 </Dialog>
               </div>
 
-              <div className="pt-16 flex-grow">
-                  <div className="flex justify-between items-center flex-wrap gap-2">
+              <div className="pt-8 sm:pt-16 md:pt-24 flex-grow">
+                  <div className="flex flex-wrap justify-between items-center gap-2">
                       <div>
-                          <h1 className="text-3xl font-bold font-headline">{profile.name}</h1>
+                          <h1 className="text-2xl md:text-3xl font-bold font-headline">{profile.name}</h1>
                           <p className="text-muted-foreground">@{profile.handle}</p>
                       </div>
                       <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
@@ -280,7 +280,7 @@ export function ProfileClient() {
       
       <div className="px-4 sm:px-8">
         <Tabs defaultValue="publications" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 bg-card/60 rounded-xl h-auto">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-card/60 rounded-xl h-auto">
               <TabsTrigger value="publications" className="rounded-lg"><PenSquare className="mr-2 h-4 w-4"/>Publicaciones</TabsTrigger>
               <TabsTrigger value="collections" className="rounded-lg"><Folder className="mr-2 h-4 w-4"/>Colecciones</TabsTrigger>
               <TabsTrigger value="badges" className="rounded-lg"><Award className="mr-2 h-4 w-4"/>Insignias</TabsTrigger>

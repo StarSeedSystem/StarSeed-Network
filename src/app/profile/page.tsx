@@ -23,7 +23,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
+      <div className="flex h-screen w-full items-center justify-center -m-8">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
@@ -43,7 +43,7 @@ export default function ProfilePage() {
   // If there's no user and we are not loading, the useEffect will handle the redirect.
   // We can return a loader or null here to prevent rendering anything briefly before redirect.
   return (
-      <div className="flex h-full w-full items-center justify-center">
+      <div className="flex h-screen w-full items-center justify-center -m-8">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
   );
