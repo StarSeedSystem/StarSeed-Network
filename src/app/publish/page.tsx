@@ -44,8 +44,7 @@ export default function PublishPage() {
     const [destinations, setDestinations] = useState<UserPage[]>([]);
     const [isNews, setIsNews] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [legislativeData, setLegislativeData] = useState<LegislativeData>({});
-
+    
     // Derived State
     const isFederationSelected = useMemo(() => destinations.some(d => d.type === 'federation'), [destinations]);
     const isLegislative = useMemo(() => isFederationSelected && federationArea === 'legislative', [isFederationSelected, federationArea]);
@@ -96,7 +95,23 @@ export default function PublishPage() {
 
     const handleFederationAreaChange = useCallback((area: string | null) => {
         setFederationArea(area);
-    }, []);
+        
+        // Auto-manage the legislative poll block
+        const isNowLegislative = destinations.some(d => d.type === 'federation') && area === 'legislative';
+
+        setBlocks(prevBlocks => {
+            const hasLegislativeBlock = prevBlocks.some(b => b.isLegislative);
+            if (isNowLegislative && !hasLegislativeBlock) {
+                // Add legislative block if it doesn't exist
+                return [...prevBlocks, { type: 'poll', question: '', options: [{ text: "A favor" }, { text: "En contra" }], isLegislative: true, legislativeData: {} }];
+            } else if (!isNowLegislative && hasLegislativeBlock) {
+                // Remove legislative block if it exists and we're no longer in legislative context
+                return prevBlocks.filter(b => !b.isLegislative);
+            }
+            return prevBlocks;
+        });
+
+    }, [destinations]);
 
     const handleAreaSelect = (area: Area) => {
         setSelectedArea(area);
@@ -104,16 +119,6 @@ export default function PublishPage() {
     };
     
     const handleNextToCanvas = () => {
-        if (isLegislative) {
-            setBlocks(prev => {
-                if (!prev.some(b => b.isLegislative)) {
-                    return [...prev, { type: 'poll', question: '', options: [{ text: "A favor" }, { text: "En contra" }], isLegislative: true }];
-                }
-                return prev;
-            });
-        } else {
-             setBlocks(prev => prev.filter(b => !b.isLegislative));
-        }
         setStep("canvas");
     };
 
@@ -157,14 +162,6 @@ export default function PublishPage() {
         setIsLoading(true);
 
         try {
-            // Find the poll block to include legislative data
-            const finalBlocks = blocks.map(b => {
-                if (b.type === 'poll' && b.isLegislative) {
-                    return { ...b, legislativeData };
-                }
-                return b;
-            });
-
             await addDoc(collection(db, "posts"), {
                 authorId: authUser.uid,
                 authorName: profile.name,
@@ -172,7 +169,7 @@ export default function PublishPage() {
                 avatarUrl: profile.avatarUrl,
                 title,
                 content,
-                blocks: finalBlocks,
+                blocks: blocks,
                 destinations: destinations.map(({ id, name, type }) => ({ id, name, type })),
                 area: selectedArea,
                 subArea: federationArea,
@@ -305,10 +302,6 @@ export default function PublishPage() {
                                     </CardContent>
                                 </Card>
                                 
-                                {isLegislative && (
-                                    <LegislativeSettings data={legislativeData} onChange={setLegislativeData} />
-                                )}
-
                                 <Card className="glass-card">
                                      <CardHeader><CardTitle>Configuración</CardTitle></CardHeader>
                                      <CardContent>
@@ -337,5 +330,3 @@ export default function PublishPage() {
         </div>
     );
 }
-
-      
