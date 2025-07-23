@@ -42,5 +42,3 @@ export function KnowledgePostItem({ post }: { post: FeedPostType }) {
     )
 
 }
-
-    

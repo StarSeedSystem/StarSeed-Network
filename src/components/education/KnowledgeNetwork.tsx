@@ -249,7 +249,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                         <CardTitle>{activeNode ? activeNode.name : (networkType === 'category' ? "Red de Categorías" : "Red de Temas")}</CardTitle>
                         <CardDescription>{activeNode ? activeNode.description : "Haz clic en un ítem para explorarlo."}</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-6">
                         <ScrollArea className="h-[50vh]">
                            <div className="space-y-6">
                             {/* Topics in this Category OR Categories this Topic belongs to */}
@@ -324,5 +324,3 @@ export const KnowledgeNetwork = (props: KnowledgeNetworkProps) => {
             return <ListView {...props} />;
     }
 };
-
-    
