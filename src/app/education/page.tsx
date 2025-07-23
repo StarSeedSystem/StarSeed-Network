@@ -42,12 +42,14 @@ export default function EducationPage() {
 
     const categories = allNodesData.filter(node => node.type === 'category');
     
-    // Flatten all topics and concepts for the topic network view
-    const topicsAndConcepts: KnowledgeNode[] = [];
+    // Use a Map to ensure unique nodes when flattening for the topics network
+    const topicsAndConceptsMap = new Map<string, KnowledgeNode>();
     const findTopicsRecursive = (nodes: KnowledgeNode[]) => {
         for (const node of nodes) {
             if (node.type === 'topic' || node.type === 'concept') {
-                topicsAndConcepts.push(node);
+                if (!topicsAndConceptsMap.has(node.id)) {
+                    topicsAndConceptsMap.set(node.id, node);
+                }
             }
             if (node.children) {
                 findTopicsRecursive(node.children);
@@ -55,6 +57,7 @@ export default function EducationPage() {
         }
     }
     findTopicsRecursive(allNodesData);
+    const topicsAndConcepts = Array.from(topicsAndConceptsMap.values());
 
     setCategoryNodes(categories);
     setTopicNodes(topicsAndConcepts);
