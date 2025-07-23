@@ -1,129 +1,104 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import { addDoc, collection, serverTimestamp, getDocs } from "firebase/firestore";
 import { db } from "@/data/firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
-// --- UI Imports ---
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PenSquare, Gavel, GraduationCap, Palette, Send, ArrowRight, Loader2, Info, ListPlus, BarChart2, Table, Link, Vote } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Switch } from "@/components/ui/switch";
-
-// --- Sub-components for a cleaner structure ---
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Loader2, Check, ArrowLeft, PenSquare, Vote, Gavel, GraduationCap, Sparkles } from "lucide-react";
 import { AudienceSelector, UserPage } from "@/components/publish/AudienceSelector";
-import { LegislativeSettings } from "@/components/publish/LegislativeSettings";
-import { NewsSettings } from "@/components/publish/NewsSettings";
-import { FederatedEntitySettings } from "@/components/publish/FederatedEntitySettings";
 import { PollBlock, PollData } from "@/components/publish/PollBlock";
+import { FederatedEntitySettings } from "@/components/publish/FederatedEntitySettings";
+import { NewsSettings } from "@/components/publish/NewsSettings";
 
+type Step = "area" | "context" | "canvas";
+type Area = "politics" | "education" | "culture";
+type Block = PollData; // Will be extended with more block types
 
-type Area = "politics" | "culture" | "education";
-type Step = "area" | "details" | "canvas";
+// Mock data for user's pages
+const mockAvailablePages: UserPage[] = [
+    { id: "user123", name: "Mi Perfil Personal", type: "profile", areas: ["education", "culture"] },
+    { id: "innovacion-sostenible", name: "Innovación Sostenible", type: "community", areas: ["education", "culture"] },
+    { id: "art-ai-collective", name: "Art-AI Collective", type: "community", areas: ["culture"] },
+    { id: "consejo-etica-digital", name: "Consejo de Ética Digital", type: "federation", areas: ["politics"] },
+    { id: "partido-conciencia-digital", name: "Partido Conciencia Digital", type: "political_party", areas: ["politics"] },
+    { id: "exploradores-cuanticos", name: "Exploradores Cuánticos", type: "study_group", areas: ["education"] },
+];
 
 export default function PublishPage() {
     const router = useRouter();
     const { toast } = useToast();
     const { user: authUser, profile } = useUser();
-    
-    // --- State Management ---
+
+    // Flow State
     const [step, setStep] = useState<Step>("area");
     const [selectedArea, setSelectedArea] = useState<Area | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [myPages, setMyPages] = useState<UserPage[]>([]);
-    const [isLoadingPages, setIsLoadingPages] = useState(true);
+    const [federationArea, setFederationArea] = useState<string | null>(null);
 
-    // -- Form Data State ---
+    // Content State
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
-    const [selectedDestinations, setSelectedDestinations] = useState<UserPage[]>([]);
-    
-    // -- Block Data State --
-    const [blocks, setBlocks] = useState<any[]>([]);
-
-    // -- Contextual Settings State --
-    const [federationArea, setFederationArea] = useState<string | null>(null);
-    const [isLegislative, setIsLegislative] = useState(false);
+    const [blocks, setBlocks] = useState<Block[]>([]);
+    const [destinations, setDestinations] = useState<UserPage[]>([]);
     const [isNews, setIsNews] = useState(false);
-    
-    // Moved this declaration up to be before its usage in useEffect
-    const isFederationSelected = selectedDestinations.some(d => d.type === 'federation');
-    
-    useEffect(() => {
-        if (!authUser || !profile) return;
+    const [isLoading, setIsLoading] = useState(false);
 
-        const fetchUserPages = async () => {
-            setIsLoadingPages(true);
-            const collectionsToFetch = [
-                { name: "communities", type: 'community', areas: ['culture', 'education'] },
-                { name: "federated_entities", type: 'federation', areas: ['politics'] },
-                { name: "political_parties", type: 'political_party', areas: ['politics'] },
-                { name: "study_groups", type: 'study_group', areas: ['education'] },
-            ] as const;
+    // Derived State
+    const isFederationSelected = useMemo(() => destinations.some(d => d.type === 'federation'), [destinations]);
+    const isLegislative = useMemo(() => isFederationSelected && federationArea === 'legislative', [isFederationSelected, federationArea]);
 
-            const userAffiliatedPages: UserPage[] = [];
-
-            for (const c of collectionsToFetch) {
-                const q = collection(db, c.name);
-                const querySnapshot = await getDocs(q);
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    if (data.creatorId === authUser.uid || (Array.isArray(data.members) && data.members.includes(authUser.uid))) {
-                       userAffiliatedPages.push({ id: doc.id, name: data.name, type: c.type, areas: c.areas });
-                    }
-                });
+    // Effect to manage blocks based on legislative status
+    // Ensures poll block is added/removed automatically
+    React.useEffect(() => {
+        if (isLegislative) {
+            // If not already present, add a legislative poll block
+            if (!blocks.some(b => b.isLegislative)) {
+                setBlocks(prev => [...prev, { type: 'poll', question: 'Propuesta Legislativa', options: [{ text: "A favor" }, { text: "En contra" }], isLegislative: true }]);
             }
-            
-            const profilePage: UserPage = { id: authUser.uid, name: "Mi Perfil Personal", type: 'profile', areas: ['culture', 'education'] };
-            setMyPages([profilePage, ...userAffiliatedPages]);
-            setIsLoadingPages(false);
-        };
-        
-        fetchUserPages();
-
-    }, [profile, authUser]);
-
-    useEffect(() => {
-        // Automatically add legislative block when conditions are met
-        if (isFederationSelected && federationArea === 'legislative' && isLegislative) {
-             const hasPollBlock = blocks.some(b => b.type === 'poll');
-             if (!hasPollBlock) {
-                 handleAddPoll(true);
-             }
         } else {
-            // Clean up legislative poll block if conditions are no longer met
-             setBlocks(blocks.filter(b => !b.isLegislative));
+            // Remove any legislative poll blocks if the context is no longer legislative
+            setBlocks(prev => prev.filter(b => !b.isLegislative));
         }
-    }, [isFederationSelected, federationArea, isLegislative]);
-
+    }, [isLegislative, blocks]);
 
     const handleAreaSelect = (area: Area) => {
         setSelectedArea(area);
-        setStep("details");
+        setStep("context");
     };
 
-    const handleAddPoll = (isLegislativePoll = false) => {
-        const newPoll: PollData = {
-            type: 'poll',
-            question: '',
-            options: [{ text: '' }, { text: '' }],
-            isLegislative: isLegislativePoll,
-        };
-        setBlocks([...blocks, newPoll]);
+    const resetState = () => {
+        setStep("area");
+        setSelectedArea(null);
+        setFederationArea(null);
+        setTitle("");
+        setContent("");
+        setBlocks([]);
+        setDestinations([]);
+        setIsNews(false);
+        setIsLoading(false);
+    }
+
+    const addBlock = (type: Block['type']) => {
+        if (type === 'poll') {
+            setBlocks([...blocks, { type: 'poll', question: '', options: [{ text: "" }, { text: "" }] }]);
+        }
     };
-    
-    const updateBlockData = (index: number, data: any) => {
+
+    const updateBlockData = useCallback((index: number, data: Block) => {
         const newBlocks = [...blocks];
-        newBlocks[index] = { ...newBlocks[index], ...data };
+        newBlocks[index] = data;
         setBlocks(newBlocks);
-    };
+    }, [blocks]);
+
 
     const removeBlock = (index: number) => {
         setBlocks(blocks.filter((_, i) => i !== index));
@@ -131,249 +106,177 @@ export default function PublishPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSubmitting(true);
-        
-        if (!authUser || !profile) {
-            toast({ title: "Error de autenticación", description: "Debes estar conectado para publicar.", variant: "destructive" });
-            setIsSubmitting(false);
-            return;
-        }
-        if (!title.trim() || !content.trim()) {
-            toast({ title: "Faltan datos", description: "El título y el contenido son obligatorios.", variant: "destructive" });
-            setIsSubmitting(false);
-            return;
-        }
-        if (selectedDestinations.length === 0) {
-            toast({ title: "Falta destino", description: "Debes seleccionar al menos un destino para tu publicación.", variant: "destructive" });
-            setIsSubmitting(false);
-            return;
-        }
-         const isFederationSelected = selectedDestinations.some(d => d.type === 'federation');
-         if (isFederationSelected && !federationArea) {
-            toast({ title: "Falta área de la E.F.", description: "Debes seleccionar un área de destino dentro de la Entidad Federativa.", variant: "destructive" });
-            setIsSubmitting(false);
-            return;
-        }
+        if (!authUser || !profile) return toast({ variant: "destructive", title: "Necesitas iniciar sesión para publicar." });
+        if (destinations.length === 0) return toast({ variant: "destructive", title: "Por favor, selecciona al menos un destino." });
+        if (!title.trim() || !content.trim()) return toast({ variant: "destructive", title: "Por favor, completa el título y el contenido." });
+        if (isLegislative && !blocks.some(b => b.isLegislative)) return toast({ variant: "destructive", title: "Las propuestas legislativas deben tener un bloque de votación." });
+
+        setIsLoading(true);
 
         try {
-            // Prepare blocks for saving, adding initial votes count
-            const blocksToSave = blocks.map(block => {
-                if (block.type === 'poll') {
-                    return {
-                        ...block,
-                        options: block.options.map((opt: {text: string}) => ({ text: opt.text, votes: 0 })),
-                    };
-                }
-                return block;
-            });
-
-
-            const postData: any = {
+            await addDoc(collection(db, "posts"), {
                 authorId: authUser.uid,
                 authorName: profile.name,
                 handle: profile.handle,
                 avatarUrl: profile.avatarUrl,
                 title,
                 content,
+                blocks,
+                destinations: destinations.map(({ id, name, type }) => ({ id, name, type })),
                 area: selectedArea,
+                subArea: federationArea,
                 isNews,
-                destinations: selectedDestinations.map(d => ({ id: d.id, type: d.type, name: d.name })),
-                blocks: blocksToSave,
                 comments: 0,
-                likes: 0,
                 reposts: 0,
+                likes: 0,
                 createdAt: serverTimestamp(),
-            };
-            
-            if (isLegislative && isFederationSelected) {
-                postData.isLegislative = true;
-                // Add legislative settings to the post data from the form if needed
-            }
-
-
-            await addDoc(collection(db, "posts"), postData);
-            
-            toast({
-                title: "Publicación Creada",
-                description: "Tu contenido ha sido publicado en los destinos seleccionados.",
             });
-            
-            const targetPath = selectedArea === 'culture' ? '/culture' : selectedArea === 'education' ? '/education' : '/';
-            router.push(targetPath);
-
+            toast({ title: "Éxito", description: "Tu publicación ha sido difundida en la red." });
+            router.push('/');
         } catch (error) {
-            console.error("Error creating post:", error);
-            toast({ title: "Error al publicar", description: "Hubo un problema al crear tu publicación.", variant: "destructive" });
+            console.error("Error al publicar:", error);
+            toast({ title: "Error", description: "No se pudo crear la publicación.", variant: "destructive" });
         } finally {
-            setIsSubmitting(false);
+            setIsLoading(false);
         }
     };
 
-    const resetFlow = () => {
-        setStep("area");
-        setSelectedArea(null);
-        setTitle("");
-        setContent("");
-        setSelectedDestinations([]);
-        setFederationArea(null);
-        setIsLegislative(false);
-        setIsNews(false);
-        setBlocks([]);
-    }
-    
-
-    return (
-        <div className="space-y-6 max-w-4xl mx-auto">
-             <Card className="glass-card">
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="font-headline text-3xl flex items-center gap-3">
-                            <PenSquare className="h-8 w-8 text-primary glowing-icon" />
-                            El Lienzo de Creación
-                        </CardTitle>
-                        {step !== 'area' && <Button variant="link" onClick={resetFlow}>Empezar de nuevo</Button>}
-                    </div>
-                     <CardDescription>
-                        {step === 'area' && "Elige el área principal de tu publicación para empezar."}
-                        {step === 'details' && `Publicando en el área de ${selectedArea}. Elige los detalles y el destino.`}
-                        {step === 'canvas' && `Estás listo para escribir. Destino: ${selectedDestinations.map(d => d.name).join(', ')}.`}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {step === 'area' && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in-50">
-                            <AreaCard icon={Gavel} title="Política" description="Propón leyes, inicia debates y participa en la gobernanza de la red." onClick={() => handleAreaSelect('politics')} />
-                            <AreaCard icon={Palette} title="Cultura" description="Comparte tu arte, música, escritos y expresiones creativas." onClick={() => handleAreaSelect('culture')} />
-                            <AreaCard icon={GraduationCap} title="Educación" description="Publica tutoriales, artículos de investigación y comparte conocimiento." onClick={() => handleAreaSelect('education')} />
-                        </div>
-                    )}
-
-                    {step === 'details' && selectedArea && (
-                        <div className="space-y-6 animate-in fade-in-50">
-                            <div>
-                                <h3 className="font-headline text-xl font-semibold mb-2">Paso 2: Elige el Destino</h3>
-                                {isLoadingPages ? <Loader2 className="animate-spin" /> :
-                                <AudienceSelector 
-                                    availablePages={myPages}
-                                    selectedArea={selectedArea}
-                                    selectedDestinations={selectedDestinations}
-                                    onSelectionChange={setSelectedDestinations}
-                                />
-                                }
-                            </div>
-                           
-                            {isFederationSelected && (
-                                 <FederatedEntitySettings onAreaChange={setFederationArea} />
-                            )}
-                            
-                            {isFederationSelected && federationArea === 'legislative' && (
-                                <div className="flex items-center space-x-2 p-3 rounded-lg border border-primary/20 bg-primary/10">
-                                    <Info className="h-5 w-5 text-primary"/>
-                                    <Label htmlFor="add-voting" className="flex-grow">Convertir esta publicación en una Propuesta Legislativa formal (con votación)</Label>
-                                    <Switch id="add-voting" checked={isLegislative} onCheckedChange={setIsLegislative} />
+    const renderStepContent = () => {
+        switch (step) {
+            case "area":
+                return (
+                    <Card className="glass-card">
+                        <CardHeader>
+                            <CardTitle>Paso 1: Elige un Área</CardTitle>
+                            <CardDescription>Selecciona el dominio principal de tu publicación. Esto adaptará las herramientas y opciones disponibles.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <button onClick={() => handleAreaSelect("politics")} className="p-6 rounded-2xl bg-primary/10 hover:bg-primary/20 transition-colors text-center space-y-2 border border-primary/20">
+                                <Gavel className="h-10 w-10 mx-auto text-primary" />
+                                <h3 className="font-headline text-xl font-semibold">Política</h3>
+                                <p className="text-sm text-muted-foreground">Propuestas, leyes y debates para la gobernanza de la red.</p>
+                            </button>
+                            <button onClick={() => handleAreaSelect("education")} className="p-6 rounded-2xl bg-primary/10 hover:bg-primary/20 transition-colors text-center space-y-2 border border-primary/20">
+                                <GraduationCap className="h-10 w-10 mx-auto text-primary" />
+                                <h3 className="font-headline text-xl font-semibold">Educación</h3>
+                                <p className="text-sm text-muted-foreground">Comparte conocimiento, tutoriales e investigaciones.</p>
+                            </button>
+                            <button onClick={() => handleAreaSelect("culture")} className="p-6 rounded-2xl bg-primary/10 hover:bg-primary/20 transition-colors text-center space-y-2 border border-primary/20">
+                                <Sparkles className="h-10 w-10 mx-auto text-primary" />
+                                <h3 className="font-headline text-xl font-semibold">Cultura</h3>
+                                <p className="text-sm text-muted-foreground">Expresión artística, eventos y creaciones sociales.</p>
+                            </button>
+                        </CardContent>
+                    </Card>
+                );
+            case "context":
+                return (
+                    <Card className="glass-card">
+                        <CardHeader>
+                            <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="icon" onClick={() => setStep('area')}><ArrowLeft className="h-4 w-4"/></Button>
+                                <div>
+                                    <CardTitle>Paso 2: Define el Contexto y el Ámbito</CardTitle>
+                                    <CardDescription>Selecciona dónde y cómo se difundirá tu publicación.</CardDescription>
                                 </div>
-                             )}
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div>
+                                <Label className="text-base font-semibold">Destino(s) de la Publicación</Label>
+                                <p className="text-sm text-muted-foreground mb-2">Selecciona las páginas donde quieres que aparezca esta publicación.</p>
+                                {selectedArea && (
+                                    <AudienceSelector
+                                        availablePages={mockAvailablePages}
+                                        selectedArea={selectedArea}
+                                        selectedDestinations={destinations}
+                                        onSelectionChange={setDestinations}
+                                    />
+                                )}
+                            </div>
+                            {isFederationSelected && (
+                                <FederatedEntitySettings onAreaChange={setFederationArea} />
+                            )}
+                        </CardContent>
+                         <div className="p-6 flex justify-end">
+                            <Button size="lg" onClick={() => setStep('canvas')} disabled={destinations.length === 0 || (isFederationSelected && !federationArea)}>
+                                Ir al Lienzo de Creación
+                            </Button>
+                         </div>
+                    </Card>
+                );
+            case "canvas":
+                return (
+                    <form onSubmit={handleSubmit}>
+                        <div className="flex items-center gap-2 mb-6">
+                            <Button variant="outline" size="sm" onClick={() => setStep('context')}><ArrowLeft className="mr-2 h-4 w-4" />Volver al Contexto</Button>
+                            <h2 className="text-xl font-headline font-semibold">Paso 3: Lienzo de Creación</h2>
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            {/* Columna Principal (Editor) */}
+                            <div className="lg:col-span-2 space-y-6">
+                                <Card className="glass-card">
+                                    <CardContent className="p-6 space-y-4">
+                                        <div>
+                                            <Label htmlFor="title" className="sr-only">Title</Label>
+                                            <Input id="title" placeholder="Título de la publicación..." value={title} onChange={(e) => setTitle(e.target.value)} required className="text-2xl font-bold font-headline h-auto border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 shadow-none"/>
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="content" className="sr-only">Content</Label>
+                                            <Textarea id="content" placeholder="Escribe tu mensaje... Usa la barra de herramientas para añadir bloques interactivos." value={content} onChange={(e) => setContent(e.target.value)} required className="min-h-[250px] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 shadow-none text-base"/>
+                                        </div>
+                                    </CardContent>
+                                </Card>
 
-                            <div className="flex justify-end">
-                                <Button size="lg" onClick={() => setStep('canvas')} disabled={selectedDestinations.length === 0 || (isFederationSelected && !federationArea)}>
-                                    Siguiente: Escribir Contenido <ArrowRight className="ml-2 h-4 w-4" />
+                                {blocks.map((block, index) => {
+                                    if (block.type === 'poll') {
+                                        return <PollBlock key={index} data={block} onChange={(data) => updateBlockData(index, data)} onRemove={() => removeBlock(index)} isLegislative={block.isLegislative} />
+                                    }
+                                    return null;
+                                })}
+                            </div>
+
+                            {/* Columna Derecha (Herramientas y Configuración) */}
+                            <div className="space-y-6">
+                                <Card className="glass-card">
+                                    <CardHeader><CardTitle>Herramientas</CardTitle></CardHeader>
+                                    <CardContent className="space-y-2">
+                                        {!isLegislative && (
+                                            <Button variant="outline" className="w-full justify-start" onClick={() => addBlock('poll')}>
+                                                <Vote className="mr-2 h-4 w-4"/> Añadir Votación/Encuesta
+                                            </Button>
+                                        )}
+                                        <Button variant="outline" className="w-full justify-start" disabled>
+                                            <PenSquare className="mr-2 h-4 w-4"/> Añadir Tabla (Próximamente)
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="glass-card">
+                                     <CardHeader><CardTitle>Configuración</CardTitle></CardHeader>
+                                     <CardContent>
+                                         <NewsSettings isNews={isNews} onIsNewsChange={setIsNews} />
+                                     </CardContent>
+                                </Card>
+                                
+                                <Button size="lg" type="submit" className="w-full shadow-lg shadow-primary/30" disabled={isLoading}>
+                                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Check className="mr-2 h-5 w-5" />}
+                                    Publicar
                                 </Button>
                             </div>
                         </div>
-                    )}
+                    </form>
+                );
+        }
+    };
 
-                    {step === 'canvas' && selectedArea && (
-                         <form onSubmit={handleSubmit} className="animate-in fade-in-50">
-                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <div className="lg:col-span-2 space-y-4">
-                                     <div>
-                                        <Label htmlFor="title" className="text-lg font-semibold">Título</Label>
-                                        <Input id="title" placeholder="El título de tu publicación..." value={title} onChange={(e) => setTitle(e.target.value)} required className="text-xl h-12 mt-1" />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="content" className="text-lg font-semibold">Contenido Principal</Label>
-                                        <Textarea 
-                                            id="content"
-                                            placeholder="Escribe aquí tu obra maestra..."
-                                            className="min-h-[300px] text-base mt-1"
-                                            value={content}
-                                            onChange={(e) => setContent(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* Render blocks */}
-                                    <div className="space-y-4">
-                                        {blocks.map((block, index) => {
-                                            if (block.type === 'poll') {
-                                                return <PollBlock 
-                                                            key={index} 
-                                                            data={block} 
-                                                            onChange={(data) => updateBlockData(index, data)} 
-                                                            onRemove={() => removeBlock(index)}
-                                                            isLegislative={block.isLegislative}
-                                                        />
-                                            }
-                                            return null;
-                                        })}
-                                    </div>
-                                </div>
-                                <div className="space-y-4">
-                                     <h3 className="font-headline text-xl font-semibold">Ajustes y Herramientas</h3>
-                                     {(selectedArea === 'culture' || selectedArea === 'education') && (
-                                         <NewsSettings isNews={isNews} onIsNewsChange={setIsNews} />
-                                     )}
-                                    
-                                     {isLegislative && (
-                                         <LegislativeSettings isLegislativeProposal={isLegislative} />
-                                     )}
-                                    
-                                    {/* Tool Palette */}
-                                    <Card className="glass-card">
-                                        <CardHeader className="pb-2">
-                                            <CardTitle className="text-base font-headline">Añadir Bloques</CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="grid grid-cols-2 gap-2">
-                                            <ToolButton icon={Vote} label="Encuesta" onClick={() => handleAddPoll(false)} disabled={blocks.some(b => b.type === 'poll')}/>
-                                            <ToolButton icon={BarChart2} label="Gráfico" disabled/>
-                                            <ToolButton icon={Table} label="Tabla" disabled/>
-                                            <ToolButton icon={Link} label="Enlace" disabled/>
-                                        </CardContent>
-                                    </Card>
-
-                                     <Button size="lg" className="w-full" type="submit" disabled={isSubmitting}>
-                                        {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Send className="mr-2 h-5 w-5" />}
-                                        Publicar en la Red
-                                     </Button>
-                                </div>
-                             </div>
-                         </form>
-                    )}
-                </CardContent>
-            </Card>
+    return (
+        <div className="space-y-6 max-w-6xl mx-auto">
+            <div className="text-center">
+                <h1 className="text-4xl font-bold font-headline">Crear Publicación</h1>
+                <p className="text-muted-foreground mt-2">Comparte tu visión, conocimiento o creatividad con la red a través del Lienzo de Creación.</p>
+            </div>
+            {renderStepContent()}
         </div>
     );
-}
-
-
-// --- Helper Components ---
-function AreaCard({ icon: Icon, title, description, onClick }: { icon: React.ElementType, title: string, description: string, onClick: () => void }) {
-    return (
-        <button onClick={onClick} className="text-left">
-            <Card className="glass-card rounded-2xl h-full p-6 transition-all hover:border-primary/80 hover:shadow-primary/20 hover:scale-105">
-                <Icon className="h-10 w-10 text-primary mb-4" />
-                <h3 className="font-headline text-2xl font-bold">{title}</h3>
-                <p className="text-muted-foreground mt-2">{description}</p>
-            </Card>
-        </button>
-    );
-}
-
-function ToolButton({ icon: Icon, label, onClick, disabled = false }: { icon: React.ElementType, label: string, onClick?: () => void, disabled?: boolean}) {
-    return (
-        <Button variant="outline" className="h-auto flex-col p-3 gap-1" onClick={onClick} disabled={disabled}>
-            <Icon className="h-5 w-5 text-primary/80" />
-            <span className="text-xs">{label}</span>
-        </Button>
-    )
 }

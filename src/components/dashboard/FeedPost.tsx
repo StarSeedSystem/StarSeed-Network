@@ -9,12 +9,14 @@ import { MessageSquare, Repeat, Heart, Share, SendHorizonal, Dot } from "lucide-
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import { Textarea } from "../ui/textarea";
-import { PollBlockDisplay } from "../publish/PollBlock";
+import { PollBlockDisplay, PollData } from "../publish/PollBlock";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@/context/UserContext";
 
 export interface FeedPostType {
-  id: string; // Add id to post type
+  id: string;
   author: string;
   handle: string;
   avatar: string;
@@ -24,45 +26,78 @@ export interface FeedPostType {
   comments: number;
   reposts: number;
   likes: number;
-  destinations?: string[];
-  blocks?: any[]; // For polls, etc.
+  destinations?: { id: string; name: string; type: string }[];
+  blocks?: any[];
   createdAt?: { seconds: number, nanoseconds: number };
 }
 
-export function FeedPost({ post }: { post: FeedPostType }) {
-  const [likes, setLikes] = useState(post.likes);
+export function FeedPost({ post: initialPost }: { post: FeedPostType }) {
+  const [post, setPost] = useState(initialPost);
   const [isLiked, setIsLiked] = useState(false);
-  const [reposts, setReposts] = useState(post.reposts);
   const [isReposted, setIsReposted] = useState(false);
-  const [comments, setComments] = useState(post.comments);
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
+  const { toast } = useToast();
+  const { user } = useUser();
 
   const handleLike = () => {
-    if (isLiked) {
-      setLikes(likes - 1);
-    } else {
-      setLikes(likes + 1);
-    }
+    setPost(prev => ({
+        ...prev,
+        likes: isLiked ? prev.likes -1 : prev.likes + 1
+    }));
     setIsLiked(!isLiked);
   };
 
   const handleRepost = () => {
-    if (isReposted) {
-      setReposts(reposts - 1);
-    } else {
-      setReposts(reposts + 1);
-    }
+    setPost(prev => ({
+        ...prev,
+        reposts: isReposted ? prev.reposts - 1 : prev.reposts + 1
+    }));
     setIsReposted(!isReposted);
   };
 
   const handleAddComment = () => {
       if (newComment.trim()) {
-        setComments(comments + 1);
+        setPost(prev => ({ ...prev, comments: prev.comments + 1 }));
         setNewComment("");
-        // In a real app, you would add the comment to a list of comments
       }
   }
+
+  const handleVote = (blockIndex: number, optionIndex: number) => {
+      if (!user) return toast({ variant: "destructive", title: "Necesitas iniciar sesión para votar." });
+      
+      const newBlocks = [...post.blocks!];
+      const pollBlock = newBlocks[blockIndex] as PollData;
+
+      // In a real app, we'd check against a 'voters' list in the DB
+      // For now, this is a client-side simulation
+      if (pollBlock.userVote !== undefined) {
+          return toast({ variant: "destructive", title: "Ya has votado en esta encuesta." });
+      }
+
+      pollBlock.options[optionIndex].votes = (pollBlock.options[optionIndex].votes || 0) + 1;
+      pollBlock.userVote = optionIndex; // Mark that the user has voted
+
+      setPost(prev => ({ ...prev, blocks: newBlocks }));
+      toast({ title: "¡Voto registrado!"});
+  }
+  
+  const handleAddOptionFromComment = (blockIndex: number, newOptionText: string) => {
+    if (!user) return toast({ variant: "destructive", title: "Necesitas iniciar sesión para proponer una opción." });
+
+    const newBlocks = [...post.blocks!];
+    const pollBlock = newBlocks[blockIndex] as PollData;
+    
+    pollBlock.options.push({
+        text: newOptionText,
+        votes: 1, // The proposer's vote is counted
+    });
+
+    // In a real app, this would also add the proposer to the voters list.
+    
+    setPost(prev => ({ ...prev, blocks: newBlocks }));
+    toast({ title: "Opción propuesta y añadida a la votación."});
+  };
 
   const timeAgo = post.createdAt?.seconds 
     ? formatDistanceToNow(new Date(post.createdAt.seconds * 1000), { addSuffix: true, locale: es })
@@ -90,10 +125,9 @@ export function FeedPost({ post }: { post: FeedPostType }) {
         <h3 className="text-xl font-headline font-semibold">{post.title}</h3>
         <p className="text-foreground/90 whitespace-pre-wrap">{post.content}</p>
         
-        {/* Render blocks */}
         {post.blocks && post.blocks.map((block, index) => {
             if (block.type === 'poll') {
-                return <PollBlockDisplay key={index} data={block} postId={post.id} />;
+                return <PollBlockDisplay key={index} data={block} onVote={(optionIndex) => handleVote(index, optionIndex)} />;
             }
             return null;
         })}
@@ -103,12 +137,16 @@ export function FeedPost({ post }: { post: FeedPostType }) {
             <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                 <SendHorizonal className="h-3 w-3" />
                 <span>Publicado en:</span>
-                {post.destinations.map(dest => <Badge variant="secondary" key={dest} className="font-normal">{dest}</Badge>)}
+                {post.destinations.map(dest => {
+                    const destName = typeof dest === 'string' ? dest : dest.name;
+                    const destId = typeof dest === 'string' ? destName : dest.id;
+                    return <Badge variant="secondary" key={destId} className="font-normal">{destName}</Badge>
+                })}
             </div>
         )}
         <div className="flex justify-between w-full">
             <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-primary" onClick={() => setShowComments(!showComments)}>
-                <MessageSquare className="h-4 w-4" /> {comments}
+                <MessageSquare className="h-4 w-4" /> {post.comments}
             </Button>
             <Button 
                 variant="ghost" 
@@ -116,7 +154,7 @@ export function FeedPost({ post }: { post: FeedPostType }) {
                 className={cn("flex items-center gap-2 text-muted-foreground hover:text-sea-green", isReposted && "text-sea-green")}
                 onClick={handleRepost}
             >
-                <Repeat className="h-4 w-4" /> {reposts}
+                <Repeat className="h-4 w-4" /> {post.reposts}
             </Button>
             <Button 
                 variant="ghost" 
@@ -124,7 +162,7 @@ export function FeedPost({ post }: { post: FeedPostType }) {
                 className={cn("flex items-center gap-2 text-muted-foreground hover:text-accent", isLiked && "text-accent")}
                 onClick={handleLike}
             >
-                <Heart className={cn("h-4 w-4", isLiked && "fill-current")} /> {likes}
+                <Heart className={cn("h-4 w-4", isLiked && "fill-current")} /> {post.likes}
             </Button>
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-sky-blue">
                 <Share className="h-4 w-4" />
@@ -132,7 +170,7 @@ export function FeedPost({ post }: { post: FeedPostType }) {
         </div>
          {showComments && (
             <div className="w-full pt-4 mt-4 border-t border-white/10 space-y-4">
-                 {/* This would be a list of actual comments */}
+                 {/* In a real app, this would be a list of actual comments */}
                 <div className="flex gap-3">
                      <Avatar className="h-8 w-8">
                         <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="glowing astronaut" />
@@ -145,7 +183,12 @@ export function FeedPost({ post }: { post: FeedPostType }) {
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
                         />
-                        <div className="flex justify-end">
+                        <div className="flex justify-end gap-2">
+                             {post.blocks?.some(b => b.type === 'poll') && (
+                                <Button size="sm" variant="outline" onClick={() => handleAddOptionFromComment(0, newComment)} disabled={!newComment.trim()}>
+                                    Proponer como Opción
+                                </Button>
+                             )}
                             <Button size="sm" onClick={handleAddComment} disabled={!newComment.trim()}>
                                 Responder
                             </Button>
