@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FeedPost } from "../dashboard/FeedPost";
+import { FeedPost, FeedPostType } from "../dashboard/FeedPost";
 import { Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 
@@ -92,13 +92,16 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
     
     const q = query(
         postsCollection, 
-        where("authorId", "==", profile.id),
-        orderBy("createdAt", "desc")
+        where("authorId", "==", profile.id)
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const postsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setPosts(postsData);
+        
+        // Sort client-side to avoid needing a composite index
+        const sortedPosts = postsData.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+        
+        setPosts(sortedPosts);
         setIsLoading(false);
     }, (error) => {
         console.error("Error fetching profile feed:", error);
@@ -125,9 +128,9 @@ export function ProfileFeed({ profile }: ProfileFeedProps) {
                 posts.map((post) => (
                     <FeedPost key={post.id} post={{
                         id: post.id,
-                        author: post.authorName,
+                        authorName: post.authorName,
                         handle: post.handle,
-                        avatar: post.avatarUrl,
+                        avatarUrl: post.avatarUrl,
                         avatarHint: "user avatar",
                         title: post.title,
                         content: post.content,
