@@ -91,8 +91,11 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
             const flatNodes: KnowledgeNode[] = [];
             const dive = (nodesToSearch: KnowledgeNode[]) => {
                 for (const node of nodesToSearch) {
-                    if (node.type === networkType || (networkType === 'topic' && node.type === 'concept')) {
+                    // In category network, only search for categories. In topic network, search for topics and concepts.
+                    if (networkType === 'category' && node.type === 'category') {
                         flatNodes.push(node);
+                    } else if (networkType === 'topic' && (node.type === 'topic' || node.type === 'concept')) {
+                         flatNodes.push(node);
                     }
                     if (node.children) dive(node.children);
                 }
@@ -100,9 +103,14 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
             dive(allNodes); // Search all nodes
             return flatNodes.filter(node => node.name.toLowerCase().includes(searchTerm.toLowerCase()));
         }
-        // In category view, show children. In topic view, show all topics.
-        if (networkType === 'category') {
-             return activeNode?.children?.filter(c => c.type === 'category') || nodes;
+        // If there's an active node, show its children. Otherwise, show the root nodes for the current network type.
+        if (activeNode) {
+            if (networkType === 'category') {
+                 // In category view, children can be categories or topics. We only want to show sub-categories here.
+                 return activeNode.children?.filter(c => c.type === 'category') || [];
+            }
+             // In topic view, children can be sub-topics or concepts.
+            return activeNode.children || [];
         }
         return nodes;
 
@@ -115,11 +123,7 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
             setActivePath(pathToNode.length > 0 ? pathToNode : [node]);
             setSearchTerm('');
         } else {
-            if (networkType === 'category') {
-                 setActivePath([...activePath, node]);
-            } else { // topic network
-                setActivePath([node]); // Only ever show one level deep for topics
-            }
+            setActivePath([...activePath, node]);
         }
     };
     
@@ -231,6 +235,11 @@ const ListView = ({ nodes, allNodes, posts, networkType, selectionMode, selected
                                 No hay más sub-nodos aquí.
                             </div>
                         )}
+                         {displayedNodes.length === 0 && searchTerm && (
+                             <div className="p-4 text-center text-muted-foreground text-sm">
+                                No se encontraron resultados.
+                            </div>
+                        )}
                     </div>
                 </ScrollArea>
             </div>
@@ -315,5 +324,3 @@ export const KnowledgeNetwork = (props: KnowledgeNetworkProps) => {
             return <ListView {...props} />;
     }
 };
-
-    

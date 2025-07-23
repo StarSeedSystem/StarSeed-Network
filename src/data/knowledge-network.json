@@ -130,7 +130,16 @@
               "name": "Física Cuántica",
               "description": "Estudio del comportamiento de la materia y la energía a nivel atómico y subatómico.",
               "type": "topic",
-              "parentIds": ["fisica", "metafisica"]
+              "parentIds": ["fisica", "metafisica"],
+               "children": [
+                 {
+                    "id": "entrelazamiento-cuantico",
+                    "name": "Entrelazamiento Cuántico",
+                    "description": "Fenómeno en el que dos partículas están vinculadas de tal manera que el estado de una afecta instantáneamente a la otra, sin importar la distancia.",
+                    "type": "concept",
+                    "parentIds": ["fisica-cuantica"]
+                 }
+              ]
             }
           ]
         }
