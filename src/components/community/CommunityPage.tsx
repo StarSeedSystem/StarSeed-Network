@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { PenSquare, Users, Settings, Loader2 } from "lucide-react";
+import { PenSquare, Users, Settings, Loader2, Bookmark } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext"; 
 import { useToast } from "@/hooks/use-toast"; 
@@ -16,6 +16,7 @@ import type { Community } from "@/types/content-types";
 import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { PublicPageFeed } from "../utils/PublicPageFeed";
+import { SaveToCollectionDialog } from "../utils/SaveToCollectionDialog";
 
 interface CommunityPageProps {
   slug: string;
@@ -126,15 +127,18 @@ export function CommunityPage({ slug }: CommunityPageProps) {
                         <p className="text-muted-foreground">{community.description}</p>
                     </div>
                     {authUser && ( 
-                        <Button onClick={handleJoinLeave} disabled={isJoiningLeaving}>
-                            {isJoiningLeaving ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : isMember ? (
-                                "Abandonar Comunidad"
-                            ) : (
-                                "Unirse a la Comunidad"
-                            )}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <SaveToCollectionDialog pageId={community.id} pageName={community.name} />
+                            <Button onClick={handleJoinLeave} disabled={isJoiningLeaving}>
+                                {isJoiningLeaving ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : isMember ? (
+                                    "Abandonar Comunidad"
+                                ) : (
+                                    "Unirse a la Comunidad"
+                                )}
+                            </Button>
+                        </div>
                     )}
                     {!authUser && (
                         <span className="text-sm text-muted-foreground">Log in to join</span>

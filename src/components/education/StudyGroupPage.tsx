@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { PenSquare, Users, Settings, BookOpen, Loader2, PlusCircle } from "lucide-react";
+import { PenSquare, Users, Settings, BookOpen, Loader2, PlusCircle, Bookmark } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { PublicPageFeed } from "../utils/PublicPageFeed";
+import { SaveToCollectionDialog } from "../utils/SaveToCollectionDialog";
 
 interface StudyGroupPageProps {
   slug: string;
@@ -119,15 +120,18 @@ export function StudyGroupPage({ slug }: StudyGroupPageProps) {
                             <p className="text-muted-foreground">Tema: {group.topic}</p>
                         </div>
                         {authUser && (
-                            <Button onClick={handleJoinLeave} disabled={isJoiningLeaving}>
-                                {isJoiningLeaving ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                ) : isMember ? (
-                                    "Abandonar Grupo"
-                                ) : (
-                                    "Unirse a Grupo"
-                                )}
-                            </Button>
+                            <div className="flex items-center gap-2">
+                                <SaveToCollectionDialog pageId={group.id} pageName={group.name} />
+                                <Button onClick={handleJoinLeave} disabled={isJoiningLeaving}>
+                                    {isJoiningLeaving ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : isMember ? (
+                                        "Abandonar Grupo"
+                                    ) : (
+                                        "Unirse a Grupo"
+                                    )}
+                                </Button>
+                            </div>
                         )}
                         {!authUser && (<span className="text-sm text-muted-foreground">Log in to join</span>)}
                     </div>

@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Edit, ImageIcon, Award, Library, PenSquare, Upload, CheckCircle } from "lucide-react";
+import { Loader2, Edit, ImageIcon, Award, Library, PenSquare, Upload, CheckCircle, Folder } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter } from "@/components/ui/dialog";
@@ -30,6 +30,7 @@ import { LibraryGrid, LibraryItem, LibraryFolder } from "./LibraryGrid";
 import { CreateProfileForm } from "./CreateProfileForm";
 import { AIBannerGenerator } from "./AIBannerGenerator";
 import { AIAvatarGenerator } from "./AIAvatarGenerator";
+import { CollectionsTab } from "./CollectionsTab";
 
 // --- Placeholder Data ---
 const initialLibraryItems: LibraryItem[] = [ { id: "vid_001", type: "Video", title: "Dragon over forest", thumbnail: "https://placehold.co/600x400.png", thumbnailHint: "dragon forest", source: "/video-generator", folderId: "folder_videos" }];
@@ -114,7 +115,7 @@ export function ProfileClient() {
       },
       async () => {
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        const fieldToUpdate = path === 'avatars' ? 'avatarUrl' : 'bannerUrl';
+        const fieldToUpdate = path === 'avatars' ? 'avatarUrl' : 'banners';
         await handleUpdateProfile({ [fieldToUpdate]: downloadURL });
         
         toast({ title: `${path === 'avatars' ? 'Avatar' : 'Banner'} actualizado!` });
@@ -279,12 +280,14 @@ export function ProfileClient() {
       
       <div className="px-4 sm:px-8">
         <Tabs defaultValue="publications" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-card/60 rounded-xl">
+            <TabsList className="grid w-full grid-cols-4 bg-card/60 rounded-xl">
               <TabsTrigger value="publications" className="rounded-lg"><PenSquare className="mr-2 h-4 w-4"/>Publicaciones</TabsTrigger>
+              <TabsTrigger value="collections" className="rounded-lg"><Folder className="mr-2 h-4 w-4"/>Colecciones</TabsTrigger>
               <TabsTrigger value="badges" className="rounded-lg"><Award className="mr-2 h-4 w-4"/>Insignias</TabsTrigger>
               <TabsTrigger value="library" className="rounded-lg"><Library className="mr-2 h-4 w-4"/>Biblioteca</TabsTrigger>
             </TabsList>
             <TabsContent value="publications" className="mt-6"><ProfileFeed profile={profile} /></TabsContent>
+            <TabsContent value="collections" className="mt-6"><CollectionsTab collections={profile.collections || []} /></TabsContent>
             <TabsContent value="badges" className="mt-6"><BadgesGrid earnedBadges={profile.badges || {}} /></TabsContent>
             <TabsContent value="library" className="mt-6"><LibraryGrid items={initialLibraryItems} folders={initialFolders} /></TabsContent>
         </Tabs>

@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { PenSquare, Users, Settings, Gavel, Loader2 } from "lucide-react";
+import { PenSquare, Users, Settings, Gavel, Loader2, Bookmark } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +16,7 @@ import type { FederatedEntity } from "@/types/content-types";
 import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { PublicPageFeed } from "../utils/PublicPageFeed";
+import { SaveToCollectionDialog } from "../utils/SaveToCollectionDialog";
 
 
 interface FederatedEntityPageProps {
@@ -120,15 +121,18 @@ export function FederatedEntityPage({ slug }: FederatedEntityPageProps) {
                             <p className="text-muted-foreground">Tipo: {entity.scope} {entity.type}</p>
                         </div>
                         {authUser && (
-                             <Button onClick={handleJoinLeave} disabled={isJoiningLeaving}>
-                                {isJoiningLeaving ? (
-                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                 ) : isMember ? (
-                                     "Abandonar Entidad"
-                                 ) : (
-                                     "Unirse a la Entidad"
-                                 )}
-                             </Button>
+                            <div className="flex items-center gap-2">
+                                <SaveToCollectionDialog pageId={entity.id} pageName={entity.name} />
+                                <Button onClick={handleJoinLeave} disabled={isJoiningLeaving}>
+                                    {isJoiningLeaving ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : isMember ? (
+                                        "Abandonar Entidad"
+                                    ) : (
+                                        "Unirse a la Entidad"
+                                    )}
+                                </Button>
+                            </div>
                          )}
                         {!authUser && (<span className="text-sm text-muted-foreground">Log in to join</span>)}
                     </div>

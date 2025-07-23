@@ -2,6 +2,7 @@
 
 
 
+
 export interface Author {
     name: string;
     avatar: string;
@@ -92,6 +93,13 @@ export type AnyEntity = Community | FederatedEntity | StudyGroup | PoliticalPart
 
 export type AnyRecommendedPage = AnyEntity | Event;
 
+export interface UserCollection {
+    id: string;
+    name: string;
+    pageIds: string[];
+    privacy: 'public' | 'private';
+}
+
 export interface User {
   id: string;
   name: string;
@@ -110,6 +118,7 @@ export interface User {
     pioneer: boolean;
     aiSymbiote: boolean;
   };
+  collections?: UserCollection[];
   natalChart?: NatalChartData;
   privacySettings: {
     profileVisibility: 'public' | 'private' | 'friends';

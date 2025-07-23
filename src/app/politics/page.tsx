@@ -17,7 +17,7 @@ export default function PoliticsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useUser();
   const [filters, setFilters] = useState<FilterState>({
-    entity: 'all', status: 'all', tags: '', saved: false
+    entity: 'all', status: 'all', tags: '', saved: false, collection: 'all'
   });
 
   useEffect(() => {

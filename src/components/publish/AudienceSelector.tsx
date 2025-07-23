@@ -1,15 +1,19 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { User, Globe, Users, Landmark, Shield, BookOpen, Search } from "lucide-react";
+import { User, Globe, Users, Landmark, Shield, BookOpen, Search, Folder, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/context/UserContext";
+import type { UserCollection } from "@/types/content-types";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
+import { Separator } from "../ui/separator";
 
 type PageType = 'profile' | 'community' | 'federation' | 'study_group' | 'political_party';
 
@@ -44,6 +48,7 @@ interface AudienceSelectorProps {
 }
 
 export function AudienceSelector({ availablePages, selectedArea, selectedDestinations, onSelectionChange }: AudienceSelectorProps) {
+    const { profile } = useUser();
     const [searchTerm, setSearchTerm] = useState("");
     const [typeFilter, setTypeFilter] = useState<PageType | 'all'>('all');
     
@@ -52,6 +57,15 @@ export function AudienceSelector({ availablePages, selectedArea, selectedDestina
             ? [...selectedDestinations, page] 
             : selectedDestinations.filter(p => p.id !== page.id);
         onSelectionChange(newSelection);
+    };
+
+    const handleCollectionSelect = (collectionId: string) => {
+        const collection = profile?.collections?.find((c: UserCollection) => c.id === collectionId);
+        if (!collection) return;
+
+        const pagesFromCollection = availablePages.filter(p => collection.pageIds.includes(p.id));
+        const newDestinations = [...new Set([...selectedDestinations, ...pagesFromCollection])];
+        onSelectionChange(newDestinations);
     };
 
     const filteredPages = useMemo(() => {
@@ -103,6 +117,26 @@ export function AudienceSelector({ availablePages, selectedArea, selectedDestina
                         ))}
                     </div>
                 </div>
+
+                {profile?.collections && profile.collections.length > 0 && (
+                    <>
+                        <Separator />
+                        <div className="space-y-2">
+                            <Label className="flex items-center gap-2 text-sm"><Folder className="h-4 w-4"/>Seleccionar desde una Colección</Label>
+                            <Select onValueChange={handleCollectionSelect}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Elige una colección para añadir sus páginas..." />
+                                </SelectTrigger>
+                                <SelectContent className="glass-card">
+                                    {profile.collections.map((c: UserCollection) => (
+                                        <SelectItem key={c.id} value={c.id}>{c.name} ({c.pageIds.length} páginas)</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </>
+                )}
+
 
                 <ScrollArea className="h-64 pr-3">
                     <div className="space-y-2">

@@ -4,17 +4,21 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Filter, Bookmark, Landmark, ListFilter, Tag } from "lucide-react";
+import { Filter, Bookmark, Landmark, ListFilter, Tag, Folder } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { useUser } from "@/context/UserContext";
+import type { UserCollection } from "@/types/content-types";
+
 
 export interface FilterState {
     entity: string;
     status: string;
     tags: string;
     saved: boolean;
+    collection: string;
 }
 
 interface AdvancedFilterProps {
@@ -25,6 +29,7 @@ interface AdvancedFilterProps {
 
 export function AdvancedFilter({ filters, onFilterChange }: AdvancedFilterProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const { profile } = useUser();
 
     const handleFieldChange = (field: keyof FilterState, value: string | boolean) => {
         onFilterChange({ ...filters, [field]: value });
@@ -40,7 +45,7 @@ export function AdvancedFilter({ filters, onFilterChange }: AdvancedFilterProps)
             {isOpen && (
                  <Card className="glass-card mt-4 animate-in fade-in-50">
                     <CardContent className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                            
                             <div className="space-y-2">
                                 <Label className="flex items-center gap-2 text-sm"><Landmark className="h-4 w-4" />Filtrar por Entidad Federativa</Label>
@@ -83,6 +88,24 @@ export function AdvancedFilter({ filters, onFilterChange }: AdvancedFilterProps)
                                     value={filters.tags}
                                     onChange={(e) => handleFieldChange("tags", e.target.value)}
                                 />
+                            </div>
+
+                             <div className="space-y-2">
+                                <Label className="flex items-center gap-2 text-sm"><Folder className="h-4 w-4" />Filtrar por Colección</Label>
+                                <Select 
+                                    value={filters.collection} 
+                                    onValueChange={(value) => handleFieldChange("collection", value)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Seleccionar colección..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="glass-card">
+                                        <SelectItem value="all">Todas</SelectItem>
+                                        {profile?.collections?.map((c: UserCollection) => (
+                                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <div className="space-y-2 flex flex-col justify-end">

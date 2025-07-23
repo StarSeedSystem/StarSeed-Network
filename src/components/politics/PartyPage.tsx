@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { PenSquare, Users, Settings, Vote, Loader2, PlusCircle } from "lucide-react";
+import { PenSquare, Users, Settings, Vote, Loader2, PlusCircle, Bookmark } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { doc, onSnapshot, DocumentData, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "@/data/firebase";
 import { PublicPageFeed } from "../utils/PublicPageFeed";
+import { SaveToCollectionDialog } from "../utils/SaveToCollectionDialog";
 
 interface PartyPageProps {
   slug: string;
@@ -120,15 +121,18 @@ export function PartyPage({ slug }: PartyPageProps) {
                             <p className="text-muted-foreground">Ideología: {party.ideology}</p>
                         </div>
                         {authUser && (
-                             <Button onClick={handleJoinLeave} disabled={isJoiningLeaving}>
-                                {isJoiningLeaving ? (
-                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                 ) : isMember ? (
-                                     "Abandonar Partido"
-                                 ) : (
-                                     "Unirse a Partido"
-                                 )}
-                             </Button>
+                            <div className="flex items-center gap-2">
+                                <SaveToCollectionDialog pageId={party.id} pageName={party.name} />
+                                <Button onClick={handleJoinLeave} disabled={isJoiningLeaving}>
+                                    {isJoiningLeaving ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : isMember ? (
+                                        "Abandonar Partido"
+                                    ) : (
+                                        "Unirse a Partido"
+                                    )}
+                                </Button>
+                            </div>
                          )}
                          {!authUser && (<span className="text-sm text-muted-foreground">Log in to join</span>)}
                     </div>
